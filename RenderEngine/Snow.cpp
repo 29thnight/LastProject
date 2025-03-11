@@ -104,6 +104,8 @@ void SnowPass::Execute(Scene& scene)
 	UINT prevStencilRef;
 	DeviceState::g_pDeviceContext->OMGetDepthStencilState(&prevDepthState, &prevStencilRef);
 
+	ID3D11RenderTargetView* rtv = m_
+
 	ID3D11RasterizerState* prevRasterizerState;
 	DeviceState::g_pDeviceContext->RSGetState(&prevRasterizerState);
 
