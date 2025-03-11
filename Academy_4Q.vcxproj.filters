@@ -227,6 +227,9 @@
     <None Include="x64\Assets\Shaders\Shading.hlsli">
       <Filter>Shaders</Filter>
     </None>
+    <None Include="x64\Assets\Shaders\Snow.hlsli">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="App.cpp">
@@ -361,6 +364,15 @@
       <Filter>Shaders</Filter>
     </FxCompile>
     <FxCompile Include="x64\Assets\Shaders\VertexShader.vs.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="x64\Assets\Shaders\SnowGS.gs.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="x64\Assets\Shaders\SnowPS.ps.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="x64\Assets\Shaders\SnowVS.vs.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
   </ItemGroup>

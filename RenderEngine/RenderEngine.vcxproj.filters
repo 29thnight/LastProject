@@ -99,6 +99,9 @@
     <Filter Include="RenderPass\ForwardPass">
       <UniqueIdentifier>{64b7272b-de19-484c-9d60-13b87909eb48}</UniqueIdentifier>
     </Filter>
+    <Filter Include="RenderPass\EffectPass">
+      <UniqueIdentifier>{5e79d75e-1151-4afe-b388-0997501047f4}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="SceneRenderer.cpp">
@@ -193,6 +196,15 @@
     </ClCompile>
     <ClCompile Include="SkyBoxPass.cpp">
       <Filter>RenderPass\SkyBoxPass</Filter>
+    </ClCompile>
+    <ClCompile Include="BlitPass.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="SpritePass.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="Snow.cpp">
+      <Filter>RenderPass\EffectPass</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -312,6 +324,15 @@
     </ClInclude>
     <ClInclude Include="SkyBoxPass.h">
       <Filter>RenderPass\SkyBoxPass</Filter>
+    </ClInclude>
+    <ClInclude Include="BlitPass.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="SpritePass.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Snow.h">
+      <Filter>RenderPass\EffectPass</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

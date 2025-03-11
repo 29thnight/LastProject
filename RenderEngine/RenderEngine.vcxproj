@@ -171,6 +171,7 @@
     <ClCompile Include="Skeleton.cpp" />
     <ClCompile Include="SkeletonLoader.cpp" />
     <ClCompile Include="SkyBoxPass.cpp" />
+    <ClCompile Include="Snow.cpp" />
     <ClCompile Include="SpritePass.cpp" />
     <ClCompile Include="SSAOPass.cpp" />
     <ClCompile Include="Texture.cpp" />
@@ -214,6 +215,7 @@
     <ClInclude Include="Skeleton.h" />
     <ClInclude Include="SkeletonLoader.h" />
     <ClInclude Include="SkyBoxPass.h" />
+    <ClInclude Include="Snow.h" />
     <ClInclude Include="SpritePass.h" />
     <ClInclude Include="SSAOPass.h" />
     <ClInclude Include="Texture.h" />

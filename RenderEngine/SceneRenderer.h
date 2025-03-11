@@ -12,6 +12,7 @@
 #include "Model.h"
 
 #include "Light.h"
+#include "Snow.h"
 
 class Scene;
 class SceneRenderer
@@ -40,6 +41,7 @@ private:
     std::unique_ptr<ToneMapPass> m_pToneMapPass{};
 	std::unique_ptr<SpritePass> m_pSpritePass{};
 	std::unique_ptr<BlitPass> m_pBlitPass{};
+	std::unique_ptr<SnowPass> m_pSnowPass{};
 
 	//buffers
 	ComPtr<ID3D11Buffer> m_ModelBuffer;

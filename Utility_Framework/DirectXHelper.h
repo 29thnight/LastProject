@@ -101,7 +101,7 @@ namespace DirectX11
     class SharedMap final
     {
     public:
-        SharedMap(ID3D11DeviceContext* pDeviceContext, ID3D11Resource* pResource, D3D11_MAPPED_SUBRESOURCE* pMappedResource, uint32 subresource = 0, D3D11_MAP mapType = D3D11_MAP_WRITE_DISCARD, uint32 mapFlags = 0)
+        SharedMap(ID3D11DeviceContext3* pDeviceContext, ID3D11Resource* pResource, D3D11_MAPPED_SUBRESOURCE* pMappedResource, uint32 subresource = 0, D3D11_MAP mapType = D3D11_MAP_WRITE_DISCARD, uint32 mapFlags = 0)
             : m_pDeviceContext(pDeviceContext), m_pResource(pResource), m_Subresource(subresource)
         {
             m_pDeviceContext->Map(m_pResource, m_Subresource, mapType, mapFlags, pMappedResource);

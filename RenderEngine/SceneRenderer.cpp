@@ -139,6 +139,19 @@ SceneRenderer::SceneRenderer(const std::shared_ptr<DirectX11::DeviceResources>& 
 	m_pBlitPass = std::make_unique<BlitPass>();
 	m_pBlitPass->Initialize(m_toneMappedColourTexture.get(), 
 		m_deviceResources->GetBackBufferRenderTargetView());
+
+	// snowpass
+	m_pSnowPass = std::make_unique<SnowPass>();
+	SnowParameters snowParams;
+	snowParams.snowAmount = 100.0f;  // 눈 양 (밀도)
+	snowParams.snowSize = 0.5f;   // 눈송이 크기
+	snowParams.snowFallSpeed = 9.8f;  // 떨어지는 속도
+	snowParams.windDirection = Mathf::Vector3(0.3f, 0.0f, 0.0f);  // 바람 방향
+	snowParams.windStrength = 0.03f;  // 바람 세기
+	snowParams.snowColor = Mathf::Vector3(1.0f, 1.0f, 1.0f);  // 눈 색상 (흰색)
+	snowParams.snowOpacity = 1.0f;  // 투명도
+
+	m_pSnowPass->SetParameters(snowParams);
 }
 
 void SceneRenderer::Initialize(Scene* _pScene)
@@ -210,6 +223,7 @@ void SceneRenderer::Initialize(Scene* _pScene)
 void SceneRenderer::Update(float deltaTime)
 {
 	m_currentScene->Update(deltaTime);
+	m_pSnowPass->Update(deltaTime);
 }
 
 void SceneRenderer::Render()
@@ -263,6 +277,10 @@ void SceneRenderer::Render()
 	//[8] BlitPass
 	{
 		m_pBlitPass->Execute(*m_currentScene);
+	}
+
+	{
+		m_pSnowPass->Execute(*m_currentScene);
 	}
 }
 

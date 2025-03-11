@@ -29,7 +29,7 @@ namespace DirectX11
 
 		CD3D11_BUFFER_DESC bufferDesc{
 			size,
-			(uint32)bindFlag
+			(uint32)bindFlag,
 		};
 		ID3D11Buffer* buffer{};
 		if (data)
