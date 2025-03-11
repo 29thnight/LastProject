@@ -88,6 +88,11 @@ SnowPass::SnowPass()
 	//);
 }
 
+void SnowPass::Initialize(Texture* renderTarget)
+{
+	m_renderTarget = renderTarget;
+}
+
 void SnowPass::LoadTexture(const std::string_view& filePath)
 {
 	//m_texture = std::make_shared<Texture>(Texture::LoadFormPath(filePath));
@@ -104,7 +109,8 @@ void SnowPass::Execute(Scene& scene)
 	UINT prevStencilRef;
 	DeviceState::g_pDeviceContext->OMGetDepthStencilState(&prevDepthState, &prevStencilRef);
 
-	ID3D11RenderTargetView* rtv = m_
+	ID3D11RenderTargetView* rtv = m_renderTarget->GetRTV();
+	DirectX11::OMSetRenderTargets(1, &rtv, DeviceState::g_pDepthStencilView);
 
 	ID3D11RasterizerState* prevRasterizerState;
 	DeviceState::g_pDeviceContext->RSGetState(&prevRasterizerState);
@@ -163,4 +169,6 @@ void SnowPass::Execute(Scene& scene)
 	DeviceState::g_pDeviceContext->GSSetShader(nullptr, nullptr, 0);
 	DeviceState::g_pDeviceContext->OMSetDepthStencilState(prevDepthState, prevStencilRef);
 	if (prevDepthState) prevDepthState->Release();
+
+	DirectX11::UnbindRenderTargets();
 }

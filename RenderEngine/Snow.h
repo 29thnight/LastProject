@@ -44,6 +44,7 @@ class SnowPass final : public IRenderPass
 public:
 	SnowPass();
 
+	void Initialize(Texture* renderTarget);
 	void LoadTexture(const std::string_view& filePath);
 	void Update(float delta);
 	void Execute(Scene& scene) override;
@@ -55,7 +56,7 @@ private:
 	
 	std::shared_ptr<Texture> m_texture;
 	SnowParameters mParams;
-
+	Texture* m_renderTarget;
 	float m_delta;
 };
 

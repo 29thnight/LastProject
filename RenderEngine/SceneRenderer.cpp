@@ -151,6 +151,8 @@ SceneRenderer::SceneRenderer(const std::shared_ptr<DirectX11::DeviceResources>& 
 	snowParams.snowColor = Mathf::Vector3(1.0f, 1.0f, 1.0f);  // 눈 색상 (흰색)
 	snowParams.snowOpacity = 1.0f;  // 투명도
 
+	m_pSnowPass->Initialize(m_colorTexture.get());
+
 	m_pSnowPass->SetParameters(snowParams);
 }
 
