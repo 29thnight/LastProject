@@ -147,8 +147,8 @@ SceneRenderer::SceneRenderer(const std::shared_ptr<DirectX11::DeviceResources>& 
 	snowParams.snowAmount = 100.0f;  // 눈 양 (밀도)
 	snowParams.snowSize = 0.5f;   // 눈송이 크기
 	snowParams.snowFallSpeed = 9.8f;  // 떨어지는 속도
-	snowParams.windDirection = Mathf::Vector3(0.3f, 0.0f, 0.0f);  // 바람 방향
-	snowParams.windStrength = 0.03f;  // 바람 세기
+	snowParams.windDirection = Mathf::Vector3(1.0f, 0.0f, 0.0f);  // 바람 방향
+	snowParams.windStrength = 3.0f;  // 바람 세기
 	snowParams.snowColor = Mathf::Vector3(1.0f, 1.0f, 1.0f);  // 눈 색상 (흰색)
 	snowParams.snowOpacity = 1.0f;  // 투명도
 
@@ -281,8 +281,14 @@ void SceneRenderer::Render()
 		m_pSkyBoxPass->Execute(*m_currentScene);
 	}
 
+	//[5-1] EffectPass
 	{
 		m_pSnowPass->Execute(*m_currentScene);
+
+
+
+
+
 	}
 
     //[6] ToneMapPass
@@ -294,7 +300,7 @@ void SceneRenderer::Render()
 
 	//[7] SpritePass
 	{
-		//m_pSpritePass->Execute(*m_currentScene);
+		m_pSpritePass->Execute(*m_currentScene);
 	}
 
 	//[8] BlitPass
