@@ -80,6 +80,7 @@ SnowPass::SnowPass()
 
 	CD3D11_DEPTH_STENCIL_DESC depthDesc{ CD3D11_DEFAULT() };
 	depthDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
+	depthDesc.DepthEnable = false;
 
 	DeviceState::g_pDevice->CreateDepthStencilState(&depthDesc, &m_pso->m_depthStencilState);
 
@@ -122,15 +123,16 @@ void SnowPass::Initialize(Texture* renderTarget)
 		hr = DeviceState::g_pDevice->CreateDepthStencilView(depthStencilTexture, &dsvDesc, &m_depthStencilView);
 		depthStencilTexture->Release(); // 텍스처에 대한 참조 해제
 	}
+	LoadTexture("pika.png");
 }
 
 void SnowPass::LoadTexture(const std::string_view& filePath)
 {
-	//m_texture = std::make_shared<Texture>(Texture::LoadFormPath(filePath));
+	m_texture = std::shared_ptr<Texture>(Texture::LoadFormPath(filePath));
 }
 
 void SnowPass::Update(float delta)
-{
+{	
 	m_delta += delta;
 	// time 값이 너무 커지는 것 방지
 	if (m_delta > 10000.0f) {
@@ -151,7 +153,7 @@ void SnowPass::Execute(Scene& scene)
 	DeviceState::g_pDeviceContext->RSGetState(&prevRasterizerState);
 
 	m_pso->Apply();
-
+	scene.UseCamera(scene.m_MainCamera);
 	UINT stride = sizeof(EffectVertex);
 	UINT offset = 0;
 	DirectX11::IASetVertexBuffers(0, 1, m_vertexBuffer.GetAddressOf(), &stride, &offset);
@@ -162,7 +164,6 @@ void SnowPass::Execute(Scene& scene)
 	);
 	Mathf::Vector4 pos;
 	pos = scene.m_MainCamera.m_eyePosition;
-
 	SnowCB* cbData = reinterpret_cast<SnowCB*>(mappedResource.pData);
 	cbData->View = XMMatrixTranspose(scene.m_MainCamera.CalculateView());
 	cbData->Projection = XMMatrixTranspose(scene.m_MainCamera.CalculateProjection() );
@@ -194,6 +195,8 @@ void SnowPass::Execute(Scene& scene)
 	DeviceState::g_pDeviceContext->VSSetConstantBuffers(1, 1, &snowParamsBuffer);
 	DeviceState::g_pDeviceContext->GSSetConstantBuffers(1, 1, &snowParamsBuffer);
 	DeviceState::g_pDeviceContext->PSSetConstantBuffers(1, 1, &snowParamsBuffer);
+
+	DirectX11::PSSetShaderResources(0, 1, &m_texture->m_pSRV);
 
 	DeviceState::g_pDeviceContext->Draw(1, 0);
 

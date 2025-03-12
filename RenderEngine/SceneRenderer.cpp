@@ -247,47 +247,49 @@ void SceneRenderer::Render()
 
 	//[1] ShadowMapPass
 	{
-		Texture& shadowMapTexture = (*m_currentScene->m_LightController.GetShadowMapTexture());
-		SetRenderTargets(shadowMapTexture);
-		m_currentScene->ShadowStage();
-		Clear(DirectX::Colors::Transparent, 1.0f, 0);
-		UnbindRenderTargets();
+		//Texture& shadowMapTexture = (*m_currentScene->m_LightController.GetShadowMapTexture());
+		//SetRenderTargets(shadowMapTexture);
+		//m_currentScene->ShadowStage();
+		//Clear(DirectX::Colors::Transparent, 1.0f, 0);
+		//UnbindRenderTargets();
 	}
 
 	//[2] GBufferPass
 	{
-		m_pGBufferPass->Execute(*m_currentScene);
+		//m_pGBufferPass->Execute(*m_currentScene);
 	}
 
 	//[3] SSAOPass
 	{
-        m_pSSAOPass->Execute(*m_currentScene);
+        //m_pSSAOPass->Execute(*m_currentScene);
 	}
 
     //[4] DeferredPass
     {
-		m_pDeferredPass->UseAmbientOcclusion(m_ambientOcclusionTexture.get());
-        m_pDeferredPass->Execute(*m_currentScene);
+		//m_pDeferredPass->UseAmbientOcclusion(m_ambientOcclusionTexture.get());
+        //m_pDeferredPass->Execute(*m_currentScene);
     }
 
 	//[*] WireFramePass
 	if(useWireFrame){
-		m_pWireFramePass->Execute(*m_currentScene);
+		//m_pWireFramePass->Execute(*m_currentScene);
 	}
 
 	//[5] skyBoxPass
 	{
-		m_pSkyBoxPass->Execute(*m_currentScene);
+		//m_pSkyBoxPass->Execute(*m_currentScene);
 	}
 
     //[6] ToneMapPass
     {
-        m_pToneMapPass->Execute(*m_currentScene);
+        //m_pToneMapPass->Execute(*m_currentScene);
     }
+
+	
 
 	//[7] SpritePass
 	{
-		m_pSpritePass->Execute(*m_currentScene);
+		//m_pSpritePass->Execute(*m_currentScene);
 	}
 
 	//[8] BlitPass
@@ -298,6 +300,7 @@ void SceneRenderer::Render()
 	{
 		m_pSnowPass->Execute(*m_currentScene);
 	}
+	
 }
 
 void SceneRenderer::Clear(const float color[4], float depth, uint8_t stencil)
