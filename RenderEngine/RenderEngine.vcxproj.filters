@@ -101,6 +101,8 @@
     </Filter>
     <Filter Include="RenderPass\EffectPass">
       <UniqueIdentifier>{5e79d75e-1151-4afe-b388-0997501047f4}</UniqueIdentifier>
+    <Filter Include="RenderPass\WireFramePass">
+      <UniqueIdentifier>{f2f829c8-d1db-42f3-bd42-058d669c1e6c}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -205,6 +207,8 @@
     </ClCompile>
     <ClCompile Include="Snow.cpp">
       <Filter>RenderPass\EffectPass</Filter>
+    <ClCompile Include="WireFramePass.cpp">
+      <Filter>RenderPass\WireFramePass</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -333,6 +337,8 @@
     </ClInclude>
     <ClInclude Include="Snow.h">
       <Filter>RenderPass\EffectPass</Filter>
+    <ClInclude Include="WireFramePass.h">
+      <Filter>RenderPass\WireFramePass</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

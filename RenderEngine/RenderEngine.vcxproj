@@ -179,6 +179,7 @@
     <ClCompile Include="Transform.cpp" />
     <ClCompile Include="UI_DataSystem.cpp" />
     <ClCompile Include="widgets.cpp" />
+    <ClCompile Include="WireFramePass.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AnimationJob.h" />
@@ -223,6 +224,7 @@
     <ClInclude Include="Transform.h" />
     <ClInclude Include="UI_DataSystem.h" />
     <ClInclude Include="widgets.h" />
+    <ClInclude Include="WireFramePass.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
