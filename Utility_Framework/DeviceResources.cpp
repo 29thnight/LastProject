@@ -66,7 +66,7 @@ void DirectX11::DeviceResources::SetDpi(float dpi)
     {
         m_dpi = dpi;
         m_effectiveDpi = dpi;
-        m_d2dContext->SetDpi(m_dpi, m_dpi);
+        //m_d2dContext->SetDpi(m_dpi, m_dpi);
         CreateWindowSizeDependentResources();
     }
 }
@@ -130,7 +130,7 @@ void DirectX11::DeviceResources::HandleDeviceLost()
     }
 
     CreateDeviceResources();
-    m_d2dContext->SetDpi(m_dpi, m_dpi);
+    //m_d2dContext->SetDpi(m_dpi, m_dpi);
     CreateWindowSizeDependentResources();
 
     if (m_deviceNotify != nullptr)
@@ -217,14 +217,14 @@ void DirectX11::DeviceResources::CreateDeviceIndependentResources()
 #endif
 
     // Direct2D 팩터리를 초기화합니다.
-    DirectX11::ThrowIfFailed(
-        D2D1CreateFactory(
-            D2D1_FACTORY_TYPE_SINGLE_THREADED,
-            __uuidof(ID2D1Factory3),
-            &options,
-            &m_d2dFactory
-        )
-    );
+    //DirectX11::ThrowIfFailed(
+    //    D2D1CreateFactory(
+    //        D2D1_FACTORY_TYPE_SINGLE_THREADED,
+    //        __uuidof(ID2D1Factory3),
+    //        &options,
+    //        &m_d2dFactory
+    //    )
+    //);
 
     // DirectWrite 팩터리를 초기화합니다.
     DirectX11::ThrowIfFailed(
@@ -328,16 +328,16 @@ void DirectX11::DeviceResources::CreateDeviceResources()
         m_d3dDevice.As(&dxgiDevice)
     );
 
-    DirectX11::ThrowIfFailed(
-        m_d2dFactory->CreateDevice(dxgiDevice.Get(), &m_d2dDevice)
-    );
-
-    DirectX11::ThrowIfFailed(
-        m_d2dDevice->CreateDeviceContext(
-            D2D1_DEVICE_CONTEXT_OPTIONS_NONE,
-            &m_d2dContext
-        )
-    );
+    //DirectX11::ThrowIfFailed(
+    //    m_d2dFactory->CreateDevice(dxgiDevice.Get(), &m_d2dDevice)
+    //);
+    //
+    //DirectX11::ThrowIfFailed(
+    //    m_d2dDevice->CreateDeviceContext(
+    //        D2D1_DEVICE_CONTEXT_OPTIONS_NONE,
+    //        &m_d2dContext
+    //    )
+    //);
 }
 
 void DirectX11::DeviceResources::CreateWindowSizeDependentResources()
@@ -566,13 +566,13 @@ void DirectX11::DeviceResources::CreateWindowSizeDependentResources()
 			D2D1_FEATURE_LEVEL_DEFAULT
 		);
 
-		m_d2dFactory->CreateDxgiSurfaceRenderTarget(
-			dxgiBackBuffer.Get(),
-            &props,
-			&m_d2dTarget
-		);
-        m_d2dContext->SetDpi(m_effectiveDpi, m_effectiveDpi);
-        m_d2dContext->SetTextAntialiasMode(D2D1_TEXT_ANTIALIAS_MODE_GRAYSCALE);
+		//m_d2dFactory->CreateDxgiSurfaceRenderTarget(
+		//	dxgiBackBuffer.Get(),
+        //    &props,
+		//	&m_d2dTarget
+		//);
+        //m_d2dContext->SetDpi(m_effectiveDpi, m_effectiveDpi);
+        //m_d2dContext->SetTextAntialiasMode(D2D1_TEXT_ANTIALIAS_MODE_GRAYSCALE);
     }
 }
 

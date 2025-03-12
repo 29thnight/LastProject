@@ -12,26 +12,26 @@ namespace DirectX11
 	class D2DRenderer
 	{
 	public:
-		D2DRenderer(const std::shared_ptr<DeviceResources>& deviceResources);
-		~D2DRenderer();
-		void SetEditorComputeShader();
-		void UpdateDrawModel();
-		void BeginDraw();
-		void Render();
-		void EndDraw();
-		void LoadSceneRender(int levelIndex);
-
-		Canvas* GetCurCanvas() { return m_CurrentCanvas; }
-		void SetCurCanvas(Canvas* target) { m_CurrentCanvas = target; }
-
-		void SetCanvasEditorStage();
-		void ComputeCanvasEditorStage();
-		void ImGuiRenderStage();
-
-		void SetEditorMenu(World* pWorld)
-		{
-			_world = pWorld;
-		}
+		//D2DRenderer(const std::shared_ptr<DeviceResources>& deviceResources);
+		//~D2DRenderer();
+		//void SetEditorComputeShader();
+		//void UpdateDrawModel();
+		//void BeginDraw();
+		//void Render();
+		//void EndDraw();
+		//void LoadSceneRender(int levelIndex);
+		//
+		//Canvas* GetCurCanvas() { return m_CurrentCanvas; }
+		//void SetCurCanvas(Canvas* target) { m_CurrentCanvas = target; }
+		//
+		//void SetCanvasEditorStage();
+		//void ComputeCanvasEditorStage();
+		//void ImGuiRenderStage();
+		//
+		//void SetEditorMenu(World* pWorld)
+		//{
+		//	_world = pWorld;
+		//}
 
 	private:
 		Canvas* m_CurrentCanvas{};

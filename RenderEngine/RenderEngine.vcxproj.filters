@@ -99,10 +99,11 @@
     <Filter Include="RenderPass\ForwardPass">
       <UniqueIdentifier>{64b7272b-de19-484c-9d60-13b87909eb48}</UniqueIdentifier>
     </Filter>
-    <Filter Include="RenderPass\EffectPass">
-      <UniqueIdentifier>{5e79d75e-1151-4afe-b388-0997501047f4}</UniqueIdentifier>
     <Filter Include="RenderPass\WireFramePass">
       <UniqueIdentifier>{f2f829c8-d1db-42f3-bd42-058d669c1e6c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="RenderPass\EffectPass">
+      <UniqueIdentifier>{ab70d09c-c5d6-4350-91f4-ee8451bd5e3e}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -205,10 +206,11 @@
     <ClCompile Include="SpritePass.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="Snow.cpp">
-      <Filter>RenderPass\EffectPass</Filter>
     <ClCompile Include="WireFramePass.cpp">
       <Filter>RenderPass\WireFramePass</Filter>
+    </ClCompile>
+    <ClCompile Include="Snow.cpp">
+      <Filter>RenderPass\EffectPass</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -335,10 +337,11 @@
     <ClInclude Include="SpritePass.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="Snow.h">
-      <Filter>RenderPass\EffectPass</Filter>
     <ClInclude Include="WireFramePass.h">
       <Filter>RenderPass\WireFramePass</Filter>
+    </ClInclude>
+    <ClInclude Include="Snow.h">
+      <Filter>RenderPass\EffectPass</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -53,10 +53,10 @@ namespace DirectX11
 		ID3D11BlendState* GetBlendState() const { return m_blendState.Get(); }
 		D3D11_VIEWPORT GetScreenViewport() const { return m_screenViewport; }
 
-		ID2D1Factory3* GetD2DFactory() const { return m_d2dFactory.Get(); }
-		ID2D1Device2* GetD2DDevice() const { return m_d2dDevice.Get(); }
-		ID2D1DeviceContext2* GetD2DDeviceContext() const { return m_d2dContext.Get(); }
-		ID2D1RenderTarget* GetD2DTarget() const { return m_d2dTarget.Get(); }
+		//ID2D1Factory3* GetD2DFactory() const { return m_d2dFactory.Get(); }
+		//ID2D1Device2* GetD2DDevice() const { return m_d2dDevice.Get(); }
+		//ID2D1DeviceContext2* GetD2DDeviceContext() const { return m_d2dContext.Get(); }
+		ID2D1RenderTarget* GetD2DTarget() const { return 0; }//m_d2dTarget.Get(); }
 		IDWriteFactory3* GetDWriteFactory() const { return m_dwriteFactory.Get(); }
 		IWICImagingFactory2* GetWicImagingFactory() const { return m_wicFactory; }
 
@@ -88,10 +88,10 @@ namespace DirectX11
 		ComPtr<ID3D11BlendState> m_blendState;
 		D3D11_VIEWPORT m_screenViewport;
 
-		ComPtr<ID2D1Factory3> m_d2dFactory;
-		ComPtr<ID2D1Device2> m_d2dDevice;
-		ComPtr<ID2D1DeviceContext2> m_d2dContext;
-		ComPtr<ID2D1RenderTarget> m_d2dTarget;
+		//ComPtr<ID2D1Factory3> m_d2dFactory;
+		//ComPtr<ID2D1Device2> m_d2dDevice;
+		//ComPtr<ID2D1DeviceContext2> m_d2dContext;
+		//ComPtr<ID2D1RenderTarget> m_d2dTarget;
 		ComPtr<IDXGISurface2> dxgiBackBuffer;
 
 		ComPtr<IDWriteFactory3> m_dwriteFactory;

@@ -38,6 +38,11 @@ void Camera::HandleMovement(float deltaTime)
 		y += 1.f;
 	}
 
+	if (InputManagement->IsKeyPressed(VK_ESCAPE))
+	{
+		PostQuitMessage(0);
+	}
+
 	if (InputManagement->IsMouseButtonDown(MouseKey::MIDDLE))
 	{
 		m_pitch += InputManagement->GetMouseDelta().y * 0.01f;

@@ -47,7 +47,7 @@ namespace DirectX11
 		World* m_world;
 		std::shared_ptr<SceneRenderer> m_sceneRenderer;
 		std::unique_ptr<ImGuiRenderer> m_imguiRenderer;
-		std::unique_ptr<D2DRenderer>   m_D2DRenderer;
+		//std::unique_ptr<D2DRenderer>   m_D2DRenderer;
 
 		std::unique_ptr<PerspacetiveCamera> m_camera;
 		//std::unique_ptr<Scene> m_scene;

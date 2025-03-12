@@ -17,7 +17,7 @@ DirectX11::Dx11Main::Dx11Main(const std::shared_ptr<DeviceResources>& deviceReso
 
 	//아래 렌더러	초기화 코드를 여기에 추가합니다.
 	m_sceneRenderer = std::make_shared<SceneRenderer>(m_deviceResources);
-	m_D2DRenderer = std::make_unique<D2DRenderer>(m_deviceResources);
+	//m_D2DRenderer = std::make_unique<D2DRenderer>(m_deviceResources);
 	m_imguiRenderer = std::make_unique<ImGuiRenderer>(m_deviceResources);
 
     AssetsSystem2->LoadShaders();
@@ -26,7 +26,7 @@ DirectX11::Dx11Main::Dx11Main(const std::shared_ptr<DeviceResources>& deviceReso
 	Sound->initialize((int)ChannelType::MaxChannel);
 	FontSystem->Initialize();
 
-	m_D2DRenderer->SetEditorComputeShader();
+	//m_D2DRenderer->SetEditorComputeShader();
 	m_sceneRenderer->Initialize();
 
 	m_world = new World();
@@ -146,7 +146,7 @@ void DirectX11::Dx11Main::Update()
 		//렌더러의 업데이트 코드를 여기에 추가합니다.
 		m_sceneRenderer->Update(m_timeSystem.GetElapsedSeconds());
 		m_world->Update((float)m_timeSystem.GetElapsedSeconds());
-		m_D2DRenderer->SetCurCanvas(m_world->GetCurCanvas());
+		//m_D2DRenderer->SetCurCanvas(m_world->GetCurCanvas());
 		GameManagement->PlayUpdate((float)m_timeSystem.GetElapsedSeconds() * GameManagement->GetTimeScale()); //게임 시스템 업데이트
 		m_world->LateUpdate((float)m_timeSystem.GetElapsedSeconds() * GameManagement->GetTimeScale());
 	
@@ -188,19 +188,19 @@ void DirectX11::Dx11Main::Update()
 		{
 			float mouseX = InputManagement->GetMouseDelta().x;
 			float mouseY = InputManagement->GetMouseDelta().y;
-			auto canvas = m_D2DRenderer->GetCurCanvas();
-			if (canvas != nullptr)
-			{
-				auto& objlist = canvas->getObjList();
-				for (auto& obj : objlist)
-				{
-					if (obj->m_IsSelected && !obj->m_IsPosLock)
-					{
-						InputManagement->HideCursor();
-						obj->Pos += { mouseX, mouseY };
-					}
-				}
-			}
+			//auto canvas = m_D2DRenderer->GetCurCanvas();
+			//if (canvas != nullptr)
+			//{
+			//	auto& objlist = canvas->getObjList();
+			//	for (auto& obj : objlist)
+			//	{
+			//		if (obj->m_IsSelected && !obj->m_IsPosLock)
+			//		{
+			//			InputManagement->HideCursor();
+			//			obj->Pos += { mouseX, mouseY };
+			//		}
+			//	}
+			//}
 		}
 	}
 
@@ -210,19 +210,19 @@ void DirectX11::Dx11Main::Update()
 		{
 			float mouseX = InputManagement->GetMouseDelta().x;
 			float mouseY = InputManagement->GetMouseDelta().y;
-			auto canvas = m_D2DRenderer->GetCurCanvas();
-			if (canvas != nullptr)
-			{
-				auto& textlist = canvas->getTextList();
-				for (auto& text : textlist)
-				{
-					if (text->m_IsSelected)
-					{
-						InputManagement->HideCursor();
-						text->Pos += { mouseX, mouseY };
-					}
-				}
-			}
+			//auto canvas = m_D2DRenderer->GetCurCanvas();
+			//if (canvas != nullptr)
+			//{
+			//	auto& textlist = canvas->getTextList();
+			//	for (auto& text : textlist)
+			//	{
+			//		if (text->m_IsSelected)
+			//		{
+			//			InputManagement->HideCursor();
+			//			text->Pos += { mouseX, mouseY };
+			//		}
+			//	}
+			//}
 		}
 	}
 
@@ -230,38 +230,38 @@ void DirectX11::Dx11Main::Update()
 	{
 		if (m_isSelectUI)
 		{
-			auto canvas = m_D2DRenderer->GetCurCanvas();
-			if (canvas != nullptr)
-			{
-				auto& objlist = canvas->getObjList();
-				for (auto& obj : objlist)
-				{
-					if (obj->m_IsSelected)
-					{
-						InputManagement->ShowCursor();
-						obj->m_IsSelected = false;
-					}
-				}
-			}
-			m_isSelectUI = false;
+			//auto canvas = m_D2DRenderer->GetCurCanvas();
+			//if (canvas != nullptr)
+			//{
+			//	auto& objlist = canvas->getObjList();
+			//	for (auto& obj : objlist)
+			//	{
+			//		if (obj->m_IsSelected)
+			//		{
+			//			InputManagement->ShowCursor();
+			//			obj->m_IsSelected = false;
+			//		}
+			//	}
+			//}
+			//m_isSelectUI = false;
 		}
 
 		if (m_isSelectText)
 		{
-			auto canvas = m_D2DRenderer->GetCurCanvas();
-			if (canvas != nullptr)
-			{
-				auto& textlist = canvas->getTextList();
-				for (auto& text : textlist)
-				{
-					if (text->m_IsSelected)
-					{
-						InputManagement->ShowCursor();
-						text->m_IsSelected = false;
-					}
-				}
-			}
-			m_isSelectText = false;
+			//auto canvas = m_D2DRenderer->GetCurCanvas();
+			//if (canvas != nullptr)
+			//{
+			//	auto& textlist = canvas->getTextList();
+			//	for (auto& text : textlist)
+			//	{
+			//		if (text->m_IsSelected)
+			//		{
+			//			InputManagement->ShowCursor();
+			//			text->m_IsSelected = false;
+			//		}
+			//	}
+			//}
+			//m_isSelectText = false;
 		}
 	}
 
@@ -270,39 +270,39 @@ void DirectX11::Dx11Main::Update()
 		float mouseX = InputManagement->GetMousePos().x;
 		float mouseY = InputManagement->GetMousePos().y;
 
-		auto canvas = m_D2DRenderer->GetCurCanvas();
-		if (canvas!=nullptr)
-		{
-			auto& objlist = canvas->getObjList();
-			for (auto& obj : objlist)
-			{
-				if (!m_isSelectUI && !m_isSelectText && obj->m_Visible && obj->m_IsDeSerialize)
-				{
-					AABB aabb = { obj->Pos.x, obj->Pos.y, obj->m_Size.x, obj->m_Size.y };
-					if (aabb.Contains(mouseX, mouseY))
-					{
-						std::cout << "click : " << obj->m_Name << std::endl;
-						obj->m_IsSelected = true;
-						m_isSelectUI = true;
-					}
-				}
-			}
-
-			auto& textlist = canvas->getTextList();
-			for (auto& text : textlist)
-			{
-				if (!m_isSelectUI && !m_isSelectText && text->m_Visible && text->m_IsDeSerialize)
-				{
-					AABB aabb = { text->Pos.x, text->Pos.y, text->m_AABBSize.x, text->m_AABBSize.y };
-					if (aabb.Contains(mouseX, mouseY))
-					{
-						std::cout << "click : " << text->m_Name << std::endl;
-						text->m_IsSelected = true;
-						m_isSelectText = true;
-					}
-				}
-			}
-		}
+		//auto canvas = m_D2DRenderer->GetCurCanvas();
+		//if (canvas!=nullptr)
+		//{
+		//	auto& objlist = canvas->getObjList();
+		//	for (auto& obj : objlist)
+		//	{
+		//		if (!m_isSelectUI && !m_isSelectText && obj->m_Visible && obj->m_IsDeSerialize)
+		//		{
+		//			AABB aabb = { obj->Pos.x, obj->Pos.y, obj->m_Size.x, obj->m_Size.y };
+		//			if (aabb.Contains(mouseX, mouseY))
+		//			{
+		//				std::cout << "click : " << obj->m_Name << std::endl;
+		//				obj->m_IsSelected = true;
+		//				m_isSelectUI = true;
+		//			}
+		//		}
+		//	}
+		//
+		//	auto& textlist = canvas->getTextList();
+		//	for (auto& text : textlist)
+		//	{
+		//		if (!m_isSelectUI && !m_isSelectText && text->m_Visible && text->m_IsDeSerialize)
+		//		{
+		//			AABB aabb = { text->Pos.x, text->Pos.y, text->m_AABBSize.x, text->m_AABBSize.y };
+		//			if (aabb.Contains(mouseX, mouseY))
+		//			{
+		//				std::cout << "click : " << text->m_Name << std::endl;
+		//				text->m_IsSelected = true;
+		//				m_isSelectText = true;
+		//			}
+		//		}
+		//	}
+		//}
 	}
 #endif // !Editor
 	m_world->Destroy();
