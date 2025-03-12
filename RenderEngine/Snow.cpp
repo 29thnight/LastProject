@@ -93,36 +93,6 @@ void SnowPass::Initialize(Texture* renderTarget)
 {
 	m_renderTarget = renderTarget;
 
-	// 렌더 타겟 텍스처에서 크기 정보 가져오기
-	D3D11_TEXTURE2D_DESC rtDesc;
-	m_renderTarget->m_pTexture->GetDesc(&rtDesc);
-
-	// 깊이 스텐실 텍스처 생성
-	D3D11_TEXTURE2D_DESC depthDesc;
-	ZeroMemory(&depthDesc, sizeof(depthDesc));
-	depthDesc.Width = rtDesc.Width;
-	depthDesc.Height = rtDesc.Height;
-	depthDesc.MipLevels = 1;
-	depthDesc.ArraySize = 1;
-	depthDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
-	depthDesc.SampleDesc = rtDesc.SampleDesc; // 렌더 타겟과 동일한 멀티샘플링 설정
-	depthDesc.Usage = D3D11_USAGE_DEFAULT;
-	depthDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
-
-	ID3D11Texture2D* depthStencilTexture = nullptr;
-	HRESULT hr = DeviceState::g_pDevice->CreateTexture2D(&depthDesc, nullptr, &depthStencilTexture);
-	if (SUCCEEDED(hr))
-	{
-		// 깊이 스텐실 뷰 생성
-		D3D11_DEPTH_STENCIL_VIEW_DESC dsvDesc;
-		ZeroMemory(&dsvDesc, sizeof(dsvDesc));
-		dsvDesc.Format = depthDesc.Format;
-		dsvDesc.ViewDimension = rtDesc.SampleDesc.Count > 1 ? D3D11_DSV_DIMENSION_TEXTURE2DMS : D3D11_DSV_DIMENSION_TEXTURE2D;
-		dsvDesc.Texture2D.MipSlice = 0;
-
-		hr = DeviceState::g_pDevice->CreateDepthStencilView(depthStencilTexture, &dsvDesc, &m_depthStencilView);
-		depthStencilTexture->Release(); // 텍스처에 대한 참조 해제
-	}
 	LoadTexture("pika.png");
 }
 

@@ -198,11 +198,12 @@ void SceneRenderer::Initialize(Scene* _pScene)
 		desc.m_viewHeight = 12;
 		desc.m_nearPlane = 0.1f;
 		desc.m_farPlane = 1000.f;
-		desc.m_textureWidth = 8192.f;
-		desc.m_textureHeight = 8192.f;
+		desc.m_textureWidth = DeviceState::g_ClientRect.width;
+		desc.m_textureHeight = DeviceState::g_ClientRect.height;
 
 		m_currentScene->m_LightController.Initialize();
 		m_currentScene->m_LightController.SetLightWithShadows(0, desc);
+
 
 		model = Model::LoadModel("Prop_Block.fbx");
 		//model = Model::LoadModel("Sphere.fbx");
@@ -247,27 +248,27 @@ void SceneRenderer::Render()
 
 	//[1] ShadowMapPass
 	{
-		//Texture& shadowMapTexture = (*m_currentScene->m_LightController.GetShadowMapTexture());
-		//SetRenderTargets(shadowMapTexture);
-		//m_currentScene->ShadowStage();
-		//Clear(DirectX::Colors::Transparent, 1.0f, 0);
-		//UnbindRenderTargets();
+		Texture& shadowMapTexture = (*m_currentScene->m_LightController.GetShadowMapTexture());
+		SetRenderTargets(shadowMapTexture);
+		m_currentScene->ShadowStage();
+		Clear(DirectX::Colors::Transparent, 1.0f, 0);
+		UnbindRenderTargets();
 	}
 
 	//[2] GBufferPass
 	{
-		//m_pGBufferPass->Execute(*m_currentScene);
+		m_pGBufferPass->Execute(*m_currentScene);
 	}
 
 	//[3] SSAOPass
 	{
-        //m_pSSAOPass->Execute(*m_currentScene);
+        m_pSSAOPass->Execute(*m_currentScene);
 	}
 
     //[4] DeferredPass
     {
-		//m_pDeferredPass->UseAmbientOcclusion(m_ambientOcclusionTexture.get());
-        //m_pDeferredPass->Execute(*m_currentScene);
+		m_pDeferredPass->UseAmbientOcclusion(m_ambientOcclusionTexture.get());
+        m_pDeferredPass->Execute(*m_currentScene);
     }
 
 	//[*] WireFramePass
@@ -277,12 +278,16 @@ void SceneRenderer::Render()
 
 	//[5] skyBoxPass
 	{
-		//m_pSkyBoxPass->Execute(*m_currentScene);
+		m_pSkyBoxPass->Execute(*m_currentScene);
+	}
+
+	{
+		m_pSnowPass->Execute(*m_currentScene);
 	}
 
     //[6] ToneMapPass
     {
-        //m_pToneMapPass->Execute(*m_currentScene);
+        m_pToneMapPass->Execute(*m_currentScene);
     }
 
 	
@@ -297,9 +302,7 @@ void SceneRenderer::Render()
 		m_pBlitPass->Execute(*m_currentScene);
 	}
 
-	{
-		m_pSnowPass->Execute(*m_currentScene);
-	}
+	
 	
 }
 
