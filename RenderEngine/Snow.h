@@ -53,7 +53,8 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11Buffer> m_vertexBuffer;  // 단일 점 버퍼
 	Microsoft::WRL::ComPtr<ID3D11Buffer> m_constantBuffer; // 카메라, 변환 행렬 등
 	Microsoft::WRL::ComPtr<ID3D11Buffer> m_snowParamsBuffer; // 눈 파라미터
-	
+	ComPtr<ID3D11DepthStencilView> m_depthStencilView;
+
 	std::shared_ptr<Texture> m_texture;
 	SnowParameters mParams;
 	Texture* m_renderTarget;
