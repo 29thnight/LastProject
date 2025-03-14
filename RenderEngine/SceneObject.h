@@ -1,8 +1,9 @@
 #pragma once
 #include "Core.Minimal.h"
-#include "Transform.h"
+#include "../ScriptBinder/Transform.h"
 #include "ObjectRenderers.h"
 
+class Bone;
 class SceneObject
 {
 public:
@@ -11,6 +12,8 @@ public:
 	SceneObject(SceneObject&) = delete;
 	SceneObject(SceneObject&&) noexcept = default;
 	SceneObject& operator=(SceneObject&) = delete;
+
+	void ShowBoneHierarchy(Bone* bone);
 
 	std::string m_name;
 	Transform m_transform;

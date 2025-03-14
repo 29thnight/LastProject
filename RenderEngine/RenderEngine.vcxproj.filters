@@ -102,9 +102,6 @@
     <ClCompile Include="SceneRenderer.cpp">
       <Filter>Renderer</Filter>
     </ClCompile>
-    <ClCompile Include="Transform.cpp">
-      <Filter>Objects</Filter>
-    </ClCompile>
     <ClCompile Include="AnimationLoader.cpp">
       <Filter>Asset\Loader</Filter>
     </ClCompile>
@@ -197,6 +194,9 @@
     </ClCompile>
     <ClCompile Include="Snow.cpp">
       <Filter>RenderPass\EffectPass</Filter>
+       </ClCompile>
+    <ClCompile Include="SpritePass.cpp">
+      <Filter>RenderPass\SpritePass</Filter>
     </ClCompile>
     <ClCompile Include="BlitPass.cpp">
       <Filter>RenderPass\BlitPass</Filter>
@@ -216,9 +216,6 @@
       <Filter>Scene</Filter>
     </ClInclude>
     <ClInclude Include="Camera.h">
-      <Filter>Objects</Filter>
-    </ClInclude>
-    <ClInclude Include="Transform.h">
       <Filter>Objects</Filter>
     </ClInclude>
     <ClInclude Include="AnimationLoader.h">
@@ -328,6 +325,9 @@
     </ClInclude>
     <ClInclude Include="Snow.h">
       <Filter>RenderPass\EffectPass</Filter>
+       </ClCompile>
+    <ClInclude Include="SpritePass.h">
+      <Filter>RenderPass\SpritePass</Filter>
     </ClInclude>
     <ClInclude Include="BlitPass.h">
       <Filter>RenderPass\BlitPass</Filter>

@@ -26,6 +26,7 @@ public:
 	void Render();
 
 private:
+	void PrepareRender();
 	void Clear(const float color[4], float depth, uint8_t stencil);
 	void SetRenderTargets(Texture& texture, bool enableDepthTest = true);
 	void UnbindRenderTargets();
@@ -62,6 +63,9 @@ private:
 	Sampler* m_linearSampler{};
 	Sampler* m_pointSampler{};
 
+	//render queue
+
+	std::queue<SceneObject*> m_forwardQueue;
 
 	Model* model{};
 

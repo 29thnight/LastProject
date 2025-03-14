@@ -182,9 +182,6 @@
     <ClInclude Include="GridEditor.h">
       <Filter>Utill\GridEditor</Filter>
     </ClInclude>
-    <ClInclude Include="MonoBehavior.h">
-      <Filter>Utill</Filter>
-    </ClInclude>
     <ClInclude Include="CharacterController.h">
       <Filter>Component\PhysicsComponent</Filter>
     </ClInclude>
@@ -228,6 +225,8 @@
       <Filter>Shaders</Filter>
     </None>
     <None Include="x64\Assets\Shaders\Snow.hlsli">
+      </None>
+    <None Include="x64\Assets\Shaders\Lighting.hlsli">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>
@@ -376,6 +375,8 @@
       <Filter>Shaders</Filter>
     </FxCompile>
     <FxCompile Include="x64\Assets\Shaders\SnowVS.vs.hlsl">
+        </FxCompile>
+    <FxCompile Include="x64\Assets\Shaders\ToneMapACES.ps.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
   </ItemGroup>

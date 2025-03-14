@@ -198,8 +198,8 @@ void SceneRenderer::Initialize(Scene* _pScene)
 		desc.m_viewHeight = 12;
 		desc.m_nearPlane = 0.1f;
 		desc.m_farPlane = 1000.f;
-		desc.m_textureWidth = DeviceState::g_ClientRect.width;
-		desc.m_textureHeight = DeviceState::g_ClientRect.height;
+		desc.m_textureWidth = 8192;//DeviceState::g_ClientRect.width; 
+		desc.m_textureHeight = 8192;//DeviceState::g_ClientRect.height;
 
 		m_currentScene->m_LightController.Initialize();
 		m_currentScene->m_LightController.SetLightWithShadows(0, desc);
@@ -208,12 +208,6 @@ void SceneRenderer::Initialize(Scene* _pScene)
 		model = Model::LoadModel("Prop_Block.fbx");
 		//model = Model::LoadModel("Sphere.fbx");
 		Model::LoadModelToScene(model, *m_currentScene);
-		ImGui::ContextRegister("TestModelMaterial", [&]()
-		{
-			ImGui::SliderFloat4("BaseColor", &model->m_SceneObject->m_meshRenderer.m_Material->m_materialInfo.m_baseColor.x, 0.0f, 1.0f);
-			ImGui::SliderFloat("Metallic", &model->m_SceneObject->m_meshRenderer.m_Material->m_materialInfo.m_metallic, 0.0f, 1.0f);
-			ImGui::SliderFloat("Roughness", &model->m_SceneObject->m_meshRenderer.m_Material->m_materialInfo.m_roughness, 0.1f, 1.0f);
-		});
 	}
 	else
 	{
@@ -224,6 +218,21 @@ void SceneRenderer::Initialize(Scene* _pScene)
 
 	DeviceState::g_pDeviceContext->PSSetSamplers(0, 1, &m_linearSampler->m_SamplerState);
 	DeviceState::g_pDeviceContext->PSSetSamplers(1, 1, &m_pointSampler->m_SamplerState);
+
+	ImGui::ContextRegister("Model Transform", [&]() 
+	{
+		Mathf::Vector3 position = model->m_SceneObject->m_transform.position;
+		Mathf::Vector3 rotation = model->m_SceneObject->m_transform.rotation;
+		Mathf::Vector3 scale = model->m_SceneObject->m_transform.scale;
+
+		ImGui::SliderFloat3("Position", &position.x, -10, 10);
+		ImGui::SliderFloat3("Rotation", &rotation.x, -3.14f, 3.14f);
+		ImGui::SliderFloat3("Scale", &scale.x, 0.1f, 10);
+		
+		model->m_SceneObject->m_transform.SetPosition(position);
+		model->m_SceneObject->m_transform.SetRotation(rotation);
+		model->m_SceneObject->m_transform.SetScale(scale);
+	});
 
 	m_pSkyBoxPass->GenerateCubeMap(*m_currentScene);
 	Texture* envMap = m_pSkyBoxPass->GenerateEnvironmentMap(*m_currentScene);
@@ -237,19 +246,14 @@ void SceneRenderer::Initialize(Scene* _pScene)
 void SceneRenderer::Update(float deltaTime)
 {
 	m_currentScene->Update(deltaTime);
-	m_pSnowPass->Update(deltaTime);
+	PrepareRender();
 }
 
 void SceneRenderer::Render()
 {
-	model->m_SceneObject->m_transform
-		//.SetScale({ 0.1f, 0.1f, 0.1f })
-		.SetPosition({ 2.f, 0.5f, -2.f });
 
 	//[1] ShadowMapPass
 	{
-		Texture& shadowMapTexture = (*m_currentScene->m_LightController.GetShadowMapTexture());
-		SetRenderTargets(shadowMapTexture);
 		m_currentScene->ShadowStage();
 		Clear(DirectX::Colors::Transparent, 1.0f, 0);
 		UnbindRenderTargets();
@@ -272,8 +276,9 @@ void SceneRenderer::Render()
     }
 
 	//[*] WireFramePass
-	if(useWireFrame){
-		//m_pWireFramePass->Execute(*m_currentScene);
+	if(useWireFrame)
+	{
+		m_pWireFramePass->Execute(*m_currentScene);
 	}
 
 	//[5] skyBoxPass
@@ -310,6 +315,25 @@ void SceneRenderer::Render()
 
 	
 	
+}
+
+void SceneRenderer::PrepareRender()
+{
+	for (auto& obj : m_currentScene->m_SceneObjects)
+	{
+		if (!obj->m_meshRenderer.m_IsEnabled) continue;
+
+		Material* mat = obj->m_meshRenderer.m_Material;
+
+		switch (mat->m_renderingMode)
+		{
+		case Material::RenderingMode::Opaque:
+			m_pGBufferPass->PushDeferredQueue(obj.get());
+			break;
+		case Material::RenderingMode::Transparent:
+			break;
+		}
+	}
 }
 
 void SceneRenderer::Clear(const float color[4], float depth, uint8_t stencil)
