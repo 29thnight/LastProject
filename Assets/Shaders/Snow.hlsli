@@ -34,7 +34,6 @@ struct GS_OUTPUT
     float4 Position : SV_POSITION;
     float2 TexCoord : TEXCOORD0;
     float4 Color : COLOR0;
-    float Size : TEXCOORD1;
 };
 
 // 난수 생성 함수

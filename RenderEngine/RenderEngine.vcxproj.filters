@@ -325,7 +325,7 @@
     </ClInclude>
     <ClInclude Include="Snow.h">
       <Filter>RenderPass\EffectPass</Filter>
-       </ClCompile>
+	</ClInclude>
     <ClInclude Include="SpritePass.h">
       <Filter>RenderPass\SpritePass</Filter>
     </ClInclude>

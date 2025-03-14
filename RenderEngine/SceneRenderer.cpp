@@ -198,15 +198,15 @@ void SceneRenderer::Initialize(Scene* _pScene)
 		desc.m_viewHeight = 12;
 		desc.m_nearPlane = 0.1f;
 		desc.m_farPlane = 1000.f;
-		desc.m_textureWidth = 8192;//DeviceState::g_ClientRect.width; 
-		desc.m_textureHeight = 8192;//DeviceState::g_ClientRect.height;
+		desc.m_textureWidth = 8192; //DeviceState::g_ClientRect.width; 
+		desc.m_textureHeight = 8192; //DeviceState::g_ClientRect.height;
 
 		m_currentScene->m_LightController.Initialize();
 		m_currentScene->m_LightController.SetLightWithShadows(0, desc);
 
 
-		model = Model::LoadModel("Prop_Block.fbx");
-		//model = Model::LoadModel("Sphere.fbx");
+		//model = Model::LoadModel("Prop_Block.fbx");
+		model = Model::LoadModel("sphere.fbx");
 		Model::LoadModelToScene(model, *m_currentScene);
 	}
 	else
@@ -246,6 +246,7 @@ void SceneRenderer::Initialize(Scene* _pScene)
 void SceneRenderer::Update(float deltaTime)
 {
 	m_currentScene->Update(deltaTime);
+	m_pSnowPass->Update(deltaTime);
 	PrepareRender();
 }
 

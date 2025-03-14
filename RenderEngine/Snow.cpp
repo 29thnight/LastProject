@@ -84,9 +84,6 @@ SnowPass::SnowPass()
 
 	DeviceState::g_pDevice->CreateDepthStencilState(&depthDesc, &m_pso->m_depthStencilState);
 
-	//DirectX11::ThrowIfFailed(
-	//	DirectX11::IASetVertexBuffers(0,1, m_pso->);
-	//);
 }
 
 void SnowPass::Initialize(Texture* renderTarget)
