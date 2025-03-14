@@ -90,6 +90,8 @@ FirePass::FirePass()
 	mParam.colorShift = 0.5f;
 	mParam.noiseScale = 4.0f;
 	mParam.verticalFactor = 2.0f;
+	mParam.flamePower = 1.2f;
+	mParam.detailScale = 3.0f;
 }
 
 void FirePass::Initialize()
@@ -169,16 +171,22 @@ void FirePass::PushFireObject(SceneObject* object)
 
 void FirePass::Execute(Scene& scene)
 {
+	if (!m_baseFireTexture || !m_noiseTexture) {
+		return;
+	}
+
 	auto& deviceContext = DeviceState::g_pDeviceContext;
 
 	deviceContext->CSSetShader(m_computeShader.Get(), nullptr, 0);
 
 	deviceContext->CSSetConstantBuffers(0, 1, m_fireParamsBuffer.GetAddressOf());
 
-	if (m_noiseTexture)
-	{
-		DirectX11::PSSetShaderResources(0, 1, &m_noiseTexture->m_pSRV);
-	}
+	ID3D11ShaderResourceView* srvs[] = {
+	  m_baseFireTexture->m_pSRV,
+	  m_noiseTexture->m_pSRV
+	};
+
+	deviceContext->CSSetShaderResources(0, 2, srvs);
 
 	deviceContext->CSSetUnorderedAccessViews(0, 1, &m_resultTexture->m_pUAV, nullptr);
 

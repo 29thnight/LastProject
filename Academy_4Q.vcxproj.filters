@@ -381,5 +381,11 @@
     <FxCompile Include="x64\Assets\Shaders\SnowVS.vs.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
+    <FxCompile Include="x64\Assets\Shaders\FireCompute.cs.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="x64\Assets\Shaders\Fire.ps.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
   </ItemGroup>
 </Project>

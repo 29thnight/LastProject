@@ -31,9 +31,9 @@ public:
 	void SetRenderTarget(Texture* renderTargetView);
 
 	void PushFireObject(SceneObject* object);
-private:
 
 	void Initialize();
+private:
 
 	ComPtr<ID3D11ComputeShader> m_computeShader;
 	ComPtr<ID3D11Buffer> m_fireParamsBuffer;

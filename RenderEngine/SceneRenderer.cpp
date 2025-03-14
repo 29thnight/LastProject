@@ -153,11 +153,16 @@ SceneRenderer::SceneRenderer(const std::shared_ptr<DirectX11::DeviceResources>& 
 	snowParams.snowOpacity = 1.0f;  // 투명도
 
 	m_pSnowPass->Initialize(m_colorTexture.get());
-	m_pFirePass->SetRenderTarget(m_colorTexture.get());
+	
 	m_pSnowPass->SetParameters(snowParams);
 	//WireFramePass
 	m_pWireFramePass = std::make_unique<WireFramePass>();
 	m_pWireFramePass->SetRenderTarget(m_colorTexture.get());
+
+	m_pFirePass = std::make_unique<FirePass>();
+	m_pFirePass->Initialize();
+	m_pFirePass->SetRenderTarget(m_colorTexture.get());
+	m_pFirePass->LoadTexture("base.png", "noise.png");
 
 	/*FireParameters fireParam;
 	fireParam.speed = 1.0f;
@@ -295,7 +300,7 @@ void SceneRenderer::Render()
 	//[5-1] EffectPass
 	{
 		//m_pSnowPass->Execute(*m_currentScene);
-
+		m_pFirePass->Execute(*m_currentScene);
 
 
 
@@ -334,6 +339,7 @@ void SceneRenderer::PrepareRender()
 		switch (mat->m_renderingMode)
 		{
 		case Material::RenderingMode::Opaque:
+			m_pFirePass->PushFireObject(obj.get());
 			m_pGBufferPass->PushDeferredQueue(obj.get());
 			break;
 		case Material::RenderingMode::Transparent:
