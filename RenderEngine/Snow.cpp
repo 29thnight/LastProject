@@ -101,7 +101,7 @@ void SnowPass::LoadTexture(const std::string_view& filePath)
 void SnowPass::Update(float delta)
 {	
 	m_delta += delta;
-	// time 값이 너무 커지는 것 방지
+
 	if (m_delta > 10000.0f) {
 		m_delta = 0.0f;
 	}

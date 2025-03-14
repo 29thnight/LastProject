@@ -154,6 +154,7 @@
     <ClCompile Include="DeferredPass.cpp" />
     <ClCompile Include="DeviceState.cpp" />
     <ClCompile Include="drawing.cpp" />
+    <ClCompile Include="Fire.cpp" />
     <ClCompile Include="FontManager.cpp" />
     <ClCompile Include="GBufferPass.cpp" />
     <ClCompile Include="ImGuiRenderer.cpp" />
@@ -190,6 +191,7 @@
     <ClInclude Include="DeferredPass.h" />
     <ClInclude Include="DeviceState.h" />
     <ClInclude Include="drawing.h" />
+    <ClInclude Include="Fire.h" />
     <ClInclude Include="FontManager.h" />
     <ClInclude Include="ForwardPass.h" />
     <ClInclude Include="GBufferPass.h" />

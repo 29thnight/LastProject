@@ -14,6 +14,7 @@
 
 #include "Light.h"
 #include "Snow.h"
+#include "Fire.h"
 
 class Scene;
 class SceneRenderer
@@ -43,10 +44,13 @@ private:
     std::unique_ptr<ToneMapPass> m_pToneMapPass{};
 	std::unique_ptr<SpritePass> m_pSpritePass{};
 	std::unique_ptr<BlitPass> m_pBlitPass{};
-	std::unique_ptr<SnowPass> m_pSnowPass{};
 	std::unique_ptr<WireFramePass> m_pWireFramePass{};
 
-	//buffers
+	// effect
+	std::unique_ptr<SnowPass> m_pSnowPass{};
+	std::unique_ptr<FirePass> m_pFirePass{};
+
+	//buffers        
 	ComPtr<ID3D11Buffer> m_ModelBuffer;
 	ComPtr<ID3D11Buffer> m_ViewBuffer;
 	ComPtr<ID3D11Buffer> m_ProjBuffer;

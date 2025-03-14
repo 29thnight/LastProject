@@ -194,7 +194,7 @@
     </ClCompile>
     <ClCompile Include="Snow.cpp">
       <Filter>RenderPass\EffectPass</Filter>
-       </ClCompile>
+    </ClCompile>
     <ClCompile Include="SpritePass.cpp">
       <Filter>RenderPass\SpritePass</Filter>
     </ClCompile>
@@ -203,6 +203,9 @@
     </ClCompile>
     <ClCompile Include="SpritePass.cpp">
       <Filter>RenderPass\SpritePass</Filter>
+    </ClCompile>
+    <ClCompile Include="Fire.cpp">
+      <Filter>RenderPass\EffectPass</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -325,7 +328,7 @@
     </ClInclude>
     <ClInclude Include="Snow.h">
       <Filter>RenderPass\EffectPass</Filter>
-	</ClInclude>
+    </ClInclude>
     <ClInclude Include="SpritePass.h">
       <Filter>RenderPass\SpritePass</Filter>
     </ClInclude>
@@ -334,6 +337,9 @@
     </ClInclude>
     <ClInclude Include="SpritePass.h">
       <Filter>RenderPass\SpritePass</Filter>
+    </ClInclude>
+    <ClInclude Include="Fire.h">
+      <Filter>RenderPass\EffectPass</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

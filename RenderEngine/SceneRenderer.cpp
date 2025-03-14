@@ -153,11 +153,17 @@ SceneRenderer::SceneRenderer(const std::shared_ptr<DirectX11::DeviceResources>& 
 	snowParams.snowOpacity = 1.0f;  // 투명도
 
 	m_pSnowPass->Initialize(m_colorTexture.get());
-
+	m_pFirePass->SetRenderTarget(m_colorTexture.get());
 	m_pSnowPass->SetParameters(snowParams);
 	//WireFramePass
 	m_pWireFramePass = std::make_unique<WireFramePass>();
 	m_pWireFramePass->SetRenderTarget(m_colorTexture.get());
+
+	/*FireParameters fireParam;
+	fireParam.speed = 1.0f;
+	fireParam.intensity = 1.0f;
+	fireParam.colorShift = 0.5f;*/
+	//m_pFirePass->SetParameters(fireParam);
 }
 
 void SceneRenderer::Initialize(Scene* _pScene)
@@ -204,9 +210,7 @@ void SceneRenderer::Initialize(Scene* _pScene)
 		m_currentScene->m_LightController.Initialize();
 		m_currentScene->m_LightController.SetLightWithShadows(0, desc);
 
-
-		//model = Model::LoadModel("Prop_Block.fbx");
-		model = Model::LoadModel("sphere.fbx");
+		model = Model::LoadModel("Prop_Block.fbx");
 		Model::LoadModelToScene(model, *m_currentScene);
 	}
 	else
@@ -247,6 +251,7 @@ void SceneRenderer::Update(float deltaTime)
 {
 	m_currentScene->Update(deltaTime);
 	m_pSnowPass->Update(deltaTime);
+	m_pFirePass->Update(deltaTime);
 	PrepareRender();
 }
 
@@ -289,7 +294,7 @@ void SceneRenderer::Render()
 
 	//[5-1] EffectPass
 	{
-		m_pSnowPass->Execute(*m_currentScene);
+		//m_pSnowPass->Execute(*m_currentScene);
 
 
 
