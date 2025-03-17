@@ -1,13 +1,10 @@
 #pragma once
-#include "IRenderPass.h"
 #include "Texture.h"
 #include "SceneObject.h"
+#include "IEffect.h"
 
-struct FireParameters
+struct FireParameters : public EffectParameters
 {
-	float time;
-	float intensity;
-	float speed;
 	float colorShift;
 	float noiseScale;
 	float verticalFactor;
@@ -15,12 +12,12 @@ struct FireParameters
 	float detailScale;
 };
 
-class FirePass final : public IRenderPass
+class FirePass : public IEffect
 {
 public:
 	FirePass();
 
-	void SetParameters(const FireParameters& param) { mParam = param; }
+	//void SetParameters(const FireParameters& param) { mParam = param; }
 
 	void LoadTexture(const std::string_view& basePath, const std::string_view& noisePath);
 
@@ -46,7 +43,7 @@ private:
 
 	// unordered access view -> 셰이더 프로그램 안에서 자원을 읽음과 동시에 쓰기도 가능 출력이 정해지지 않아서 셰이더 프로그램안에서 임의의 위치에서 scatter연산이 가능함
 	//std::shared_ptr<Texture> m_texture;			// 기본 불 텍스처
-	FireParameters mParam;
+	//FireParameters mParam;
 	Texture* m_renderTarget = nullptr;
 	float m_delta;
 	std::vector<SceneObject*> m_fireObjects;

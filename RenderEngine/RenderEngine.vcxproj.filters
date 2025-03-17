@@ -207,6 +207,9 @@
     <ClCompile Include="Fire.cpp">
       <Filter>RenderPass\EffectPass</Filter>
     </ClCompile>
+    <ClCompile Include="IEffect.cpp">
+      <Filter>RenderPass\EffectPass</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="IRenderPass.h">
@@ -339,6 +342,9 @@
       <Filter>RenderPass\SpritePass</Filter>
     </ClInclude>
     <ClInclude Include="Fire.h">
+      <Filter>RenderPass\EffectPass</Filter>
+    </ClInclude>
+    <ClInclude Include="IEffect.h">
       <Filter>RenderPass\EffectPass</Filter>
     </ClInclude>
   </ItemGroup>

@@ -43,16 +43,6 @@ FirePass::FirePass()
 		DeviceState::g_pDevice->CreateBuffer(&cbDesc, nullptr, m_constantBuffer.GetAddressOf());
 	}
 
-	//{
-	//	D3D11_BUFFER_DESC fireParams = {};
-	//	fireParams.Usage = D3D11_USAGE_DYNAMIC;
-	//	fireParams.ByteWidth = sizeof(FireParameters);
-	//	fireParams.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	//	fireParams.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-	//	DeviceState::g_pDevice->CreateBuffer(&fireParams, nullptr, m_fireParamsBuffer.GetAddressOf());
-	//}
-
-
 	D3D11_BLEND_DESC blendDesc = {};
 	blendDesc.AlphaToCoverageEnable = FALSE;
 	blendDesc.IndependentBlendEnable = FALSE;
@@ -80,15 +70,19 @@ FirePass::FirePass()
 	m_pso->m_samplers.emplace_back(D3D11_FILTER_MIN_MAG_MIP_LINEAR, D3D11_TEXTURE_ADDRESS_WRAP);
 	m_pso->m_samplers.emplace_back(D3D11_FILTER_MIN_MAG_MIP_POINT, D3D11_TEXTURE_ADDRESS_CLAMP);
 
-	mParam = {};
-	mParam.time = 0.0f;
-	mParam.intensity = 1.0f;
-	mParam.speed = 1.0f;
-	mParam.colorShift = 0.5f;
-	mParam.noiseScale = 4.0f;
-	mParam.verticalFactor = 2.0f;
-	mParam.flamePower = 1.2f;
-	mParam.detailScale = 3.0f;
+	// 유니크 쓰지 말기
+	FireParameters* mParam = new FireParameters;
+	mParam->time = 0.0f;
+	mParam->intensity = 1.0f;
+	mParam->speed = 1.0f;
+	mParam->colorShift = 0.5f;
+	mParam->noiseScale = 4.0f;
+	mParam->verticalFactor = 2.0f;
+	mParam->flamePower = 1.2f;
+	mParam->detailScale = 3.0f;
+
+	// 타입을 명시적으로 지정하여 전달
+	SetParameters(mParam);
 
 	CD3D11_DEPTH_STENCIL_DESC depthDesc{ CD3D11_DEFAULT() };
 	depthDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
@@ -148,17 +142,18 @@ void FirePass::Update(float delta)
 	if (m_delta > 10000.0f) {
 		m_delta = 0.0f;
 	}
+	
 
-	mParam.time = m_delta;
-
+	mParam->time = m_delta;
+	
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
 	DirectX11::ThrowIfFailed(
 		DeviceState::g_pDeviceContext->Map(
 			m_fireParamsBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource
 		)
 	);
-
-	memcpy(mappedResource.pData, &mParam, sizeof(FireParameters));
+	
+	memcpy(mappedResource.pData, static_cast<FireParameters*>(mParam), sizeof(FireParameters));
 	DeviceState::g_pDeviceContext->Unmap(m_fireParamsBuffer.Get(), 0);
 
 }
