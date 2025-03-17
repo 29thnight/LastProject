@@ -58,7 +58,7 @@ FirePass::FirePass()
 	blendDesc.IndependentBlendEnable = FALSE;
 	blendDesc.RenderTarget[0].BlendEnable = TRUE;
 	blendDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
-	blendDesc.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+	blendDesc.RenderTarget[0].DestBlend = D3D11_BLEND_ONE;
 	blendDesc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
 	blendDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
 	blendDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
@@ -77,9 +77,6 @@ FirePass::FirePass()
 		)
 	);
 
-	m_pso->m_depthStencilState = DeviceState::g_pDepthStencilState;
-
-
 	m_pso->m_samplers.emplace_back(D3D11_FILTER_MIN_MAG_MIP_LINEAR, D3D11_TEXTURE_ADDRESS_WRAP);
 	m_pso->m_samplers.emplace_back(D3D11_FILTER_MIN_MAG_MIP_POINT, D3D11_TEXTURE_ADDRESS_CLAMP);
 
@@ -92,6 +89,13 @@ FirePass::FirePass()
 	mParam.verticalFactor = 2.0f;
 	mParam.flamePower = 1.2f;
 	mParam.detailScale = 3.0f;
+
+	CD3D11_DEPTH_STENCIL_DESC depthDesc{ CD3D11_DEFAULT() };
+	depthDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
+	depthDesc.DepthEnable = true;
+	depthDesc.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
+	DeviceState::g_pDevice->CreateDepthStencilState(&depthDesc, &m_pso->m_depthStencilState);
+
 }
 
 void FirePass::Initialize()
@@ -133,7 +137,8 @@ void FirePass::Initialize()
 void FirePass::LoadTexture(const std::string_view& basePath, const std::string_view& noisePath)
 {
 	m_noiseTexture = std::shared_ptr<Texture>(Texture::LoadFormPath(noisePath));
-	m_baseFireTexture = std::shared_ptr<Texture>(Texture::LoadFormPath(basePath));
+	m_baseFireTexture = std::shared_ptr<Texture>(Texture::LoadFormPath("base4.png"));
+	m_fireAlphaTexture = std::shared_ptr<Texture>(Texture::LoadFormPath("firealpha.png"));
 }
 
 void FirePass::Update(float delta)
@@ -143,6 +148,8 @@ void FirePass::Update(float delta)
 	if (m_delta > 10000.0f) {
 		m_delta = 0.0f;
 	}
+
+	mParam.time = m_delta;
 
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
 	DirectX11::ThrowIfFailed(
@@ -168,12 +175,15 @@ void FirePass::PushFireObject(SceneObject* object)
 }
 
 
-
 void FirePass::Execute(Scene& scene)
 {
 	if (!m_baseFireTexture || !m_noiseTexture) {
 		return;
 	}
+
+	ID3D11DepthStencilState* prevDepthState;
+	UINT prevStencilRef;
+	DeviceState::g_pDeviceContext->OMGetDepthStencilState(&prevDepthState, &prevStencilRef);
 
 	auto& deviceContext = DeviceState::g_pDeviceContext;
 
@@ -181,12 +191,19 @@ void FirePass::Execute(Scene& scene)
 
 	deviceContext->CSSetConstantBuffers(0, 1, m_fireParamsBuffer.GetAddressOf());
 
+	ID3D11SamplerState* samplers[] = {
+	   m_pso->m_samplers[0].m_SamplerState,  // LinearSampler
+	   m_pso->m_samplers[1].m_SamplerState   // WrapSampler
+	};
+	deviceContext->CSSetSamplers(0, 2, samplers);
+
 	ID3D11ShaderResourceView* srvs[] = {
 	  m_baseFireTexture->m_pSRV,
-	  m_noiseTexture->m_pSRV
+	  m_noiseTexture->m_pSRV,
+	   m_fireAlphaTexture->m_pSRV
 	};
 
-	deviceContext->CSSetShaderResources(0, 2, srvs);
+	deviceContext->CSSetShaderResources(0, 3, srvs);
 
 	deviceContext->CSSetUnorderedAccessViews(0, 1, &m_resultTexture->m_pUAV, nullptr);
 
@@ -200,6 +217,9 @@ void FirePass::Execute(Scene& scene)
 
 	m_pso->Apply();
 
+	m_pso->m_samplers[0].Use(0);
+	m_pso->m_samplers[1].Use(1);
+
 	ID3D11RenderTargetView* rtv = m_renderTarget->GetRTV();
 	deviceContext->OMSetRenderTargets(1, &rtv, DeviceState::g_pDepthStencilView);
 
@@ -208,27 +228,102 @@ void FirePass::Execute(Scene& scene)
 
 	scene.UseCamera(scene.m_MainCamera);
 	DirectX11::PSSetConstantBuffer(1, 1, &scene.m_LightController.m_pLightBuffer);
-	
-	DirectX11::PSSetConstantBuffer(2, 1, m_fireParamsBuffer.GetAddressOf());
+	scene.UseModel();
+
+	DirectX11::PSSetConstantBuffer(3, 1, m_fireParamsBuffer.GetAddressOf());
 
 	DirectX11::PSSetShaderResources(0, 1, &m_resultTexture->m_pSRV);
+	
+	struct SimpleVertex {
+		DirectX::XMFLOAT3 Position;
+		DirectX::XMFLOAT3 Normal;
+		DirectX::XMFLOAT2 TexCoord;
+		DirectX::XMFLOAT3 Tangent;
+		DirectX::XMFLOAT3 Binormal;
+		DirectX::XMFLOAT4 BlendIndices;
+		DirectX::XMFLOAT4 BlendWeights;
+	};
 
-	for (auto& sceneObejct : m_fireObjects)
-	{
-		if (!sceneObejct->m_meshRenderer.m_IsEnabled)
-			continue;
+	// 정점 데이터 생성
+	SimpleVertex vertices[] = {
+		// Position                  Normal              TexCoord       Tangent            Binormal          BlendIndices      BlendWeights
+		{{-1.0f, -1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}},
+		{{-1.0f,  1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, 0.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}},
+		{{ 1.0f,  1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 0.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}},
+		{{ 1.0f, -1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}}
+	};
 
-		scene.UpdateModel(sceneObejct->m_transform.GetWorldMatrix());
+	// 인덱스 데이터
+	UINT indices[] = {
+		0, 1, 2,
+		0, 2, 3
+	};
 
-		sceneObejct->m_meshRenderer.m_Mesh->Draw();
-	}
+	// 정점 버퍼 생성
+	ID3D11Buffer* vertexBuffer = nullptr;
+	D3D11_BUFFER_DESC vbDesc = {};
+	vbDesc.Usage = D3D11_USAGE_DEFAULT;
+	vbDesc.ByteWidth = sizeof(vertices);
+	vbDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 
-	m_fireObjects.clear();
+	D3D11_SUBRESOURCE_DATA vbData = {};
+	vbData.pSysMem = vertices;
+
+	DeviceState::g_pDevice->CreateBuffer(&vbDesc, &vbData, &vertexBuffer);
+
+	// 인덱스 버퍼 생성
+	ID3D11Buffer* indexBuffer = nullptr;
+	D3D11_BUFFER_DESC ibDesc = {};
+	ibDesc.Usage = D3D11_USAGE_DEFAULT;
+	ibDesc.ByteWidth = sizeof(indices);
+	ibDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
+
+	D3D11_SUBRESOURCE_DATA ibData = {};
+	ibData.pSysMem = indices;
+
+	DeviceState::g_pDevice->CreateBuffer(&ibDesc, &ibData, &indexBuffer);
+
+	// 월드 행렬 설정 - 카메라 앞에 위치하도록 조정
+	DirectX::XMMATRIX worldMatrix = DirectX::XMMatrixIdentity();
+	worldMatrix = DirectX::XMMatrixScaling(2.0f, 2.0f, 1.0f) *
+		DirectX::XMMatrixTranslation(0.0f, 0.0f, 5.0f); // 카메라 앞쪽에 위치
+
+	scene.UpdateModel(worldMatrix);
+
+	// 버퍼 설정 및 그리기
+	UINT stride = sizeof(SimpleVertex);
+	UINT offset = 0;
+	deviceContext->IASetVertexBuffers(0, 1, &vertexBuffer, &stride, &offset);
+	deviceContext->IASetIndexBuffer(indexBuffer, DXGI_FORMAT_R32_UINT, 0);
+	deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	// 그리기
+	deviceContext->DrawIndexed(6, 0, 0);
+
+	// 리소스 해제
+	if (vertexBuffer) vertexBuffer->Release();
+	if (indexBuffer) indexBuffer->Release();
+
+
+	//for (auto& sceneObejct : m_fireObjects)
+	//{
+	//	if (!sceneObejct->m_meshRenderer.m_IsEnabled)
+	//		continue;
+	//
+	//	scene.UpdateModel(sceneObejct->m_transform.GetWorldMatrix());
+	//
+	//	sceneObejct->m_meshRenderer.m_Mesh->Draw();
+	//}
 
 	DirectX11::PSSetShaderResources(0, 1, &nullSRV);
 
 	deviceContext->OMSetBlendState(nullptr, blendFactor, 0xffffffff);
 
+	DeviceState::g_pDeviceContext->OMSetDepthStencilState(prevDepthState, prevStencilRef);
+	if (prevDepthState) prevDepthState->Release();
+
 	DirectX11::UnbindRenderTargets();
+
+	m_fireObjects.clear();
 
 }
