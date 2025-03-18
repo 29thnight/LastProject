@@ -40,7 +40,7 @@ class FirePass : public IEffect
 {
 public:
 	FirePass();
-	~FirePass();
+
 	//void SetParameters(const FireParameters& param) { mParam = param; }
 
 	void LoadTexture(const std::string_view& basePath, const std::string_view& noisePath);
@@ -56,7 +56,6 @@ public:
 	void Initialize();
 private:
 
-	ComPtr<ID3D11Buffer> m_particleBuffer;
 	ComPtr<ID3D11ComputeShader> m_computeShader;
 	ComPtr<ID3D11Buffer> m_fireParamsBuffer;
 	ComPtr<ID3D11Buffer> m_constantBuffer;
