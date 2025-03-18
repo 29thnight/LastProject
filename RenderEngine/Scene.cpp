@@ -5,18 +5,8 @@ Scene::Scene()
 {
 	CreateSceneObject("Root", 0);
 
-	ImGui::ContextRegister("Models", [&]() 
-	{	
-		ImGui::Text("Models");
-		ImGui::Separator();
-		for (auto& obj : m_SceneObjects)
-		{
-			ImGui::Text(obj->m_name.c_str());
-		}
-		ImGui::Separator();
-
-	});
-
+	EditorSceneObjectHierarchy();
+	EditorSceneObjectInspector();
 }
 
 Scene::~Scene()
@@ -68,10 +58,6 @@ void Scene::Start()
 	m_LightController.
 		SetEyePosition(m_MainCamera.m_eyePosition)
 		.Update();
-
-	//TODO : 카메라 AspectRatio를 아래에 설정하도록 추가
-
-
 }
 
 void Scene::Update(float deltaSecond)
@@ -113,6 +99,81 @@ void Scene::UseCamera(Camera& camera)
 
 	DirectX11::VSSetConstantBuffer(1, 1, &m_ViewBuffer);
 	DirectX11::VSSetConstantBuffer(2, 1, &m_ProjBuffer);
+}
+
+void Scene::EditorSceneObjectHierarchy()
+{
+	ImGui::ContextRegister("SceneObject Hierarchy", [&]()
+	{
+		for (auto& obj : m_SceneObjects)
+		{
+			if (obj->m_index == 0 || obj->m_parentIndex > 0) continue;
+
+			ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick;
+			if (obj.get() == m_selectedSceneObject)
+				flags |= ImGuiTreeNodeFlags_Selected;
+
+			std::string uniqueLabel = obj->m_name + "##" + std::to_string(obj->m_index);
+			bool opened = ImGui::TreeNodeEx(uniqueLabel.c_str(), flags);
+
+			if (ImGui::IsItemClicked()) // 클릭 시 선택된 객체 변경
+			{
+				m_selectedSceneObject = obj.get();
+			}
+
+			if (opened)
+			{
+				for (auto& childIndex : obj->m_childrenIndices)
+				{
+					auto child = GetSceneObject(childIndex);
+
+					ImGuiTreeNodeFlags childFlags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick;
+					if (child.get() == m_selectedSceneObject)
+						childFlags |= ImGuiTreeNodeFlags_Selected;
+
+					std::string childUniqueLabel = child->m_name + "##" + std::to_string(child->m_index);
+					if (ImGui::TreeNodeEx(childUniqueLabel.c_str(), childFlags))
+					{
+						if (ImGui::IsItemClicked()) // 자식 객체 클릭 시 선택
+						{
+							m_selectedSceneObject = child.get();
+						}
+						ImGui::TreePop();
+					}
+				}
+				ImGui::TreePop();
+			}
+		}
+	}, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoFocusOnAppearing);
+}
+
+void Scene::EditorSceneObjectInspector()
+{
+	ImGui::ContextRegister("SceneObject Inspector", [&]()
+	{
+		if (m_selectedSceneObject)
+		{
+			Mathf::Vector4 position = m_selectedSceneObject->m_transform.position;
+			Mathf::Vector4 rotation = m_selectedSceneObject->m_transform.rotation;
+			Mathf::Vector4 scale = m_selectedSceneObject->m_transform.scale;
+
+			ImGui::Text(m_selectedSceneObject->m_name.c_str());
+			ImGui::Separator();
+			ImGui::Text("Position");	
+			ImGui::DragFloat3("##Position", &position.x, -1000, 1000);
+			ImGui::Text("Rotation");
+			ImGui::DragFloat3("##Rotation", &rotation.x, -3.14f, 3.14f);
+			ImGui::Text("Scale");
+			ImGui::DragFloat3("##Scale", &scale.x, 0.1f, 10);
+
+			m_selectedSceneObject->m_transform.position = position;
+			m_selectedSceneObject->m_transform.rotation = rotation;
+			m_selectedSceneObject->m_transform.scale = scale;
+			m_selectedSceneObject->m_transform.m_dirty = true;
+
+			m_selectedSceneObject->m_transform.GetLocalMatrix();
+		}
+	}, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoFocusOnAppearing);
 }
 
 void Scene::UpdateModelRecursive(SceneObject::Index objIndex, Mathf::xMatrix model)

@@ -1,8 +1,177 @@
 #include "SceneRenderer.h"
+#include "SceneRenderer.h"
 #include "DeviceState.h"
 #include "AssetSystem.h"
 #include "Scene.h"
 #include "ImGuiRegister.h"
+
+#pragma region ImGuizmo
+#include "ImGuizmo.h"
+
+static const float identityMatrix[16] = { 
+	1.f, 0.f, 0.f, 0.f,
+	0.f, 1.f, 0.f, 0.f,
+	0.f, 0.f, 1.f, 0.f,
+	0.f, 0.f, 0.f, 1.f 
+};
+bool useWindow = true;
+bool editWindow = true;
+int gizmoCount = 1;
+float camDistance = 8.f;
+static ImGuizmo::OPERATION mCurrentGizmoOperation(ImGuizmo::TRANSLATE);
+
+
+void SceneRenderer::EditTransform(float* cameraView, float* cameraProjection, float* matrix, bool editTransformDecomposition, SceneObject* obj, Camera* cam)
+{
+	static ImGuizmo::MODE mCurrentGizmoMode(ImGuizmo::LOCAL);
+	static bool useSnap = false;
+	static float snap[3] = { 1.f, 1.f, 1.f };
+	static float bounds[] = { -0.5f, -0.5f, -0.5f, 0.5f, 0.5f, 0.5f };
+	static float boundsSnap[] = { 0.1f, 0.1f, 0.1f };
+	static bool boundSizing = false;
+	static bool boundSizingSnap = false;
+
+	ImGuizmo::SetOrthographic(false);
+	ImGuizmo::BeginFrame();
+
+	if (editTransformDecomposition)
+	{
+		if (ImGui::IsKeyPressed(ImGuiKey_T))
+			mCurrentGizmoOperation = ImGuizmo::TRANSLATE;
+		if (ImGui::IsKeyPressed(ImGuiKey_G))
+			mCurrentGizmoOperation = ImGuizmo::ROTATE;
+		if (ImGui::IsKeyPressed(ImGuiKey_R)) // r Key
+			mCurrentGizmoOperation = ImGuizmo::SCALE;
+		if (ImGui::RadioButton("Translate", mCurrentGizmoOperation == ImGuizmo::TRANSLATE))
+			mCurrentGizmoOperation = ImGuizmo::TRANSLATE;
+		ImGui::SameLine();
+		if (ImGui::RadioButton("Rotate", mCurrentGizmoOperation == ImGuizmo::ROTATE))
+			mCurrentGizmoOperation = ImGuizmo::ROTATE;
+		ImGui::SameLine();
+		if (ImGui::RadioButton("Scale", mCurrentGizmoOperation == ImGuizmo::SCALE))
+			mCurrentGizmoOperation = ImGuizmo::SCALE;
+		if (ImGui::RadioButton("Universal", mCurrentGizmoOperation == ImGuizmo::UNIVERSAL))
+			mCurrentGizmoOperation = ImGuizmo::UNIVERSAL;
+		float matrixTranslation[3], matrixRotation[3], matrixScale[3];
+		ImGuizmo::DecomposeMatrixToComponents(matrix, matrixTranslation, matrixRotation, matrixScale);
+		ImGui::InputFloat3("Tr", matrixTranslation);
+		ImGui::InputFloat3("Rt", matrixRotation);
+		ImGui::InputFloat3("Sc", matrixScale);
+		ImGuizmo::RecomposeMatrixFromComponents(matrixTranslation, matrixRotation, matrixScale, matrix);
+
+		if (mCurrentGizmoOperation != ImGuizmo::SCALE)
+		{
+			if (ImGui::RadioButton("Local", mCurrentGizmoMode == ImGuizmo::LOCAL))
+				mCurrentGizmoMode = ImGuizmo::LOCAL;
+			ImGui::SameLine();
+			if (ImGui::RadioButton("World", mCurrentGizmoMode == ImGuizmo::WORLD))
+				mCurrentGizmoMode = ImGuizmo::WORLD;
+		}
+		if (ImGui::IsKeyPressed(ImGuiKey_F))
+			useSnap = !useSnap;
+		ImGui::Checkbox("##UseSnap", &useSnap);
+		ImGui::SameLine();
+
+		switch (mCurrentGizmoOperation)
+		{
+		case ImGuizmo::TRANSLATE:
+			ImGui::InputFloat3("Snap", &snap[0]);
+			break;
+		case ImGuizmo::ROTATE:
+			ImGui::InputFloat("Angle Snap", &snap[0]);
+			break;
+		case ImGuizmo::SCALE:
+			ImGui::InputFloat("Scale Snap", &snap[0]);
+			break;
+		}
+		ImGui::Checkbox("Bound Sizing", &boundSizing);
+		if (boundSizing)
+		{
+			ImGui::PushID(3);
+			ImGui::Checkbox("##BoundSizing", &boundSizingSnap);
+			ImGui::SameLine();
+			ImGui::InputFloat3("Snap", boundsSnap);
+			ImGui::PopID();
+		}
+	}
+
+	ImGuiIO& io = ImGui::GetIO();
+	float viewManipulateRight = io.DisplaySize.x;
+	float viewManipulateTop = 0;
+	static ImGuiWindowFlags gizmoWindowFlags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBringToFrontOnFocus;
+	if (useWindow)
+	{
+		//ImGui::SetNextWindowSize(ImVec2(800, 400), ImGuiCond_Appearing);
+		//ImGui::SetNextWindowPos(ImVec2(400, 20), ImGuiCond_Appearing);
+		ImGui::PushStyleColor(ImGuiCol_WindowBg, (ImVec4)ImColor(0.35f, 0.3f, 0.3f));
+		ImGui::Begin("Gizmo", 0, gizmoWindowFlags);
+		ImGuizmo::SetDrawlist();
+
+		//std::cout << ImGui::GetMousePos().x <<", " << ImGui::GetMousePos().y<< std::endl;
+
+		float windowWidth = (float)ImGui::GetWindowWidth();
+		float windowHeight = (float)ImGui::GetWindowHeight();
+		ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, windowWidth, windowHeight);
+		viewManipulateRight = ImGui::GetWindowPos().x + windowWidth;
+		viewManipulateTop = ImGui::GetWindowPos().y;
+		ImGuiWindow* window = ImGui::GetCurrentWindow();
+		gizmoWindowFlags = ImGui::IsWindowHovered() && ImGui::IsMouseHoveringRect(window->InnerRect.Min, window->InnerRect.Max) ? ImGuiWindowFlags_NoMove : 0;
+
+		float x = window->InnerRect.Max.x - window->InnerRect.Min.x;
+		float y = window->InnerRect.Max.y - window->InnerRect.Min.y;
+
+		ImGui::Image((ImTextureID)m_gridTexture->m_pSRV, ImVec2(x, y));
+		//ImGui::Image((ImTextureID)sceneRenderer->GetMeshEditorTarget()->GetSRV(),
+		//	ImVec2(450, 560));
+		//ImGui::End();
+
+		//std::cout << window->InnerRect.Min.x <<", " << window->InnerRect.Min.y << std::endl;
+	}
+	else
+	{
+		ImGuizmo::SetRect(0, 0, io.DisplaySize.x, io.DisplaySize.y);
+	}
+
+
+	//ImGuizmo::DrawCubes(cameraView, cameraProjection, &objectMatrix[0][0], gizmoCount);
+
+
+	if (obj)
+	{
+		ImGuizmo::Manipulate(cameraView, cameraProjection, mCurrentGizmoOperation, mCurrentGizmoMode, matrix, NULL, useSnap ? &snap[0] : NULL, boundSizing ? bounds : NULL, boundSizingSnap ? boundsSnap : NULL);
+
+		XMVECTOR pos;
+		XMVECTOR rot;
+		XMVECTOR scale;
+		XMMatrixDecompose(&scale, &rot, &pos, XMMATRIX(matrix));
+
+		obj->m_transform.SetPosition(pos);
+		obj->m_transform.SetRotation(rot);
+		obj->m_transform.SetScale(scale);
+	}
+
+	ImGuizmo::ViewManipulate(cameraView, camDistance, ImVec2(viewManipulateRight - 128, viewManipulateTop), ImVec2(128, 128), 0x10101010);
+
+	{
+		XMVECTOR poss;
+		XMVECTOR rots;
+		XMVECTOR scales;
+		XMMatrixDecompose(&scales, &rots, &poss, XMMatrixInverse(nullptr, XMMATRIX(cameraView)));
+		cam->m_eyePosition = poss;
+		cam->m_rotation = rots;
+
+		XMVECTOR rotDir = XMVector3Rotate(cam->FORWARD, rots);
+
+		cam->m_forward = rotDir;
+	}
+
+	if (useWindow)
+	{
+		ImGui::End();
+		ImGui::PopStyleColor(1);
+	}
+}
+#pragma endregion
 
 SceneRenderer::SceneRenderer(const std::shared_ptr<DirectX11::DeviceResources>& deviceResources) :
 	m_deviceResources(deviceResources)
@@ -68,6 +237,13 @@ SceneRenderer::SceneRenderer(const std::shared_ptr<DirectX11::DeviceResources>& 
 		DXGI_FORMAT_R16G16B16A16_FLOAT
 	);
 
+    m_gridTexture = TextureHelper::CreateRenderTexture(
+        DeviceState::g_ClientRect.width,
+        DeviceState::g_ClientRect.height,
+        "GridRTV",
+        DXGI_FORMAT_R16G16B16A16_FLOAT
+    );
+
 	Texture* ao = Texture::Create(
 		DeviceState::g_ClientRect.width,
 		DeviceState::g_ClientRect.height,
@@ -123,7 +299,8 @@ SceneRenderer::SceneRenderer(const std::shared_ptr<DirectX11::DeviceResources>& 
 	//skyBoxPass
 	m_pSkyBoxPass = std::make_unique<SkyBoxPass>();
 	m_pSkyBoxPass->SetRenderTarget(m_colorTexture.get());
-	m_pSkyBoxPass->Initialize(PathFinder::Relative("HDR/Malibu_Overlook_3k.hdr").string());
+	m_pSkyBoxPass->Initialize(PathFinder::Relative("HDR/rosendal_park_sunset_puresky_4k.hdr").string());
+	
 
 	//toneMapPass
 	m_pToneMapPass = std::make_unique<ToneMapPass>();
@@ -169,6 +346,8 @@ SceneRenderer::SceneRenderer(const std::shared_ptr<DirectX11::DeviceResources>& 
 	fireParam.intensity = 1.0f;
 	fireParam.colorShift = 0.5f;*/
 	//m_pFirePass->SetParameters(fireParam);
+    m_pGridPass = std::make_unique<GridPass>();
+    m_pGridPass->Initialize(m_toneMappedColourTexture.get(), m_gridTexture.get());
 }
 
 void SceneRenderer::Initialize(Scene* _pScene)
@@ -209,13 +388,15 @@ void SceneRenderer::Initialize(Scene* _pScene)
 		desc.m_viewHeight = 12;
 		desc.m_nearPlane = 0.1f;
 		desc.m_farPlane = 1000.f;
-		desc.m_textureWidth = 8192; //DeviceState::g_ClientRect.width; 
-		desc.m_textureHeight = 8192; //DeviceState::g_ClientRect.height;
+		desc.m_textureWidth = 8192;
+		desc.m_textureHeight = 8192;
 
 		m_currentScene->m_LightController.Initialize();
 		m_currentScene->m_LightController.SetLightWithShadows(0, desc);
 
-		model = Model::LoadModel("Prop_Block.fbx");
+		model = Model::LoadModel("bangbooExport.fbx");
+		//model = Model::LoadModel("BoxHuman.fbx");
+		//model = Model::LoadModel("sphere.fbx");
 		Model::LoadModelToScene(model, *m_currentScene);
 	}
 	else
@@ -228,28 +409,12 @@ void SceneRenderer::Initialize(Scene* _pScene)
 	DeviceState::g_pDeviceContext->PSSetSamplers(0, 1, &m_linearSampler->m_SamplerState);
 	DeviceState::g_pDeviceContext->PSSetSamplers(1, 1, &m_pointSampler->m_SamplerState);
 
-	ImGui::ContextRegister("Model Transform", [&]() 
-	{
-		Mathf::Vector3 position = model->m_SceneObject->m_transform.position;
-		Mathf::Vector3 rotation = model->m_SceneObject->m_transform.rotation;
-		Mathf::Vector3 scale = model->m_SceneObject->m_transform.scale;
-
-		ImGui::SliderFloat3("Position", &position.x, -10, 10);
-		ImGui::SliderFloat3("Rotation", &rotation.x, -3.14f, 3.14f);
-		ImGui::SliderFloat3("Scale", &scale.x, 0.1f, 10);
-		
-		model->m_SceneObject->m_transform.SetPosition(position);
-		model->m_SceneObject->m_transform.SetRotation(rotation);
-		model->m_SceneObject->m_transform.SetScale(scale);
-	});
-
 	m_pSkyBoxPass->GenerateCubeMap(*m_currentScene);
 	Texture* envMap = m_pSkyBoxPass->GenerateEnvironmentMap(*m_currentScene);
 	Texture* preFilter = m_pSkyBoxPass->GeneratePrefilteredMap(*m_currentScene);
 	Texture* brdfLUT = m_pSkyBoxPass->GenerateBRDFLUT(*m_currentScene);
 
 	m_pDeferredPass->UseEnvironmentMap(envMap, preFilter, brdfLUT);
-
 }
 
 void SceneRenderer::Update(float deltaTime)
@@ -262,7 +427,6 @@ void SceneRenderer::Update(float deltaTime)
 
 void SceneRenderer::Render()
 {
-
 	//[1] ShadowMapPass
 	{
 		m_currentScene->ShadowStage();
@@ -311,6 +475,11 @@ void SceneRenderer::Render()
     {
         m_pToneMapPass->Execute(*m_currentScene);
     }
+	
+	//[*] GridPass
+	{
+        m_pGridPass->Execute(*m_currentScene);
+	}
 
 	
 
@@ -324,8 +493,6 @@ void SceneRenderer::Render()
 		m_pBlitPass->Execute(*m_currentScene);
 	}
 
-	
-	
 }
 
 void SceneRenderer::PrepareRender()
@@ -376,4 +543,44 @@ void SceneRenderer::UnbindRenderTargets()
 	ID3D11RenderTargetView* nullRTV = nullptr;
 	ID3D11DepthStencilView* nullDSV = nullptr;
 	DirectX11::OMSetRenderTargets(1, &nullRTV, nullDSV);
+}
+
+void SceneRenderer::EditorView()
+{
+	auto obj = m_currentScene->GetSelectSceneObject();
+	if (obj) 
+	{
+		auto mat = obj->m_transform.GetLocalMatrix();
+		XMFLOAT4X4 objMat;
+		XMStoreFloat4x4(&objMat, mat);
+		auto view = m_currentScene->m_MainCamera.CalculateView();
+		XMFLOAT4X4 floatMatrix;
+		XMStoreFloat4x4(&floatMatrix, view);
+		auto proj = m_currentScene->m_MainCamera.CalculateProjection();
+		XMFLOAT4X4 projMatrix;
+		XMStoreFloat4x4(&projMatrix, proj);
+
+		EditTransform(&floatMatrix.m[0][0], &projMatrix.m[0][0], &objMat.m[0][0], true, obj, &m_currentScene->m_MainCamera);
+
+	}
+	else
+	{
+		auto view = m_currentScene->m_MainCamera.CalculateView();
+		XMFLOAT4X4 floatMatrix;
+		XMStoreFloat4x4(&floatMatrix, view);
+		auto proj = m_currentScene->m_MainCamera.CalculateProjection();
+		XMFLOAT4X4 projMatrix;
+		XMStoreFloat4x4(&projMatrix, proj);
+		XMFLOAT4X4 identityMatrix;
+		XMStoreFloat4x4(&identityMatrix, XMMatrixIdentity());
+
+		EditTransform(&floatMatrix.m[0][0], &projMatrix.m[0][0], &identityMatrix.m[0][0], false, nullptr, &m_currentScene->m_MainCamera);
+	}
+
+	ImGui::Begin("GameView", 0, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBringToFrontOnFocus);
+	{
+		ImVec2 size = ImGui::GetContentRegionAvail();
+		ImGui::Image((ImTextureID)m_toneMappedColourTexture->m_pSRV, size);
+	}
+	ImGui::End();
 }

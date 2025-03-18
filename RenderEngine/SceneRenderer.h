@@ -10,8 +10,9 @@
 #include "SpritePass.h"
 #include "BlitPass.h"
 #include "WireFramePass.h"
-#include "Model.h"
+#include "GridPass.h"
 
+#include "Model.h"
 #include "Light.h"
 #include "Snow.h"
 #include "Fire.h"
@@ -45,6 +46,7 @@ private:
 	std::unique_ptr<SpritePass> m_pSpritePass{};
 	std::unique_ptr<BlitPass> m_pBlitPass{};
 	std::unique_ptr<WireFramePass> m_pWireFramePass{};
+    std::unique_ptr<GridPass> m_pGridPass{};
 
 	// effect
 	std::unique_ptr<SnowPass> m_pSnowPass{};
@@ -63,9 +65,13 @@ private:
 	std::unique_ptr<Texture> m_emissiveTexture;
 	std::unique_ptr<Texture> m_ambientOcclusionTexture;
 	std::unique_ptr<Texture> m_toneMappedColourTexture;
+    std::unique_ptr<Texture> m_gridTexture;
 
 	Sampler* m_linearSampler{};
 	Sampler* m_pointSampler{};
+
+	//PerspacetiveCamera m_perspacetiveEditCamera{};
+	//OrthographicCamera m_orthographicEditCamera{};
 
 	//render queue
 
@@ -78,4 +84,8 @@ public:
 	void SetWireFrame() { useWireFrame = !useWireFrame; }
 private:
 	bool useWireFrame = false;
+
+public:
+	void EditorView();
+	void EditTransform(float* cameraView, float* cameraProjection, float* matrix, bool editTransformDecomposition, SceneObject* obj, Camera* cam);
 };

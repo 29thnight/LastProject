@@ -1,6 +1,7 @@
 #include "Camera.h"
 #include "../InputManager.h"
 #include "DeviceState.h"
+#include "ImGuiRegister.h"
 
 const static float pi = XM_PIDIV2 - 0.01f;
 const static float pi2 = XM_PI * 2.f;
@@ -91,33 +92,92 @@ void Camera::HandleMovement(float deltaTime)
 		y += 1.f;
 	}
 
+	XMVECTOR m_rotationQuat = XMQuaternionIdentity();
+	static XMVECTOR rotate = XMQuaternionIdentity();
+	//Change the Camera Rotaition Quaternion Not Use XMQuaternionRotationRollPitchYaw
 	if (InputManagement->IsMouseButtonDown(MouseKey::MIDDLE))
 	{
-		m_pitch += InputManagement->GetMouseDelta().y * 0.01f;
-		m_pitch = fmax(-pi, fmin(m_pitch, pi));
-		m_yaw += InputManagement->GetMouseDelta().x * 0.01f;
-		if (m_yaw > XM_PI) m_yaw -= pi2;
-		if (m_yaw < -XM_PI) m_yaw += pi2;
 
-		Mathf::xVector viewRotation = XMQuaternionRotationRollPitchYaw(m_pitch, m_yaw, 0.f);
-		m_forward = XMVector3Normalize(XMVector3Rotate(FORWARD, viewRotation));
-		m_right = XMVector3Normalize(XMVector3Cross(UP, m_forward));
+
+		// 마우스 이동량 가져오기
+		float deltaPitch = InputManagement->GetMouseDelta().y * 0.01f;
+		float deltaYaw = InputManagement->GetMouseDelta().x * 0.01f;
+
+		// Pitch 제한 적용
+		//m_pitch += deltaPitch;
+		
+		// 현재 회전 기준 축을 얻음
+		XMVECTOR rightAxis = XMVector3Normalize(XMVector3Cross(m_up, m_forward));
+
+		// 프레임당 변화량만 적용
+		XMVECTOR pitchQuat = XMQuaternionRotationAxis(rightAxis, deltaPitch);
+		XMVECTOR yawQuat = XMQuaternionRotationAxis(m_up, deltaYaw);
+
+		// Yaw를 먼저 적용 -> Pitch를 적용
+		XMVECTOR deltaRotation = XMQuaternionMultiply(yawQuat, pitchQuat);
+		m_rotationQuat = XMQuaternionMultiply(deltaRotation, m_rotationQuat);
+		m_rotationQuat = XMQuaternionMultiply(rotate, m_rotationQuat);
+		m_rotationQuat = XMQuaternionNormalize(m_rotationQuat);
+
+
+		// 새로운 방향 벡터 계산
+		m_forward = XMVector3Normalize(XMVector3Rotate(FORWARD, m_rotationQuat));
+
+		// Right 벡터 업데이트 (UP을 기준으로 다시 계산)
+		m_right = XMVector3Normalize(XMVector3Cross(m_up, m_forward));
+
+		m_up = XMVector3Cross(m_forward, m_right);
+
+			float sign = XMVectorGetY(m_up) > 0 ? 1.0f : -1.0f;
+			m_up = XMVectorSet(XMVectorGetX(m_up), sign * 20.f, XMVectorGetZ(m_up), 0);
+			m_up = XMQuaternionNormalize(m_up);
+
+
+		std::cout << XMVectorGetX(rightAxis) << ", " << XMVectorGetY(rightAxis) << ", " << XMVectorGetZ(rightAxis) << std::endl;
+
+		rotate = m_rotationQuat;
 	}
 
 	if (InputManagement->IsMouseButtonDown(MouseKey::LEFT))
 	{
 		m_rayDirection = RayCast(InputManagement->GetMousePos());
-		std::cout << "MousePos" << InputManagement->GetMousePos().x << InputManagement->GetMousePos().y << std::endl;
-		std::cout << "RayCast" << m_rayDirection.x << m_rayDirection.y << m_rayDirection.z << m_rayDirection.w << std::endl;
+		//std::cout << "MousePos" << InputManagement->GetMousePos().x << InputManagement->GetMousePos().y << std::endl;
+		//std::cout << "RayCast" << m_rayDirection.x << m_rayDirection.y << m_rayDirection.z << m_rayDirection.w << std::endl;
 	}
 
-	m_eyePosition += ((z * m_forward) + (y * UP) + (x * m_right)) * m_speed * deltaTime;
+	m_eyePosition += ((z * m_forward) + (y * m_up) + (x * m_right)) * m_speed * deltaTime;
 	m_lookAt = m_eyePosition + m_forward;
+}
+
+PerspacetiveCamera::PerspacetiveCamera()
+{
+	ImGui::ContextRegister("Perspacetive Camera", [&]()
+	{
+		ImGui::DragFloat("FOV", &m_fov, 1.f, 1.f, 179.f);
+		ImGui::DragFloat("Aspect Ratio", &m_aspectRatio, 0.1f, 0.1f, 10.f);
+		ImGui::DragFloat("Near Plane", &m_nearPlane, 0.1f, 0.1f, 100.f);
+		ImGui::DragFloat("Far Plane", &m_farPlane, 1.f, 1.f, 100000.f);
+		ImGui::DragFloat("Speed", &m_speed, 1.f, 1.f, 100.f);
+		ImGui::DragFloat("Pitch", &m_pitch, 0.01f, -pi, pi);
+		ImGui::DragFloat("Yaw", &m_yaw, 0.01f, -pi, pi);
+		ImGui::DragFloat("Roll", &m_roll, 0.01f, -pi, pi);
+
+		ImGui::Text("Eye Position");
+		ImGui::DragFloat3("##Eye Position", &m_eyePosition.m128_f32[0], -1000, 1000);
+		ImGui::Text("Forward");
+		ImGui::DragFloat3("##Forward", &m_forward.m128_f32[0], -1000, 1000);
+		ImGui::Text("Right");
+		ImGui::DragFloat3("##Right", &m_right.m128_f32[0], -1000, 1000);
+	});
 }
 
 Mathf::xMatrix PerspacetiveCamera::CalculateProjection()
 {
-	return XMMatrixPerspectiveFovLH(XMConvertToRadians(m_fov), m_aspectRatio, 0.1f, 200.f);
+	return XMMatrixPerspectiveFovLH(XMConvertToRadians(m_fov), m_aspectRatio, m_nearPlane, m_farPlane);
+}
+
+OrthographicCamera::OrthographicCamera()
+{
 }
 
 Mathf::xMatrix OrthographicCamera::CalculateProjection()

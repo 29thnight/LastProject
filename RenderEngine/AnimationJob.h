@@ -5,6 +5,7 @@ class Scene;
 class Bone;
 class Animator;
 class Animation;
+class NodeAnimation;
 
 class AnimationJob
 {

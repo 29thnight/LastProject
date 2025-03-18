@@ -81,7 +81,7 @@ void WireFramePass::Execute(Scene& scene)
     m_CameraBuffer.m_CameraPosition = scene.m_MainCamera.m_eyePosition;
 
     DirectX11::UpdateBuffer(m_Buffer.Get(), &m_CameraBuffer);
-    DirectX11::PSSetConstantBuffer(4, 1, m_Buffer.GetAddressOf());
+    DirectX11::VSSetConstantBuffer(4, 1, m_Buffer.GetAddressOf());
 
 	Animator* currentAnimator = nullptr;
 
@@ -91,7 +91,8 @@ void WireFramePass::Execute(Scene& scene)
 
 		MeshRenderer& meshRenderer = sceneObject->m_meshRenderer;
 		scene.UpdateModel(sceneObject->m_transform.GetWorldMatrix());
-        Animator* animator = meshRenderer.m_Animator;
+
+        Animator* animator = &scene.m_SceneObjects[sceneObject->m_parentIndex]->m_animator;
         if (nullptr != animator && animator->m_IsEnabled)
         {
             if (animator != currentAnimator)

@@ -11,6 +11,7 @@
 #include "RenderEngine/FontManager.h"
 #include "Utility_Framework/Banchmark.hpp"
 #include "App.h"
+#include "Utility_Framework/ImGuiLogger.h"
 
 DirectX11::Dx11Main::Dx11Main(const std::shared_ptr<DeviceResources>& deviceResources)	: m_deviceResources(deviceResources)
 {
@@ -46,6 +47,11 @@ DirectX11::Dx11Main::~Dx11Main()
 //test code
 void DirectX11::Dx11Main::SceneInitialize()
 {
+	ImGui::ContextRegister("DockSpace", [&]()
+	{
+		ImGui::DockSpaceOverViewport(0, ImGui::GetMainViewport());
+	});
+
 	//m_camera = std::make_unique<PerspacetiveCamera>();
 	////m_camera->SetPosition(10.0f, 140.0f, 220.0f);
 	////m_camera->pitch = -40.f;
@@ -133,7 +139,7 @@ void DirectX11::Dx11Main::Update()
 		//렌더러의 업데이트 코드를 여기에 추가합니다.
 		std::wostringstream woss;
 		woss.precision(6);
-		woss << L"[4Q Project] Bongsu Rabbit - "
+		woss << L"Creator Editor - "
 			<< L"Width: "
 			<< m_deviceResources->GetOutputSize().width
 			<< L" Height: "
@@ -227,7 +233,11 @@ bool DirectX11::Dx11Main::Render()
 	{
 		m_imguiRenderer->BeginRender();
 		//m_D2DRenderer->ImGuiRenderStage();
+		m_sceneRenderer->EditorView();
 		m_imguiRenderer->Render();
+
+
+		// editor only
 		//MeshEditorSystem->ShowMainUI();
 		//m_btEditor.ShowMainUI();
 		//GridEditorSystem->ShowGridEditor();
