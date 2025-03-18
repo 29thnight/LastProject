@@ -82,18 +82,13 @@ void Camera::HandleMovement(float deltaTime)
 	{
 		x += 1.f;
 	}
-	if (InputManagement->IsKeyPressed('Q'))
+	if (InputManagement->IsKeyPressed(VK_SHIFT))
 	{
 		y -= 1.f;
 	}
-	if (InputManagement->IsKeyPressed('E'))
+	if (InputManagement->IsKeyPressed(VK_SPACE))
 	{
 		y += 1.f;
-	}
-
-	if (InputManagement->IsKeyPressed(VK_ESCAPE))
-	{
-		PostQuitMessage(0);
 	}
 
 	if (InputManagement->IsMouseButtonDown(MouseKey::MIDDLE))

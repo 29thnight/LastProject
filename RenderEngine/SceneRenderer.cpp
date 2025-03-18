@@ -294,7 +294,7 @@ void SceneRenderer::Render()
 
 	//[5] skyBoxPass
 	{
-		m_pSkyBoxPass->Execute(*m_currentScene);
+		//m_pSkyBoxPass->Execute(*m_currentScene);
 	}
 
 	//[5-1] EffectPass

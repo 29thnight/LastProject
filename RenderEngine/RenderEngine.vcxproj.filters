@@ -46,9 +46,6 @@
     <Filter Include="Resources\Mesh">
       <UniqueIdentifier>{0ca168e2-98f5-4141-892e-03c052043c2d}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Resources\Model">
-      <UniqueIdentifier>{eba2e3b3-3d2a-41f5-8a75-0c8eadbcec0c}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Resources\PSO">
       <UniqueIdentifier>{620ad12c-96c4-45f1-98a6-389e35068c53}</UniqueIdentifier>
     </Filter>
@@ -96,6 +93,9 @@
     </Filter>
     <Filter Include="RenderPass\EffectPass">
       <UniqueIdentifier>{ab70d09c-c5d6-4350-91f4-ee8451bd5e3e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resources\Model">
+      <UniqueIdentifier>{eba2e3b3-3d2a-41f5-8a75-0c8eadbcec0c}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

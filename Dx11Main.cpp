@@ -10,6 +10,7 @@
 #include "GridEditor.h"
 #include "RenderEngine/FontManager.h"
 #include "Utility_Framework/Banchmark.hpp"
+#include "App.h"
 
 DirectX11::Dx11Main::Dx11Main(const std::shared_ptr<DeviceResources>& deviceResources)	: m_deviceResources(deviceResources)
 {
@@ -179,6 +180,10 @@ void DirectX11::Dx11Main::Update()
 	}
 	if (InputManagement->IsKeyReleased(VK_F9)) {
 		Physics->ConnectPVD();
+	}
+	
+	if (InputManagement->IsKeyReleased(VK_ESCAPE)) {
+		ExitProcess(0);
 	}
 
 #if defined(EDITOR)

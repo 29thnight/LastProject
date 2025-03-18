@@ -6,6 +6,7 @@ struct EffectParameters
 	float time;
 	float intensity;
 	float speed;
+	float pad;
 };
 
 class IEffect : public IRenderPass

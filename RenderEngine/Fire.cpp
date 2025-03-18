@@ -3,6 +3,7 @@
 #include "Material.h"
 #include "Scene.h"
 #include "Mesh.h"
+#include "ImGuiRegister.h"
 
 FirePass::FirePass()
 {
@@ -47,7 +48,7 @@ FirePass::FirePass()
 	blendDesc.AlphaToCoverageEnable = FALSE;
 	blendDesc.IndependentBlendEnable = FALSE;
 	blendDesc.RenderTarget[0].BlendEnable = TRUE;
-	blendDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+	blendDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_ONE;
 	blendDesc.RenderTarget[0].DestBlend = D3D11_BLEND_ONE;
 	blendDesc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
 	blendDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
@@ -71,30 +72,46 @@ FirePass::FirePass()
 	m_pso->m_samplers.emplace_back(D3D11_FILTER_MIN_MAG_MIP_POINT, D3D11_TEXTURE_ADDRESS_CLAMP);
 
 	// 유니크 쓰지 말기
-	FireParameters* mParam = new FireParameters;
-	mParam->time = 0.0f;
-	mParam->intensity = 1.0f;
-	mParam->speed = 1.0f;
-	mParam->colorShift = 0.5f;
-	mParam->noiseScale = 4.0f;
-	mParam->verticalFactor = 2.0f;
-	mParam->flamePower = 1.2f;
-	mParam->detailScale = 3.0f;
+	//mParam = new FireParameters;
+	//mParam->time = 1.0f;
+	//mParam->intensity = 1.0f;
+	//mParam->speed = 1.0f;
+	//mParam->colorShift = 0.5f;
+	//mParam->noiseScale = 4.0f;
+	//mParam->verticalFactor = 2.0f;
+	//mParam->flamePower = 1.2f;
+	//mParam->detailScale = 3.0f;
+	//mParam->patternChangeSpeed = 5.0f;
+	//mParam->firePosition1 = Mathf::Vector4(0.1f, 0.1f, 0.3f, 0.3f);	// 좌측 하단
+	//mParam->firePosition2 = Mathf::Vector4(0.6f, 0.1f, 0.3f, 0.3f);	// 우측 하단
+	//mParam->firePosition3 = Mathf::Vector4(0.1f, 0.6f, 0.3f, 0.3f);	// 좌측 상단
+	//mParam->firePosition4 = Mathf::Vector4(0.6f, 0.6f, 0.3f, 0.3f);	// 우측 상단
+	//mParam->timeOffset1 = 0.0f;  // 첫 번째 불은 기본 시간
+	//mParam->timeOffset2 = 1.57f; // 약 π/2 (90도 위상차)
+	//mParam->timeOffset3 = 3.14f; // 약 π (180도 위상차)
+	//mParam->timeOffset4 = 4.17f; // 약 3π/2 (270도 위상차)
+	//mParam->numFireEffects = 4;
+	//mParam->Color = Mathf::Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+	//
+	//SetParameters(mParam);
 
-	// 타입을 명시적으로 지정하여 전달
-	SetParameters(mParam);
+	mmParam = new ExplodeParameters;
+	mmParam->time = 0.0f;
+	mmParam->intensity = 1.0f;
+	mmParam->speed = 1.0f;
+	mmParam->size = Mathf::Vector2(256.0f, 256.0f);
+	mmParam->range = Mathf::Vector2(8.0f, 4.0f);
 
 	CD3D11_DEPTH_STENCIL_DESC depthDesc{ CD3D11_DEFAULT() };
 	depthDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
 	depthDesc.DepthEnable = true;
 	depthDesc.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
 	DeviceState::g_pDevice->CreateDepthStencilState(&depthDesc, &m_pso->m_depthStencilState);
-
 }
 
 void FirePass::Initialize()
 {
-	auto computeShaderBlob = AssetsSystems->ComputeShaders["FireCompute"];
+	auto computeShaderBlob = AssetsSystems->ComputeShaders["Explode"];
 
 	DirectX11::ThrowIfFailed(
 		DeviceState::g_pDevice->CreateComputeShader(
@@ -126,13 +143,26 @@ void FirePass::Initialize()
 
 	m_resultTexture->CreateSRV(DXGI_FORMAT_R8G8B8A8_UNORM);
 	m_resultTexture->CreateUAV(DXGI_FORMAT_R8G8B8A8_UNORM);
+
+	{
+		//ImGui::ContextRegister("Fire Effect", [&]()
+		//	{
+		//		
+		//
+		//		ImGui::SliderFloat("Color Shift", &mParam->colorShift, -100, 100);
+		//		ImGui::SliderFloat("Noise Scale", &mParam->noiseScale, -10.0f, 10.0f);
+		//		ImGui::SliderFloat("Scale", &scale.x, 0.1f, 10);
+		//	});
+	}
+
+
 }
 
 void FirePass::LoadTexture(const std::string_view& basePath, const std::string_view& noisePath)
 {
 	m_noiseTexture = std::shared_ptr<Texture>(Texture::LoadFormPath(noisePath));
-	m_baseFireTexture = std::shared_ptr<Texture>(Texture::LoadFormPath("base4.png"));
-	m_fireAlphaTexture = std::shared_ptr<Texture>(Texture::LoadFormPath("firealpha.png"));
+	m_baseFireTexture = std::shared_ptr<Texture>(Texture::LoadFormPath("Explosion_01.dds"));
+	m_fireAlphaTexture = std::shared_ptr<Texture>(Texture::LoadFormPath("Explosion_01_a.jpg"));
 }
 
 void FirePass::Update(float delta)
@@ -143,18 +173,28 @@ void FirePass::Update(float delta)
 		m_delta = 0.0f;
 	}
 	
+	mmParam->time = m_delta;
 
-	mParam->time = m_delta;
-	
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
 	DirectX11::ThrowIfFailed(
 		DeviceState::g_pDeviceContext->Map(
 			m_fireParamsBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource
 		)
 	);
-	
-	memcpy(mappedResource.pData, static_cast<FireParameters*>(mParam), sizeof(FireParameters));
+
+	memcpy(mappedResource.pData, static_cast<ExplodeParameters*>(mmParam), sizeof(ExplodeParameters));
 	DeviceState::g_pDeviceContext->Unmap(m_fireParamsBuffer.Get(), 0);
+	//mParam->time = m_delta;
+	//
+	//D3D11_MAPPED_SUBRESOURCE mappedResource;
+	//DirectX11::ThrowIfFailed(
+	//	DeviceState::g_pDeviceContext->Map(
+	//		m_fireParamsBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource
+	//	)
+	//);
+	//
+	//memcpy(mappedResource.pData, static_cast<FireParameters*>(mParam), sizeof(FireParameters));
+	//DeviceState::g_pDeviceContext->Unmap(m_fireParamsBuffer.Get(), 0);
 
 }
 
@@ -192,13 +232,13 @@ void FirePass::Execute(Scene& scene)
 	};
 	deviceContext->CSSetSamplers(0, 2, samplers);
 
-	ID3D11ShaderResourceView* srvs[] = {
-	  m_baseFireTexture->m_pSRV,
-	  m_noiseTexture->m_pSRV,
-	   m_fireAlphaTexture->m_pSRV
-	};
-
-	deviceContext->CSSetShaderResources(0, 3, srvs);
+	//ID3D11ShaderResourceView* srvs[] = {
+	//  m_baseFireTexture->m_pSRV,
+	//  m_noiseTexture->m_pSRV,
+	//   m_fireAlphaTexture->m_pSRV
+	//};
+	ID3D11ShaderResourceView* srvs = m_baseFireTexture->m_pSRV;
+	deviceContext->CSSetShaderResources(0, 1, &srvs);
 
 	deviceContext->CSSetUnorderedAccessViews(0, 1, &m_resultTexture->m_pUAV, nullptr);
 

@@ -135,6 +135,8 @@ short InputManager::GetMouseWheelDelta() const
 
 void InputManager::ProcessRawInput(LPARAM lParam)
 {
+
+
     UINT dwSize = 0;
     GetRawInputData(reinterpret_cast<HRAWINPUT>(lParam), RID_INPUT, nullptr, &dwSize, sizeof(RAWINPUTHEADER));
 
