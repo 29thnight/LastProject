@@ -71,7 +71,7 @@ void GBufferPass::Execute(Scene& scene)
 	auto& deviceContext = DeviceState::g_pDeviceContext;
 	for (auto& RTV : m_renderTargetViews)
 	{
-		deviceContext->ClearRenderTargetView(RTV, Colors::Transparent);
+		deviceContext->ClearRenderTargetView(RTV, Colors::AliceBlue);
 	}
 
 	deviceContext->OMSetRenderTargets(RTV_TypeMax, m_renderTargetViews, DeviceState::g_pDepthStencilView);

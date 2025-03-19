@@ -15,7 +15,7 @@
 #include "Model.h"
 #include "Light.h"
 #include "Snow.h"
-
+#include "Fire.h"
 
 class Scene;
 class SceneRenderer
@@ -48,6 +48,7 @@ private:
 	std::unique_ptr<WireFramePass> m_pWireFramePass{};
     std::unique_ptr<GridPass> m_pGridPass{};
     std::unique_ptr<SnowPass> m_pSnowPass{};
+    std::unique_ptr<FirePass> m_pFirePass{};
 
 	//buffers
 	ComPtr<ID3D11Buffer> m_ModelBuffer;

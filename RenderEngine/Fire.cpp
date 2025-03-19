@@ -9,20 +9,16 @@ FirePass::FirePass()
 {
 	m_pso = std::make_unique<PipelineStateObject>();
 
-	m_pso->m_vertexShader = &AssetsSystems->VertexShaders["VertexShader"];
-
-	// 불효과를 ps에서만 해도 되나?
+	m_pso->m_vertexShader = &AssetsSystems->VertexShaders["BillBoard"];
+	m_pso->m_geometryShader = &AssetsSystems->GeometryShaders["BillBoard"];
 	m_pso->m_pixelShader = &AssetsSystems->PixelShaders["Fire"];
-
+	m_pso->m_computeShader = &AssetsSystems->ComputeShaders["FireCompute"];
+	m_pso->m_primitiveTopology = D3D11_PRIMITIVE_TOPOLOGY_POINTLIST;
 	D3D11_INPUT_ELEMENT_DESC vertexLayoutDesc[] =
 	{
-		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "TANGENT", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "BINORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "BLENDINDICES", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "BLENDWEIGHT", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+		{ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 }
 	};
 
 	DirectX11::ThrowIfFailed(
@@ -38,7 +34,7 @@ FirePass::FirePass()
 	{
 		D3D11_BUFFER_DESC cbDesc = {};
 		cbDesc.Usage = D3D11_USAGE_DYNAMIC;
-		cbDesc.ByteWidth = sizeof(FireParameters);
+		cbDesc.ByteWidth = sizeof(ExplodeParameters);
 		cbDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 		cbDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 		DeviceState::g_pDevice->CreateBuffer(&cbDesc, nullptr, m_constantBuffer.GetAddressOf());
@@ -48,8 +44,8 @@ FirePass::FirePass()
 	blendDesc.AlphaToCoverageEnable = FALSE;
 	blendDesc.IndependentBlendEnable = FALSE;
 	blendDesc.RenderTarget[0].BlendEnable = TRUE;
-	blendDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_ONE;
-	blendDesc.RenderTarget[0].DestBlend = D3D11_BLEND_ONE;
+	blendDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+	blendDesc.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
 	blendDesc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
 	blendDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
 	blendDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
@@ -98,7 +94,7 @@ FirePass::FirePass()
 	mmParam = new ExplodeParameters;
 	mmParam->time = 0.0f;
 	mmParam->intensity = 1.0f;
-	mmParam->speed = 1.0f;
+	mmParam->speed = 5.0f;
 	mmParam->size = Mathf::Vector2(256.0f, 256.0f);
 	mmParam->range = Mathf::Vector2(8.0f, 4.0f);
 
@@ -107,32 +103,30 @@ FirePass::FirePass()
 
 	CD3D11_DEPTH_STENCIL_DESC depthDesc{ CD3D11_DEFAULT() };
 	depthDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
-	depthDesc.DepthEnable = true;
+	depthDesc.DepthEnable = false;
 	depthDesc.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
 	DeviceState::g_pDevice->CreateDepthStencilState(&depthDesc, &m_pso->m_depthStencilState);
+
+	m_baseFireTexture = std::shared_ptr<Texture>(Texture::LoadFormPath("Explosion_01.dds"));
+	m_fireAlphaTexture = std::shared_ptr<Texture>(Texture::LoadFormPath("Explosion_01_a.jpg"));
+
+	m_ModelBuffer = DirectX11::CreateBuffer(
+		sizeof(ModelConstantBuffer),
+		D3D11_BIND_CONSTANT_BUFFER,
+		&modelConst
+	);
 }
 
 void FirePass::Initialize()
 {
-	auto computeShaderBlob = AssetsSystems->ComputeShaders["Explode"];
-
-	DirectX11::ThrowIfFailed(
-		DeviceState::g_pDevice->CreateComputeShader(
-			computeShaderBlob.GetBufferPointer(),
-			computeShaderBlob.GetBufferSize(),
-			nullptr,
-			m_computeShader.GetAddressOf()
-		)
-	);
-
 	{
 		D3D11_BUFFER_DESC paramDesc = {};
 		paramDesc.Usage = D3D11_USAGE_DYNAMIC;
-		paramDesc.ByteWidth = sizeof(FireParameters);
+		paramDesc.ByteWidth = sizeof(ExplodeParameters);
 		paramDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 		paramDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 		DirectX11::ThrowIfFailed(
-			DeviceState::g_pDevice->CreateBuffer(&paramDesc, nullptr, m_fireParamsBuffer.GetAddressOf())
+			DeviceState::g_pDevice->CreateBuffer(&paramDesc, nullptr, m_constantBuffer.GetAddressOf())
 		);
 	}
 
@@ -158,14 +152,33 @@ void FirePass::Initialize()
 		//	});
 	}
 
+	CreateBillboardVertexBuffer();
+}
 
+void FirePass::CreateBillboardVertexBuffer()
+{
+	BillboardVertex vertices[] = {
+		{ {1.0f, 0.0f, 0.0f, 1.0f}, {10.0f, -10.0f}, {0.0f, 0.0f, 0.0f, 0.0f} }
+	};
+
+	D3D11_BUFFER_DESC vbDesc = {};
+	vbDesc.Usage = D3D11_USAGE_DEFAULT;
+	vbDesc.ByteWidth = sizeof(vertices);
+	vbDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+
+	D3D11_SUBRESOURCE_DATA vbData = {};
+	vbData.pSysMem = vertices;
+
+	DirectX11::ThrowIfFailed(
+		DeviceState::g_pDevice->CreateBuffer(&vbDesc, &vbData, m_billboardVertexBuffer.GetAddressOf())
+	);
 }
 
 void FirePass::LoadTexture(const std::string_view& basePath, const std::string_view& noisePath)
 {
-	m_noiseTexture = std::shared_ptr<Texture>(Texture::LoadFormPath(noisePath));
-	m_baseFireTexture = std::shared_ptr<Texture>(Texture::LoadFormPath("Explosion_01.dds"));
-	m_fireAlphaTexture = std::shared_ptr<Texture>(Texture::LoadFormPath("Explosion_01_a.jpg"));
+	//m_noiseTexture = std::shared_ptr<Texture>(Texture::LoadFormPath(noisePath));
+	//m_baseFireTexture = std::shared_ptr<Texture>(Texture::LoadFormPath("Explosion_01.dds"));
+	//m_fireAlphaTexture = std::shared_ptr<Texture>(Texture::LoadFormPath("Explosion_01_a.jpg"));
 }
 
 void FirePass::Update(float delta)
@@ -181,12 +194,12 @@ void FirePass::Update(float delta)
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
 	DirectX11::ThrowIfFailed(
 		DeviceState::g_pDeviceContext->Map(
-			m_fireParamsBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource
+			m_constantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource
 		)
 	);
 
 	memcpy(mappedResource.pData, static_cast<ExplodeParameters*>(mmParam), sizeof(ExplodeParameters));
-	DeviceState::g_pDeviceContext->Unmap(m_fireParamsBuffer.Get(), 0);
+	DeviceState::g_pDeviceContext->Unmap(m_constantBuffer.Get(), 0);
 
 	//mParam->time = m_delta;
 	//
@@ -210,156 +223,96 @@ void FirePass::SetRenderTarget(Texture* renderTargetView)
 // 옵젝 붙이는거 고민중..
 void FirePass::PushFireObject(SceneObject* object)
 {
-	m_fireObjects.push_back(object);
+	EffectedObject.push_back(object);
 }
-
 
 void FirePass::Execute(Scene& scene)
 {
-	if (!m_baseFireTexture || !m_noiseTexture) {
-		return;
-	}
-
+	// 현재 렌더 상태 저장
 	ID3D11DepthStencilState* prevDepthState;
 	UINT prevStencilRef;
-	DeviceState::g_pDeviceContext->OMGetDepthStencilState(&prevDepthState, &prevStencilRef);
+	ID3D11BlendState* prevBlendState;
+	float prevBlendFactor[4];
+	UINT prevSampleMask;
+	ID3D11RasterizerState* prevRasterizerState;
 
 	auto& deviceContext = DeviceState::g_pDeviceContext;
+	deviceContext->OMGetDepthStencilState(&prevDepthState, &prevStencilRef);
+	deviceContext->OMGetBlendState(&prevBlendState, prevBlendFactor, &prevSampleMask);
+	deviceContext->RSGetState(&prevRasterizerState);
 
-	deviceContext->CSSetShader(m_computeShader.Get(), nullptr, 0);
-
-	deviceContext->CSSetConstantBuffers(0, 1, m_fireParamsBuffer.GetAddressOf());
+	// 컴퓨트 셰이더 실행 (불 텍스처 생성)
+	deviceContext->CSSetShader(m_pso->m_computeShader->GetShader(), nullptr, 0);
+	deviceContext->CSSetConstantBuffers(0, 1, m_constantBuffer.GetAddressOf());
 
 	ID3D11SamplerState* samplers[] = {
-	   m_pso->m_samplers[0].m_SamplerState,  // LinearSampler
-	   m_pso->m_samplers[1].m_SamplerState   // WrapSampler
+	   m_pso->m_samplers[0].m_SamplerState,
+	   m_pso->m_samplers[1].m_SamplerState
 	};
 	deviceContext->CSSetSamplers(0, 2, samplers);
 
-	//ID3D11ShaderResourceView* srvs[] = {
-	//  m_baseFireTexture->m_pSRV,
-	//  m_noiseTexture->m_pSRV,
-	//   m_fireAlphaTexture->m_pSRV
-	//};
-	ID3D11ShaderResourceView* srvs = m_baseFireTexture->m_pSRV;
-	deviceContext->CSSetShaderResources(0, 1, &srvs);
+	ID3D11ShaderResourceView* srvs[]{
+		m_baseFireTexture->m_pSRV,
+		m_fireAlphaTexture->m_pSRV
+	};
 
+	deviceContext->CSSetShaderResources(0, 2, srvs);
 	deviceContext->CSSetUnorderedAccessViews(0, 1, &m_resultTexture->m_pUAV, nullptr);
+
+	float clearColor[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+	deviceContext->ClearUnorderedAccessViewFloat(m_resultTexture->m_pUAV, clearColor);
 
 	deviceContext->Dispatch(32, 32, 1);
 
+	// 컴퓨트 셰이더 리소스 해제
 	ID3D11UnorderedAccessView* nullUAV = nullptr;
 	deviceContext->CSSetUnorderedAccessViews(0, 1, &nullUAV, nullptr);
-
 	ID3D11ShaderResourceView* nullSRV = nullptr;
 	deviceContext->CSSetShaderResources(0, 1, &nullSRV);
 
+	// 렌더링 파이프라인 설정
 	m_pso->Apply();
 
 	ID3D11RenderTargetView* rtv = m_renderTarget->GetRTV();
 	deviceContext->OMSetRenderTargets(1, &rtv, DeviceState::g_pDepthStencilView);
+	deviceContext->OMSetBlendState(m_pso->m_blendState, nullptr, 0xFFFFFFFF);
 
-	float blendFactor[] = { 0.0f, 0.0f, 0.0f,0.0f };
-	deviceContext->OMSetBlendState(m_pso->m_blendState, blendFactor, 0xFFFFFFFF);
-
+	// 카메라 설정
 	scene.UseCamera(scene.m_MainCamera);
-	DirectX11::PSSetConstantBuffer(1, 1, &scene.m_LightController.m_pLightBuffer);
-	scene.UseModel();
 
-	DirectX11::PSSetConstantBuffer(3, 1, m_fireParamsBuffer.GetAddressOf());
+	modelConst.world = XMMatrixIdentity();
+	modelConst.view = XMMatrixTranspose(scene.m_MainCamera.CalculateView());
+	modelConst.projection = XMMatrixTranspose(scene.m_MainCamera.CalculateProjection());
 
+	deviceContext->GSSetConstantBuffers(0, 1, m_ModelBuffer.GetAddressOf());
+	DirectX11::UpdateBuffer(m_ModelBuffer.Get(), &modelConst);
+
+	// 픽셀 셰이더 설정
+	DirectX11::PSSetConstantBuffer(3, 1, m_constantBuffer.GetAddressOf());
 	DirectX11::PSSetShaderResources(0, 1, &m_resultTexture->m_pSRV);
-	
-	struct SimpleVertex {
-		DirectX::XMFLOAT3 Position;
-		DirectX::XMFLOAT3 Normal;
-		DirectX::XMFLOAT2 TexCoord;
-		DirectX::XMFLOAT3 Tangent;
-		DirectX::XMFLOAT3 Binormal;
-		DirectX::XMFLOAT4 BlendIndices;
-		DirectX::XMFLOAT4 BlendWeights;
-	};
 
-	// 정점 데이터 생성
-	SimpleVertex vertices[] = {
-		// Position                  Normal              TexCoord       Tangent            Binormal          BlendIndices      BlendWeights
-		{{-1.0f, -1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}},
-		{{-1.0f,  1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, 0.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}},
-		{{ 1.0f,  1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 0.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}},
-		{{ 1.0f, -1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 0.0f}}
-	};
-
-	// 인덱스 데이터
-	UINT indices[] = {
-		0, 1, 2,
-		0, 2, 3
-	};
-
-	// 정점 버퍼 생성
-	ID3D11Buffer* vertexBuffer = nullptr;
-	D3D11_BUFFER_DESC vbDesc = {};
-	vbDesc.Usage = D3D11_USAGE_DEFAULT;
-	vbDesc.ByteWidth = sizeof(vertices);
-	vbDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-
-	D3D11_SUBRESOURCE_DATA vbData = {};
-	vbData.pSysMem = vertices;
-
-	DeviceState::g_pDevice->CreateBuffer(&vbDesc, &vbData, &vertexBuffer);
-
-	// 인덱스 버퍼 생성
-	ID3D11Buffer* indexBuffer = nullptr;
-	D3D11_BUFFER_DESC ibDesc = {};
-	ibDesc.Usage = D3D11_USAGE_DEFAULT;
-	ibDesc.ByteWidth = sizeof(indices);
-	ibDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
-
-	D3D11_SUBRESOURCE_DATA ibData = {};
-	ibData.pSysMem = indices;
-
-	DeviceState::g_pDevice->CreateBuffer(&ibDesc, &ibData, &indexBuffer);
-
-	// 월드 행렬 설정 - 카메라 앞에 위치하도록 조정
-	DirectX::XMMATRIX worldMatrix = DirectX::XMMatrixIdentity();
-	worldMatrix = DirectX::XMMatrixScaling(2.0f, 2.0f, 1.0f) *
-		DirectX::XMMatrixTranslation(0.0f, 0.0f, 5.0f); // 카메라 앞쪽에 위치
-
-	scene.UpdateModel(worldMatrix);
-
-	// 버퍼 설정 및 그리기
-	UINT stride = sizeof(SimpleVertex);
+	// 정점 버퍼 설정
+	UINT stride = sizeof(BillboardVertex);
 	UINT offset = 0;
-	deviceContext->IASetVertexBuffers(0, 1, &vertexBuffer, &stride, &offset);
-	deviceContext->IASetIndexBuffer(indexBuffer, DXGI_FORMAT_R32_UINT, 0);
-	deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	deviceContext->IASetVertexBuffers(0, 1, m_billboardVertexBuffer.GetAddressOf(), &stride, &offset);
+	deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_POINTLIST);
 
-	// 그리기
-	deviceContext->DrawIndexed(6, 0, 0);
+	// 빌보드 그리기
+	deviceContext->Draw(1, 0);
 
-	// 리소스 해제
-	if (vertexBuffer) vertexBuffer->Release();
-	if (indexBuffer) indexBuffer->Release();
-
-
-	//for (auto& sceneObejct : m_fireObjects)
-	//{
-	//	if (!sceneObejct->m_meshRenderer.m_IsEnabled)
-	//		continue;
-	//
-	//	scene.UpdateModel(sceneObejct->m_transform.GetWorldMatrix());
-	//
-	//	sceneObejct->m_meshRenderer.m_Mesh->Draw();
-	//}
-
+	// 리소스 정리 및 상태 복원
 	DirectX11::PSSetShaderResources(0, 1, &nullSRV);
+	deviceContext->OMSetDepthStencilState(prevDepthState, prevStencilRef);
+	deviceContext->OMSetBlendState(prevBlendState, prevBlendFactor, prevSampleMask);
+	deviceContext->RSSetState(prevRasterizerState);
 
-	deviceContext->OMSetBlendState(nullptr, blendFactor, 0xffffffff);
+	deviceContext->GSSetShader(nullptr, nullptr, 0);
 
-	DeviceState::g_pDeviceContext->OMSetDepthStencilState(prevDepthState, prevStencilRef);
+	// 포인터 해제
 	if (prevDepthState) prevDepthState->Release();
+	if (prevBlendState) prevBlendState->Release();
+	if (prevRasterizerState) prevRasterizerState->Release();
 
 	DirectX11::UnbindRenderTargets();
-
-	m_fireObjects.clear();
-
+	EffectedObject.clear();
 }

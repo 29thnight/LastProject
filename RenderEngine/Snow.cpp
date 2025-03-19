@@ -90,7 +90,7 @@ void SnowPass::Initialize(Texture* renderTarget)
 {
 	m_renderTarget = renderTarget;
 
-	LoadTexture("pika.png");
+	LoadTexture("asd.jpg");
 }
 
 void SnowPass::LoadTexture(const std::string_view& filePath)

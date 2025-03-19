@@ -405,5 +405,11 @@
     <FxCompile Include="x64\Assets\Shaders\SnowVS.vs.hlsl">
       <Filter>Shaders\Effect</Filter>
     </FxCompile>
+    <FxCompile Include="x64\Assets\Shaders\BillBoard.gs.hlsl">
+      <Filter>Shaders\Effect</Filter>
+    </FxCompile>
+    <FxCompile Include="x64\Assets\Shaders\BillBoard.vs.hlsl">
+      <Filter>Shaders\Effect</Filter>
+    </FxCompile>
   </ItemGroup>
 </Project>

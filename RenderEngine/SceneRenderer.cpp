@@ -322,11 +322,30 @@ SceneRenderer::SceneRenderer(const std::shared_ptr<DirectX11::DeviceResources>& 
 	m_pWireFramePass = std::make_unique<WireFramePass>();
 	m_pWireFramePass->SetRenderTarget(m_colorTexture.get());
 
+	// snowpass
+	m_pSnowPass = std::make_unique<SnowPass>();
+	SnowParameters snowParams;
+	snowParams.snowAmount = 100.0f;  // 눈 양 (밀도)
+	snowParams.snowSize = 0.5f;   // 눈송이 크기
+	snowParams.snowFallSpeed = 9.8f;  // 떨어지는 속도
+	snowParams.windDirection = Mathf::Vector3(1.0f, 0.0f, 0.0f);  // 바람 방향
+	snowParams.windStrength = 3.0f;  // 바람 세기
+	snowParams.snowColor = Mathf::Vector3(1.0f, 1.0f, 1.0f);  // 눈 색상 (흰색)
+	snowParams.snowOpacity = 1.0f;  // 투명도
+
+	m_pSnowPass->Initialize(m_toneMappedColourTexture.get());
+
+	m_pSnowPass->SetParameters(snowParams);
+
+	m_pFirePass = std::make_unique<FirePass>();
+	m_pFirePass->Initialize();
+	m_pFirePass->SetRenderTarget(m_toneMappedColourTexture.get());
+	//m_pFirePass->LoadTexture("base.png", "noise.png");
+	
     m_pGridPass = std::make_unique<GridPass>();
     m_pGridPass->Initialize(m_toneMappedColourTexture.get(), m_gridTexture.get());
 
-	m_pSnowPass = std::make_unique<SnowPass>();
-
+	
 }
 
 void SceneRenderer::Initialize(Scene* _pScene)
@@ -375,8 +394,8 @@ void SceneRenderer::Initialize(Scene* _pScene)
 
 		//model = Model::LoadModel("bangbooExport.fbx");
 		//model = Model::LoadModel("untitled.gltf");
-		model = Model::LoadModel("sphere.fbx");
-		Model::LoadModelToScene(model, *m_currentScene);
+		//model = Model::LoadModel("sphere.fbx");
+		//Model::LoadModelToScene(model, *m_currentScene);
 	}
 	else
 	{
@@ -399,6 +418,8 @@ void SceneRenderer::Initialize(Scene* _pScene)
 void SceneRenderer::Update(float deltaTime)
 {
 	m_currentScene->Update(deltaTime);
+	m_pSnowPass->Update(deltaTime);
+	m_pFirePass->Update(deltaTime);
 	PrepareRender();
 }
 
@@ -435,7 +456,7 @@ void SceneRenderer::Render()
 
 	//[5] skyBoxPass
 	{
-		m_pSkyBoxPass->Execute(*m_currentScene);
+		//m_pSkyBoxPass->Execute(*m_currentScene);
 	}
 
     //[6] ToneMapPass
@@ -446,6 +467,11 @@ void SceneRenderer::Render()
 	//[*] GridPass
 	{
         m_pGridPass->Execute(*m_currentScene);
+	}
+
+	{
+		//m_pSnowPass->Execute(*m_currentScene);
+		m_pFirePass->Execute(*m_currentScene);
 	}
 
 	//[7] SpritePass
