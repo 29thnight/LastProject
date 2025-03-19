@@ -554,14 +554,14 @@ void SceneRenderer::Render()
         m_pToneMapPass->Execute(*m_currentScene);
     }
 	
-	//[*] GridPass
-	{
-        m_pGridPass->Execute(*m_currentScene);
-	}
-
 	{
 		//m_pSnowPass->Execute(*m_currentScene);
 		m_pFirePass->Execute(*m_currentScene);
+	}
+
+	//[*] GridPass
+	{
+        m_pGridPass->Execute(*m_currentScene);
 	}
 
 	//[7] SpritePass

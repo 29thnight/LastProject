@@ -9,12 +9,6 @@ struct alignas(16) ExplodeParameters : public EffectParameters
 	Mathf::Vector2 range;
 };
 
-struct BillboardVertex {
-	DirectX::XMFLOAT4 Position;  // 중심 위치
-	DirectX::XMFLOAT2 Size;      // 빌보드 크기
-	DirectX::XMFLOAT4 Color;     // 색상
-};
-
 struct alignas(16) ModelConstantBuffer 
 {
 	Mathf::Matrix world;
@@ -40,8 +34,6 @@ public:
 	void PushFireObject(SceneObject* object);
 
 	void Initialize();
-
-	void CreateBillboardVertexBuffer();
 private:
 	ComPtr<ID3D11Buffer> m_constantBuffer;
 	ComPtr<ID3D11Buffer> m_billboardVertexBuffer;

@@ -67,30 +67,6 @@ FirePass::FirePass()
 	m_pso->m_samplers.emplace_back(D3D11_FILTER_MIN_MAG_MIP_LINEAR, D3D11_TEXTURE_ADDRESS_WRAP);
 	m_pso->m_samplers.emplace_back(D3D11_FILTER_MIN_MAG_MIP_POINT, D3D11_TEXTURE_ADDRESS_CLAMP);
 
-	// 유니크 쓰지 말기
-	//mParam = new FireParameters;
-	//mParam->time = 1.0f;
-	//mParam->intensity = 1.0f;
-	//mParam->speed = 1.0f;
-	//mParam->colorShift = 0.5f;
-	//mParam->noiseScale = 4.0f;
-	//mParam->verticalFactor = 2.0f;
-	//mParam->flamePower = 1.2f;
-	//mParam->detailScale = 3.0f;
-	//mParam->patternChangeSpeed = 5.0f;
-	//mParam->firePosition1 = Mathf::Vector4(0.1f, 0.1f, 0.3f, 0.3f);	// 좌측 하단
-	//mParam->firePosition2 = Mathf::Vector4(0.6f, 0.1f, 0.3f, 0.3f);	// 우측 하단
-	//mParam->firePosition3 = Mathf::Vector4(0.1f, 0.6f, 0.3f, 0.3f);	// 좌측 상단
-	//mParam->firePosition4 = Mathf::Vector4(0.6f, 0.6f, 0.3f, 0.3f);	// 우측 상단
-	//mParam->timeOffset1 = 0.0f;  // 첫 번째 불은 기본 시간
-	//mParam->timeOffset2 = 1.57f; // 약 π/2 (90도 위상차)
-	//mParam->timeOffset3 = 3.14f; // 약 π (180도 위상차)
-	//mParam->timeOffset4 = 4.17f; // 약 3π/2 (270도 위상차)
-	//mParam->numFireEffects = 4;
-	//mParam->Color = Mathf::Vector4(1.0f, 1.0f, 1.0f, 1.0f);
-	//
-	//SetParameters(mParam);
-
 	mmParam = new ExplodeParameters;
 	mmParam->time = 0.0f;
 	mmParam->intensity = 1.0f;
@@ -142,36 +118,19 @@ void FirePass::Initialize()
 	m_resultTexture->CreateUAV(DXGI_FORMAT_R8G8B8A8_UNORM);
 
 	{
-		//ImGui::ContextRegister("Fire Effect", [&]()
-		//	{
-		//		
-		//
-		//		ImGui::SliderFloat("Color Shift", &mParam->colorShift, -100, 100);
-		//		ImGui::SliderFloat("Noise Scale", &mParam->noiseScale, -10.0f, 10.0f);
-		//		ImGui::SliderFloat("Scale", &scale.x, 0.1f, 10);
-		//	});
+		ImGui::ContextRegister("Fire Effect", [&]()
+			{
+				ImGui::SliderFloat("Intensity", &mmParam->intensity, 0.0f, 10.0f);
+				ImGui::SliderFloat("Speed", &mmParam->speed, 1.0f, 100.0f);
+			});
 	}
 
-	CreateBillboardVertexBuffer();
-}
+	BillboardVertex vertex;
+	vertex.Position = { 1.0f, 0.0f, 0.0f, 1.0f };
+	vertex.Size = { 10.0f, -10.0f };
+	vertex.Color = { 0.5f, 0.25f, 0.0f, 1.0f };
 
-void FirePass::CreateBillboardVertexBuffer()
-{
-	BillboardVertex vertices[] = {
-		{ {1.0f, 0.0f, 0.0f, 1.0f}, {10.0f, -10.0f}, {0.0f, 0.0f, 0.0f, 0.0f} }
-	};
-
-	D3D11_BUFFER_DESC vbDesc = {};
-	vbDesc.Usage = D3D11_USAGE_DEFAULT;
-	vbDesc.ByteWidth = sizeof(vertices);
-	vbDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-
-	D3D11_SUBRESOURCE_DATA vbData = {};
-	vbData.pSysMem = vertices;
-
-	DirectX11::ThrowIfFailed(
-		DeviceState::g_pDevice->CreateBuffer(&vbDesc, &vbData, m_billboardVertexBuffer.GetAddressOf())
-	);
+	CreateBillboardVertex(&vertex);
 }
 
 void FirePass::LoadTexture(const std::string_view& basePath, const std::string_view& noisePath)
@@ -294,7 +253,7 @@ void FirePass::Execute(Scene& scene)
 	// 정점 버퍼 설정
 	UINT stride = sizeof(BillboardVertex);
 	UINT offset = 0;
-	deviceContext->IASetVertexBuffers(0, 1, m_billboardVertexBuffer.GetAddressOf(), &stride, &offset);
+	deviceContext->IASetVertexBuffers(0, 1, &billboardVertexBuffer, &stride, &offset);
 	deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_POINTLIST);
 
 	// 빌보드 그리기
