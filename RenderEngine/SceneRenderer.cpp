@@ -38,72 +38,74 @@ void SceneRenderer::EditTransform(float* cameraView, float* cameraProjection, fl
 	{
 		if (ImGui::IsKeyPressed(ImGuiKey_T))
 			mCurrentGizmoOperation = ImGuizmo::TRANSLATE;
-		if (ImGui::IsKeyPressed(ImGuiKey_G))
+		if (ImGui::IsKeyPressed(ImGuiKey_R))
 			mCurrentGizmoOperation = ImGuizmo::ROTATE;
-		if (ImGui::IsKeyPressed(ImGuiKey_R)) // r Key
+		if (ImGui::IsKeyPressed(ImGuiKey_G)) // r Key
 			mCurrentGizmoOperation = ImGuizmo::SCALE;
-		if (ImGui::RadioButton("Translate", mCurrentGizmoOperation == ImGuizmo::TRANSLATE))
-			mCurrentGizmoOperation = ImGuizmo::TRANSLATE;
-		ImGui::SameLine();
-		if (ImGui::RadioButton("Rotate", mCurrentGizmoOperation == ImGuizmo::ROTATE))
-			mCurrentGizmoOperation = ImGuizmo::ROTATE;
-		ImGui::SameLine();
-		if (ImGui::RadioButton("Scale", mCurrentGizmoOperation == ImGuizmo::SCALE))
-			mCurrentGizmoOperation = ImGuizmo::SCALE;
-		if (ImGui::RadioButton("Universal", mCurrentGizmoOperation == ImGuizmo::UNIVERSAL))
-			mCurrentGizmoOperation = ImGuizmo::UNIVERSAL;
-		float matrixTranslation[3], matrixRotation[3], matrixScale[3];
-		ImGuizmo::DecomposeMatrixToComponents(matrix, matrixTranslation, matrixRotation, matrixScale);
-		ImGui::InputFloat3("Tr", matrixTranslation);
-		ImGui::InputFloat3("Rt", matrixRotation);
-		ImGui::InputFloat3("Sc", matrixScale);
-		ImGuizmo::RecomposeMatrixFromComponents(matrixTranslation, matrixRotation, matrixScale, matrix);
+		//if (ImGui::RadioButton("Translate", mCurrentGizmoOperation == ImGuizmo::TRANSLATE))
+		//	mCurrentGizmoOperation = ImGuizmo::TRANSLATE;
+		//ImGui::SameLine();
+		//if (ImGui::RadioButton("Rotate", mCurrentGizmoOperation == ImGuizmo::ROTATE))
+		//	mCurrentGizmoOperation = ImGuizmo::ROTATE;
+		//ImGui::SameLine();
+		//if (ImGui::RadioButton("Scale", mCurrentGizmoOperation == ImGuizmo::SCALE))
+		//	mCurrentGizmoOperation = ImGuizmo::SCALE;
+		//if (ImGui::RadioButton("Universal", mCurrentGizmoOperation == ImGuizmo::UNIVERSAL))
+		//	mCurrentGizmoOperation = ImGuizmo::UNIVERSAL;
+		//float matrixTranslation[3], matrixRotation[3], matrixScale[3];
+		//ImGuizmo::DecomposeMatrixToComponents(matrix, matrixTranslation, matrixRotation, matrixScale);
+		//ImGui::InputFloat3("Tr", matrixTranslation);
+		//ImGui::InputFloat3("Rt", matrixRotation);
+		//ImGui::InputFloat3("Sc", matrixScale);
+		//ImGuizmo::RecomposeMatrixFromComponents(matrixTranslation, matrixRotation, matrixScale, matrix);
 
-		if (mCurrentGizmoOperation != ImGuizmo::SCALE)
-		{
-			if (ImGui::RadioButton("Local", mCurrentGizmoMode == ImGuizmo::LOCAL))
-				mCurrentGizmoMode = ImGuizmo::LOCAL;
-			ImGui::SameLine();
-			if (ImGui::RadioButton("World", mCurrentGizmoMode == ImGuizmo::WORLD))
-				mCurrentGizmoMode = ImGuizmo::WORLD;
-		}
+		//if (mCurrentGizmoOperation != ImGuizmo::SCALE)
+		//{
+		//	if (ImGui::RadioButton("Local", mCurrentGizmoMode == ImGuizmo::LOCAL))
+		//		mCurrentGizmoMode = ImGuizmo::LOCAL;
+		//	ImGui::SameLine();
+		//	if (ImGui::RadioButton("World", mCurrentGizmoMode == ImGuizmo::WORLD))
+		//		mCurrentGizmoMode = ImGuizmo::WORLD;
+		//}
 		if (ImGui::IsKeyPressed(ImGuiKey_F))
 			useSnap = !useSnap;
-		ImGui::Checkbox("##UseSnap", &useSnap);
-		ImGui::SameLine();
-
-		switch (mCurrentGizmoOperation)
-		{
-		case ImGuizmo::TRANSLATE:
-			ImGui::InputFloat3("Snap", &snap[0]);
-			break;
-		case ImGuizmo::ROTATE:
-			ImGui::InputFloat("Angle Snap", &snap[0]);
-			break;
-		case ImGuizmo::SCALE:
-			ImGui::InputFloat("Scale Snap", &snap[0]);
-			break;
-		}
-		ImGui::Checkbox("Bound Sizing", &boundSizing);
-		if (boundSizing)
-		{
-			ImGui::PushID(3);
-			ImGui::Checkbox("##BoundSizing", &boundSizingSnap);
-			ImGui::SameLine();
-			ImGui::InputFloat3("Snap", boundsSnap);
-			ImGui::PopID();
-		}
+		//ImGui::Checkbox("##UseSnap", &useSnap);
+		//ImGui::SameLine();
+		//
+		//switch (mCurrentGizmoOperation)
+		//{
+		//case ImGuizmo::TRANSLATE:
+		//	ImGui::InputFloat3("Snap", &snap[0]);
+		//	break;
+		//case ImGuizmo::ROTATE:
+		//	ImGui::InputFloat("Angle Snap", &snap[0]);
+		//	break;
+		//case ImGuizmo::SCALE:
+		//	ImGui::InputFloat("Scale Snap", &snap[0]);
+		//	break;
+		//}
+		//ImGui::Checkbox("Bound Sizing", &boundSizing);
+		//if (boundSizing)
+		//{
+		//	ImGui::PushID(3);
+		//	ImGui::Checkbox("##BoundSizing", &boundSizingSnap);
+		//	ImGui::SameLine();
+		//	ImGui::InputFloat3("Snap", boundsSnap);
+		//	ImGui::PopID();
+		//}
 	}
 
 	ImGuiIO& io = ImGui::GetIO();
 	float viewManipulateRight = io.DisplaySize.x;
 	float viewManipulateTop = 0;
-	static ImGuiWindowFlags gizmoWindowFlags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBringToFrontOnFocus;
+	static ImGuiWindowFlags gizmoWindowFlags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse;
 	if (useWindow)
 	{
 		//ImGui::SetNextWindowSize(ImVec2(800, 400), ImGuiCond_Appearing);
 		//ImGui::SetNextWindowPos(ImVec2(400, 20), ImGuiCond_Appearing);
-		ImGui::PushStyleColor(ImGuiCol_WindowBg, (ImVec4)ImColor(0.35f, 0.3f, 0.3f));
+		ImGui::PushStyleColor(ImGuiCol_WindowBg, (ImVec4)ImColor(0.f, 0.f, 0.f, 0.f));
+		//ImGui::PushStyleColor(ImGuiCol_WindowBg, (ImVec4)ImColor(0.35f, 0.3f, 0.3f));
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0,0));
 		ImGui::Begin("Gizmo", 0, gizmoWindowFlags);
 		ImGuizmo::SetDrawlist();
 
@@ -115,12 +117,15 @@ void SceneRenderer::EditTransform(float* cameraView, float* cameraProjection, fl
 		viewManipulateRight = ImGui::GetWindowPos().x + windowWidth;
 		viewManipulateTop = ImGui::GetWindowPos().y;
 		ImGuiWindow* window = ImGui::GetCurrentWindow();
-		gizmoWindowFlags = ImGui::IsWindowHovered() && ImGui::IsMouseHoveringRect(window->InnerRect.Min, window->InnerRect.Max) ? ImGuiWindowFlags_NoMove : 0;
+		gizmoWindowFlags |= ImGui::IsWindowHovered() && ImGui::IsMouseHoveringRect(window->InnerRect.Min, window->InnerRect.Max) ? ImGuiWindowFlags_NoMove : 0;
 
-		float x = window->InnerRect.Max.x - window->InnerRect.Min.x;
-		float y = window->InnerRect.Max.y - window->InnerRect.Min.y;
+		float x = windowWidth;//window->InnerRect.Max.x - window->InnerRect.Min.x;
+		//auto proj = m_currentScene->m_MainCamera.CalculateProjection();
+		//float ratio = proj.r[0].m128_f32[0] / proj.r[1].m128_f32[1];
+		float y = windowHeight;//window->InnerRect.Max.y - window->InnerRect.Min.y;
 
 		ImGui::Image((ImTextureID)m_gridTexture->m_pSRV, ImVec2(x, y));
+		ImGui::PopStyleVar();
 		//ImGui::Image((ImTextureID)sceneRenderer->GetMeshEditorTarget()->GetSRV(),
 		//	ImVec2(450, 560));
 		//ImGui::End();
@@ -140,14 +145,26 @@ void SceneRenderer::EditTransform(float* cameraView, float* cameraProjection, fl
 	{
 		ImGuizmo::Manipulate(cameraView, cameraProjection, mCurrentGizmoOperation, mCurrentGizmoMode, matrix, NULL, useSnap ? &snap[0] : NULL, boundSizing ? bounds : NULL, boundSizingSnap ? boundsSnap : NULL);
 
-		XMVECTOR pos;
-		XMVECTOR rot;
-		XMVECTOR scale;
-		XMMatrixDecompose(&scale, &rot, &pos, XMMATRIX(matrix));
+		//XMVECTOR pos;
+		//XMVECTOR rot;
+		//XMVECTOR scale;
+		//XMMatrixDecompose(&scale, &rot, &pos, XMMATRIX(matrix));
 
-		obj->m_transform.SetPosition(pos);
-		obj->m_transform.SetRotation(rot);
-		obj->m_transform.SetScale(scale);
+		obj->m_transform.SetLocalMatrix(XMMATRIX(matrix));
+
+		//XMMATRIX parentWorldMatrix = XMMatrixMultiply(
+		//	XMMatrixInverse(nullptr, obj->m_transform.GetLocalMatrix()),
+		//	obj->m_transform.GetWorldMatrix()
+		//);
+
+		//XMMatrixDecompose(&scale, &rot, &pos, XMMatrixMultiply(
+		//	XMMatrixInverse(nullptr, parentWorldMatrix),
+		//	XMMATRIX(matrix))
+		//);
+
+		//obj->m_transform.SetPosition(pos);
+		//obj->m_transform.SetRotation(rot);
+		//obj->m_transform.SetScale(scale);
 	}
 
 	ImGuizmo::ViewManipulate(cameraView, camDistance, ImVec2(viewManipulateRight - 128, viewManipulateTop), ImVec2(128, 128), 0x10101010);
@@ -396,6 +413,11 @@ void SceneRenderer::Initialize(Scene* _pScene)
 		//model = Model::LoadModel("untitled.gltf");
 		//model = Model::LoadModel("sphere.fbx");
 		//Model::LoadModelToScene(model, *m_currentScene);
+		//model = Model::LoadModel("BoxHuman.fbx");
+		//Model::LoadModelToScene(model, *m_currentScene);
+		//testModel = Model::LoadModel("BoxHuman.fbx");
+		//Model::LoadModelToScene(testModel, *m_currentScene);
+		
 	}
 	else
 	{
@@ -413,6 +435,74 @@ void SceneRenderer::Initialize(Scene* _pScene)
 	Texture* brdfLUT = m_pSkyBoxPass->GenerateBRDFLUT(*m_currentScene);
 
 	m_pDeferredPass->UseEnvironmentMap(envMap, preFilter, brdfLUT);
+
+	ImGui::ContextRegister("RenderPass", true, [&]()
+	{
+		if (ImGui::BeginTabBar("RenderPass Control Panel"))
+		{
+			if (ImGui::BeginTabItem("ShadowPass"))
+			{
+				m_currentScene->m_LightController.m_shadowMapPass->ControlPanel();
+				ImGui::EndTabItem();
+			}
+
+			if (ImGui::BeginTabItem("GBufferPass"))
+			{
+				m_pGBufferPass->ControlPanel();
+				ImGui::EndTabItem();
+			}
+
+			if (ImGui::BeginTabItem("SSAOPass"))
+			{
+				m_pSSAOPass->ControlPanel();
+				ImGui::EndTabItem();
+			}
+
+			if (ImGui::BeginTabItem("DeferredPass"))
+			{
+				m_pDeferredPass->ControlPanel();
+				ImGui::EndTabItem();
+			}
+
+			if (ImGui::BeginTabItem("SkyBoxPass"))
+			{
+				m_pSkyBoxPass->ControlPanel();
+				ImGui::EndTabItem();
+			}
+
+			if (ImGui::BeginTabItem("ToneMapPass"))
+			{
+				m_pToneMapPass->ControlPanel();
+				ImGui::EndTabItem();
+			}
+
+			if (ImGui::BeginTabItem("SpritePass"))
+			{
+				m_pSpritePass->ControlPanel();
+				ImGui::EndTabItem();
+			}
+
+			if (ImGui::BeginTabItem("BlitPass"))
+			{
+				m_pBlitPass->ControlPanel();
+				ImGui::EndTabItem();
+			}
+
+			if (ImGui::BeginTabItem("WireFramePass"))
+			{
+				m_pWireFramePass->ControlPanel();
+				ImGui::EndTabItem();
+			}
+
+			if (ImGui::BeginTabItem("GridPass"))
+			{
+				m_pGridPass->ControlPanel();
+				ImGui::EndTabItem();
+			}
+
+			ImGui::EndTabBar();
+		}
+	});
 }
 
 void SceneRenderer::Update(float deltaTime)
@@ -567,10 +657,16 @@ void SceneRenderer::EditorView()
 		EditTransform(&floatMatrix.m[0][0], &projMatrix.m[0][0], &identityMatrix.m[0][0], false, nullptr, &m_currentScene->m_MainCamera);
 	}
 
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
 	ImGui::Begin("GameView", 0, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBringToFrontOnFocus);
 	{
 		ImVec2 size = ImGui::GetContentRegionAvail();
+
+		float convert = DeviceState::g_aspectRatio;
+		size.x = size.y * convert;
+
 		ImGui::Image((ImTextureID)m_toneMappedColourTexture->m_pSRV, size);
 	}
 	ImGui::End();
+	ImGui::PopStyleVar();
 }

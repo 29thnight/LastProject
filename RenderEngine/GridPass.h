@@ -19,14 +19,14 @@ struct alignas(16) GridVertex
 struct alignas(16) GridUniformBuffer
 {
     float4 gridColor{ XMFLOAT4(0.45f, 0.44f, 0.43f, 0.5f) };
-    float4 checkerColor{ XMFLOAT4(0.41f, 0.38f, 0.36f, 0.5f) };
-    float fadeStart{ 0.f };
-    float fadeEnd{ 10.f };
-    float unitSize{ 1.f };
-    int subdivisions{ 5 };
+    float4 checkerColor{ XMFLOAT4(0.41f, 0.38f, 0.36f, 0.f) };
+    float fadeStart{ 300.f };
+    float fadeEnd{ 1000.f };
+    float unitSize{ 10.f };
+    int subdivisions{ 10 };
     float3 centerOffset{ 0, 0, 0 };
     float majorLineThickness{ 2.f };
-    float minorLineThickness{ 1.f };
+    float minorLineThickness{ 0.5f };
     float minorLineAlpha{ 1.f };
 };
 
@@ -38,6 +38,7 @@ public:
 	~GridPass();
 	void Initialize(Texture* color, Texture* grid);
 	void Execute(Scene& scene) override;
+	void ControlPanel() override;
 
     ID3D11ShaderResourceView* GetGridSRV() const { return m_gridTexture->m_pSRV; }
 
