@@ -78,5 +78,11 @@ float4 main(PixelInput input) : SV_TARGET
     //fireColor.rgb *= flicker;
     
     // 최종 색상 반환
+    
+    if (fireColor.a < 0.1)
+    {
+        discard; // 픽셀 폐기 (완전 투명 처리)
+    }
+    
     return fireColor;
 }

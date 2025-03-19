@@ -86,6 +86,7 @@
     </Filter>
     <Filter Include="Shaders\Normal">
       <UniqueIdentifier>{8438fb5a-ae73-4c23-96a2-61cd47145424}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Window">
       <UniqueIdentifier>{1e1443b4-3acb-4b35-9d82-37003d91fcfd}</UniqueIdentifier>
     </Filter>
@@ -243,6 +244,9 @@
     </None>
     <None Include="x64\Assets\Shaders\Shading.hlsli">
       <Filter>Shaders\Normal</Filter>
+    </None>
+    <None Include="x64\Assets\Shaders\BillBoard.gs.hlsl">
+      <Filter>Shaders\Effect</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
@@ -404,14 +408,17 @@
     <FxCompile Include="x64\Assets\Shaders\Explode.cs.hlsl">
       <Filter>Shaders\Effect</Filter>
     </FxCompile>
-    <FxCompile Include="x64\Assets\Shaders\WireFrame.ps.hlsl">
-      <Filter>Shaders</Filter>
+    <FxCompile Include="x64\Assets\Shaders\Grid.ps.hlsl">
+      <Filter>Shaders\Normal</Filter>
     </FxCompile>
     <FxCompile Include="x64\Assets\Shaders\Grid.vs.hlsl">
-      <Filter>Shaders</Filter>
+      <Filter>Shaders\Normal</Filter>
     </FxCompile>
-    <FxCompile Include="x64\Assets\Shaders\Grid.ps.hlsl">
-      <Filter>Shaders</Filter>
+    <FxCompile Include="x64\Assets\Shaders\WireFrame.ps.hlsl">
+      <Filter>Shaders\Normal</Filter>
+    </FxCompile>
+    <FxCompile Include="x64\Assets\Shaders\BillBoard.vs.hlsl">
+      <Filter>Shaders\Effect</Filter>
     </FxCompile>
   </ItemGroup>
 </Project>
