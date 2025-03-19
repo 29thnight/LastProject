@@ -96,7 +96,6 @@
     </Filter>
     <Filter Include="Resources\Model">
       <UniqueIdentifier>{eba2e3b3-3d2a-41f5-8a75-0c8eadbcec0c}</UniqueIdentifier>
-    </Filter>
     <Filter Include="RenderPass\TAAPass">
       <UniqueIdentifier>{acc932ee-ade3-4e17-ba66-54ac90e28a6a}</UniqueIdentifier>
     </Filter>
@@ -215,7 +214,6 @@
     </ClCompile>
     <ClCompile Include="IEffect.cpp">
       <Filter>RenderPass\EffectPass</Filter>
-    </ClCompile>
     <ClCompile Include="TAAPass.cpp">
       <Filter>RenderPass\TAAPass</Filter>
     </ClCompile>
@@ -355,12 +353,6 @@
     </ClInclude>
     <ClInclude Include="GridPass.h">
       <Filter>RenderPass\GridPass</Filter>
-    </ClInclude>
-    <ClInclude Include="IEffect.h">
-      <Filter>RenderPass\EffectPass</Filter>
-    </ClInclude>
-    <ClInclude Include="Fire.h">
-      <Filter>RenderPass\EffectPass</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
