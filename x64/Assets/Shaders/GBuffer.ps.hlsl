@@ -70,6 +70,11 @@ GBufferOutput main(PixelShaderInput IN)
     if (gUseAlbedoMap)
     {
 
+        if(all(albedo == 0))
+        {
+            albedo = float4(1, 1, 1, 1);
+        }
+        
         albedo = Albedo.Sample(LinearSampler, IN.texCoord);
         if (gConvertToLinear)
             albedo = SRGBtoLINEAR(albedo);

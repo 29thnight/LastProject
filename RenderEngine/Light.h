@@ -74,6 +74,8 @@ private:
 	friend class DeferredPass;
 	friend class GBufferPass;
 	friend class ShadowMapPass;
+	friend class SnowPass;
+	friend class FirePass;
 
 	ID3D11Buffer* m_pLightBuffer{ nullptr };
 	ShadowMapRenderDesc m_shadowMapRenderDesc;

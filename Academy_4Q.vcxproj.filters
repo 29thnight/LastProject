@@ -84,6 +84,9 @@
     <Filter Include="Window">
       <UniqueIdentifier>{1e1443b4-3acb-4b35-9d82-37003d91fcfd}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Shaders\Effect">
+      <UniqueIdentifier>{56941d40-ecd2-418e-9bf1-dc7b756506c6}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -386,6 +389,21 @@
     </FxCompile>
     <FxCompile Include="x64\Assets\Shaders\Grid.ps.hlsl">
       <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="x64\Assets\Shaders\Fire.ps.hlsl">
+      <Filter>Shaders\Effect</Filter>
+    </FxCompile>
+    <FxCompile Include="x64\Assets\Shaders\FireCompute.cs.hlsl">
+      <Filter>Shaders\Effect</Filter>
+    </FxCompile>
+    <FxCompile Include="x64\Assets\Shaders\SnowGS.gs.hlsl">
+      <Filter>Shaders\Effect</Filter>
+    </FxCompile>
+    <FxCompile Include="x64\Assets\Shaders\SnowPS.ps.hlsl">
+      <Filter>Shaders\Effect</Filter>
+    </FxCompile>
+    <FxCompile Include="x64\Assets\Shaders\SnowVS.vs.hlsl">
+      <Filter>Shaders\Effect</Filter>
     </FxCompile>
   </ItemGroup>
 </Project>

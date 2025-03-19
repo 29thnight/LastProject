@@ -324,6 +324,9 @@ SceneRenderer::SceneRenderer(const std::shared_ptr<DirectX11::DeviceResources>& 
 
     m_pGridPass = std::make_unique<GridPass>();
     m_pGridPass->Initialize(m_toneMappedColourTexture.get(), m_gridTexture.get());
+
+	m_pSnowPass = std::make_unique<SnowPass>();
+
 }
 
 void SceneRenderer::Initialize(Scene* _pScene)
@@ -370,9 +373,9 @@ void SceneRenderer::Initialize(Scene* _pScene)
 		m_currentScene->m_LightController.Initialize();
 		m_currentScene->m_LightController.SetLightWithShadows(0, desc);
 
-		model = Model::LoadModel("bangbooExport.fbx");
+		//model = Model::LoadModel("bangbooExport.fbx");
 		//model = Model::LoadModel("untitled.gltf");
-		//model = Model::LoadModel("sphere.fbx");
+		model = Model::LoadModel("sphere.fbx");
 		Model::LoadModelToScene(model, *m_currentScene);
 	}
 	else
