@@ -158,7 +158,7 @@
     <ClCompile Include="FontManager.cpp" />
     <ClCompile Include="GBufferPass.cpp" />
     <ClCompile Include="GridPass.cpp" />
-    <ClCompile Include="IEffect.cpp" />
+    <ClCompile Include="Effects.cpp" />
     <ClCompile Include="ImGuiRenderer.cpp" />
     <ClCompile Include="Light.cpp" />
     <ClCompile Include="Material.cpp" />
@@ -198,7 +198,7 @@
     <ClInclude Include="FontManager.h" />
     <ClInclude Include="ForwardPass.h" />
     <ClInclude Include="GBufferPass.h" />
-    <ClInclude Include="IEffect.h" />
+    <ClInclude Include="Effects.h" />
     <ClInclude Include="ImGuiContext.h" />
     <ClInclude Include="ImGuiRegister.h" />
     <ClInclude Include="ImGUiRegisterClass.h" />

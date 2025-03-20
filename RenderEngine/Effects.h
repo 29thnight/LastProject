@@ -15,11 +15,11 @@ struct BillboardVertex {
 	Mathf::Vector4 Color;
 };
 
-class IEffect : public IRenderPass
+class Effects : public IRenderPass
 {
 public:
 
-	virtual ~IEffect() {}
+	virtual ~Effects() {}
 
 	void CreateBillboardVertex(BillboardVertex* vertex);
 	

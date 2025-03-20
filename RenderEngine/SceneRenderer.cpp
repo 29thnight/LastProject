@@ -362,7 +362,6 @@ SceneRenderer::SceneRenderer(const std::shared_ptr<DirectX11::DeviceResources>& 
     m_pGridPass = std::make_unique<GridPass>();
     m_pGridPass->Initialize(m_toneMappedColourTexture.get(), m_gridTexture.get());
 
-	
 }
 
 void SceneRenderer::Initialize(Scene* _pScene)

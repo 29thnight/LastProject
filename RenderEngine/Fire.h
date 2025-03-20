@@ -1,7 +1,7 @@
 #pragma once
 #include "Texture.h"
 #include "SceneObject.h"
-#include "IEffect.h"
+#include "Effects.h"
 
 struct alignas(16) ExplodeParameters : public EffectParameters
 {
@@ -17,8 +17,8 @@ struct alignas(16) ModelConstantBuffer
 };
 
 
-class IEffect;
-class FirePass : public IEffect
+class Effects;
+class FirePass : public Effects
 {
 public:
 	FirePass();

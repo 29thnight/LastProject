@@ -1,6 +1,6 @@
 #pragma once
 #include "Texture.h"
-#include "IEffect.h"
+#include "Effects.h"
 
 struct SnowParameters
 {
@@ -39,7 +39,7 @@ struct EffectVertex
 	Mathf::Vector3 Position;
 };
 
-class SnowPass : public IEffect
+class SnowPass : public Effects
 {
 public:
 	SnowPass();

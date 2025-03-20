@@ -1,7 +1,7 @@
-#include "IEffect.h"
+#include "Effects.h"
 
 
-void IEffect::CreateBillboardVertex(BillboardVertex* vertex)
+void Effects::CreateBillboardVertex(BillboardVertex* vertex)
 {
 	mVertex = vertex;
 
@@ -18,7 +18,7 @@ void IEffect::CreateBillboardVertex(BillboardVertex* vertex)
 	);
 }
 
-void IEffect::SetParameters(EffectParameters* param)
+void Effects::SetParameters(EffectParameters* param)
 {
 	mParam = param;
 }

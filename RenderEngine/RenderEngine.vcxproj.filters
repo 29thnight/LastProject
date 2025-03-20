@@ -218,7 +218,7 @@
     <ClCompile Include="GridPass.cpp">
       <Filter>RenderPass\GridPass</Filter>
     </ClCompile>
-    <ClCompile Include="IEffect.cpp">
+    <ClCompile Include="Effects.cpp">
       <Filter>RenderPass\EffectPass</Filter>
     </ClCompile>
     <ClCompile Include="Snow.cpp">
@@ -358,7 +358,7 @@
     <ClInclude Include="GridPass.h">
       <Filter>RenderPass\GridPass</Filter>
     </ClInclude>
-    <ClInclude Include="IEffect.h">
+    <ClInclude Include="Effects.h">
       <Filter>RenderPass\EffectPass</Filter>
     </ClInclude>
     <ClInclude Include="Snow.h">
