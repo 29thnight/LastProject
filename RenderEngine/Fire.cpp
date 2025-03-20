@@ -17,8 +17,7 @@ FirePass::FirePass()
 	D3D11_INPUT_ELEMENT_DESC vertexLayoutDesc[] =
 	{
 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 }
+		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 }
 	};
 
 	DirectX11::ThrowIfFailed(
@@ -71,9 +70,9 @@ FirePass::FirePass()
 	mmParam->time = 0.0f;
 	mmParam->intensity = 1.0f;
 	mmParam->speed = 5.0f;
+	mmParam->color = Mathf::Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 	mmParam->size = Mathf::Vector2(256.0f, 256.0f);
 	mmParam->range = Mathf::Vector2(8.0f, 4.0f);
-
 	SetParameters(mmParam);
 
 
@@ -85,12 +84,6 @@ FirePass::FirePass()
 
 	m_baseFireTexture = std::shared_ptr<Texture>(Texture::LoadFormPath("Explosion_01.dds"));
 	m_fireAlphaTexture = std::shared_ptr<Texture>(Texture::LoadFormPath("Explosion_01_a.jpg"));
-
-	m_ModelBuffer = DirectX11::CreateBuffer(
-		sizeof(ModelConstantBuffer),
-		D3D11_BIND_CONSTANT_BUFFER,
-		&modelConst
-	);
 }
 
 void FirePass::Initialize()
@@ -122,13 +115,13 @@ void FirePass::Initialize()
 			{
 				ImGui::SliderFloat("Intensity", &mmParam->intensity, 0.0f, 10.0f);
 				ImGui::SliderFloat("Speed", &mmParam->speed, 1.0f, 100.0f);
+				ImGui::ColorEdit3("Color", &mmParam->color.x);
 			});
 	}
 
 	BillboardVertex vertex;
 	vertex.Position = { 1.0f, 0.0f, 0.0f, 1.0f };
 	vertex.Size = { 10.0f, -10.0f };
-	vertex.Color = { 0.5f, 0.25f, 0.0f, 1.0f };
 
 	CreateBillboardVertex(&vertex);
 }
@@ -200,7 +193,7 @@ void FirePass::Execute(Scene& scene)
 	deviceContext->OMGetBlendState(&prevBlendState, prevBlendFactor, &prevSampleMask);
 	deviceContext->RSGetState(&prevRasterizerState);
 
-	// 컴퓨트 셰이더 실행 (불 텍스처 생성)
+	// 컴퓨트 셰이더 실행
 	deviceContext->CSSetShader(m_pso->m_computeShader->GetShader(), nullptr, 0);
 	deviceContext->CSSetConstantBuffers(0, 1, m_constantBuffer.GetAddressOf());
 
@@ -239,25 +232,15 @@ void FirePass::Execute(Scene& scene)
 	// 카메라 설정
 	scene.UseCamera(scene.m_MainCamera);
 
-	modelConst.world = XMMatrixIdentity();
-	modelConst.view = XMMatrixTranspose(scene.m_MainCamera.CalculateView());
-	modelConst.projection = XMMatrixTranspose(scene.m_MainCamera.CalculateProjection());
-
-	deviceContext->GSSetConstantBuffers(0, 1, m_ModelBuffer.GetAddressOf());
-	DirectX11::UpdateBuffer(m_ModelBuffer.Get(), &modelConst);
-
 	// 픽셀 셰이더 설정
 	DirectX11::PSSetConstantBuffer(3, 1, m_constantBuffer.GetAddressOf());
 	DirectX11::PSSetShaderResources(0, 1, &m_resultTexture->m_pSRV);
 
-	// 정점 버퍼 설정
-	UINT stride = sizeof(BillboardVertex);
-	UINT offset = 0;
-	deviceContext->IASetVertexBuffers(0, 1, &billboardVertexBuffer, &stride, &offset);
-	deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_POINTLIST);
-
 	// 빌보드 그리기
-	deviceContext->Draw(1, 0);
+	DrawBillboard(
+		XMMatrixIdentity(),
+		XMMatrixTranspose(scene.m_MainCamera.CalculateView()),
+		XMMatrixTranspose(scene.m_MainCamera.CalculateProjection()));
 
 	// 리소스 정리 및 상태 복원
 	DirectX11::PSSetShaderResources(0, 1, &nullSRV);

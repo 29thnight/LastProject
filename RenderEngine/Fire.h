@@ -9,14 +9,6 @@ struct alignas(16) ExplodeParameters : public EffectParameters
 	Mathf::Vector2 range;
 };
 
-struct alignas(16) ModelConstantBuffer 
-{
-	Mathf::Matrix world;
-	Mathf::Matrix view;
-	Mathf::Matrix projection;
-};
-
-
 class Effects;
 class FirePass : public Effects
 {
@@ -38,8 +30,6 @@ private:
 	ComPtr<ID3D11Buffer> m_constantBuffer;
 	ComPtr<ID3D11Buffer> m_billboardVertexBuffer;
 
-	ComPtr<ID3D11Buffer> m_ModelBuffer;
-
 	std::shared_ptr<Texture> m_baseFireTexture;	// 기본 불 텍스처
 	std::shared_ptr<Texture> m_noiseTexture;	// 노이즈 텍스처
 	std::shared_ptr<Texture> m_fireAlphaTexture;// 알파 텍스처
@@ -52,6 +42,5 @@ private:
 	Texture* m_renderTarget = nullptr;
 	float m_delta;
 	std::vector<SceneObject*> EffectedObject;
-	ModelConstantBuffer modelConst{};
 };
 
