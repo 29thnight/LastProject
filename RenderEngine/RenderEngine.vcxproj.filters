@@ -111,6 +111,9 @@
     <Filter Include="RenderPass\AAPass">
       <UniqueIdentifier>{acc932ee-ade3-4e17-ba66-54ac90e28a6a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="RenderPass\EffectPass">
+      <UniqueIdentifier>{16165230-a2f1-4c58-bb2c-9a176e3c5156}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="SceneRenderer.cpp">
@@ -220,6 +223,15 @@
     </ClCompile>
     <ClCompile Include="LightMap.cpp">
       <Filter>LightMap</Filter>
+    </ClCompile>
+    <ClCompile Include="Effects.cpp">
+      <Filter>RenderPass\EffectPass</Filter>
+    </ClCompile>
+    <ClCompile Include="Fire.cpp">
+      <Filter>RenderPass\EffectPass</Filter>
+    </ClCompile>
+    <ClCompile Include="Snow.cpp">
+      <Filter>RenderPass\EffectPass</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -354,6 +366,15 @@
     </ClInclude>
     <ClInclude Include="LightMap.h">
       <Filter>LightMap</Filter>
+    </ClInclude>
+    <ClInclude Include="Effects.h">
+      <Filter>RenderPass\EffectPass</Filter>
+    </ClInclude>
+    <ClInclude Include="Fire.h">
+      <Filter>RenderPass\EffectPass</Filter>
+    </ClInclude>
+    <ClInclude Include="Snow.h">
+      <Filter>RenderPass\EffectPass</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

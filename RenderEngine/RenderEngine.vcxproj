@@ -154,6 +154,8 @@
     <ClCompile Include="DeferredPass.cpp" />
     <ClCompile Include="DeviceState.cpp" />
     <ClCompile Include="drawing.cpp" />
+    <ClCompile Include="Effects.cpp" />
+    <ClCompile Include="Fire.cpp" />
     <ClCompile Include="FontManager.cpp" />
     <ClCompile Include="GBufferPass.cpp" />
     <ClCompile Include="GridPass.cpp" />
@@ -173,6 +175,7 @@
     <ClCompile Include="Skeleton.cpp" />
     <ClCompile Include="SkeletonLoader.cpp" />
     <ClCompile Include="SkyBoxPass.cpp" />
+    <ClCompile Include="Snow.cpp" />
     <ClCompile Include="SpritePass.cpp" />
     <ClCompile Include="SSAOPass.cpp" />
     <ClCompile Include="AAPass.cpp" />
@@ -192,6 +195,8 @@
     <ClInclude Include="DeferredPass.h" />
     <ClInclude Include="DeviceState.h" />
     <ClInclude Include="drawing.h" />
+    <ClInclude Include="Effects.h" />
+    <ClInclude Include="Fire.h" />
     <ClInclude Include="FontManager.h" />
     <ClInclude Include="ForwardPass.h" />
     <ClInclude Include="GBufferPass.h" />
@@ -218,6 +223,7 @@
     <ClInclude Include="Skeleton.h" />
     <ClInclude Include="SkeletonLoader.h" />
     <ClInclude Include="SkyBoxPass.h" />
+    <ClInclude Include="Snow.h" />
     <ClInclude Include="SpritePass.h" />
     <ClInclude Include="SSAOPass.h" />
     <ClInclude Include="AAPass.h" />

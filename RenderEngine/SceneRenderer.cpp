@@ -213,6 +213,9 @@ SceneRenderer::SceneRenderer(const std::shared_ptr<DirectX11::DeviceResources>& 
 
 	//GridPass
     m_pGridPass = std::make_unique<GridPass>();
+
+	m_pFirePass = std::make_unique<FirePass>();
+	m_pFirePass->Initialize();
 }
 
 
@@ -470,6 +473,7 @@ void SceneRenderer::Update(float deltaTime)
 {
 	m_currentScene->Update(deltaTime);
 	m_pEditorCamera->HandleMovement(deltaTime);
+	m_pFirePass->Update(deltaTime);
 	PrepareRender();
 }
 
@@ -538,6 +542,11 @@ void SceneRenderer::Render()
 			m_pToneMapPass->Execute(*m_currentScene, *camera);
 
 			//std::cout << "ToneMapPass : " << banch.GetElapsedTime() << std::endl;
+		}
+
+		{
+			//m_pSnowPass->Execute(*m_currentScene);
+			m_pFirePass->Execute(*m_currentScene, *camera);
 		}
 
 		//[*] GridPass

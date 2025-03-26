@@ -84,6 +84,12 @@
     <Filter Include="Window">
       <UniqueIdentifier>{1e1443b4-3acb-4b35-9d82-37003d91fcfd}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Shaders\Effects">
+      <UniqueIdentifier>{158e4839-494a-45da-a272-5aa11f0776fd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shaders\Base">
+      <UniqueIdentifier>{bac52344-b774-4811-928f-4865d0f9d964}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -218,26 +224,29 @@
     <None Include="README.md">
       <Filter>MD</Filter>
     </None>
-    <None Include="x64\Assets\Shaders\BRDF.hlsli">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="x64\Assets\Shaders\Material.hlsli">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="x64\Assets\Shaders\Phong.hlsli">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="x64\Assets\Shaders\Sampler.hlsli">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="x64\Assets\Shaders\Shading.hlsli">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="x64\Assets\Shaders\Lighting.hlsli">
-      <Filter>Shaders</Filter>
+    <None Include="x64\Assets\Shaders\Snow.hlsli">
+      <Filter>Shaders\Effects</Filter>
     </None>
     <None Include="x64\Assets\Shaders\ACES.hlsli">
-      <Filter>Shaders</Filter>
+      <Filter>Shaders\Base</Filter>
+    </None>
+    <None Include="x64\Assets\Shaders\BRDF.hlsli">
+      <Filter>Shaders\Base</Filter>
+    </None>
+    <None Include="x64\Assets\Shaders\Lighting.hlsli">
+      <Filter>Shaders\Base</Filter>
+    </None>
+    <None Include="x64\Assets\Shaders\Material.hlsli">
+      <Filter>Shaders\Base</Filter>
+    </None>
+    <None Include="x64\Assets\Shaders\Phong.hlsli">
+      <Filter>Shaders\Base</Filter>
+    </None>
+    <None Include="x64\Assets\Shaders\Sampler.hlsli">
+      <Filter>Shaders\Base</Filter>
+    </None>
+    <None Include="x64\Assets\Shaders\Shading.hlsli">
+      <Filter>Shaders\Base</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
@@ -327,71 +336,95 @@
     </Text>
   </ItemGroup>
   <ItemGroup>
+    <FxCompile Include="x64\Assets\Shaders\Explode.cs.hlsl">
+      <Filter>Shaders\Effects</Filter>
+    </FxCompile>
+    <FxCompile Include="x64\Assets\Shaders\Fire.ps.hlsl">
+      <Filter>Shaders\Effects</Filter>
+    </FxCompile>
+    <FxCompile Include="x64\Assets\Shaders\FireCompute.cs.hlsl">
+      <Filter>Shaders\Effects</Filter>
+    </FxCompile>
+    <FxCompile Include="x64\Assets\Shaders\SnowGS.gs.hlsl">
+      <Filter>Shaders\Effects</Filter>
+    </FxCompile>
+    <FxCompile Include="x64\Assets\Shaders\SnowPS.ps.hlsl">
+      <Filter>Shaders\Effects</Filter>
+    </FxCompile>
+    <FxCompile Include="x64\Assets\Shaders\SnowVS.vs.hlsl">
+      <Filter>Shaders\Effects</Filter>
+    </FxCompile>
+    <FxCompile Include="x64\Assets\Shaders\BillBoard.gs.hlsl">
+      <Filter>Shaders\Base</Filter>
+    </FxCompile>
+    <FxCompile Include="x64\Assets\Shaders\BillBoard.vs.hlsl">
+      <Filter>Shaders\Base</Filter>
+    </FxCompile>
     <FxCompile Include="x64\Assets\Shaders\Blit.ps.hlsl">
-      <Filter>Shaders</Filter>
+      <Filter>Shaders\Base</Filter>
     </FxCompile>
     <FxCompile Include="x64\Assets\Shaders\Deferred.ps.hlsl">
-      <Filter>Shaders</Filter>
+      <Filter>Shaders\Base</Filter>
     </FxCompile>
     <FxCompile Include="x64\Assets\Shaders\Forward.ps.hlsl">
-      <Filter>Shaders</Filter>
+      <Filter>Shaders\Base</Filter>
     </FxCompile>
     <FxCompile Include="x64\Assets\Shaders\Fullscreen.vs.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="x64\Assets\Shaders\GBuffer.ps.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="x64\Assets\Shaders\IntegrateBRDF.ps.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="x64\Assets\Shaders\IrradianceMap.ps.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="x64\Assets\Shaders\RectToCubeMap.ps.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="x64\Assets\Shaders\ShadowMap.ps.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="x64\Assets\Shaders\Skybox.ps.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="x64\Assets\Shaders\Skybox.vs.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="x64\Assets\Shaders\SpecularPreFilter.ps.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="x64\Assets\Shaders\Sprite.ps.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="x64\Assets\Shaders\SSAO.ps.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="x64\Assets\Shaders\ToneMapReinhard.ps.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="x64\Assets\Shaders\VertexShader.vs.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="x64\Assets\Shaders\WireFrame.vs.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="x64\Assets\Shaders\ToneMapACES.ps.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="x64\Assets\Shaders\WireFrame.ps.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="x64\Assets\Shaders\Grid.vs.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="x64\Assets\Shaders\Grid.ps.hlsl">
-      <Filter>Shaders</Filter>
+      <Filter>Shaders\Base</Filter>
     </FxCompile>
     <FxCompile Include="FXAA.cs.hlsl">
-      <Filter>Shaders</Filter>
+      <Filter>Shaders\Base</Filter>
+    </FxCompile>
+    <FxCompile Include="x64\Assets\Shaders\GBuffer.ps.hlsl">
+      <Filter>Shaders\Base</Filter>
+    </FxCompile>
+    <FxCompile Include="x64\Assets\Shaders\Grid.ps.hlsl">
+      <Filter>Shaders\Base</Filter>
+    </FxCompile>
+    <FxCompile Include="x64\Assets\Shaders\Grid.vs.hlsl">
+      <Filter>Shaders\Base</Filter>
+    </FxCompile>
+    <FxCompile Include="x64\Assets\Shaders\IntegrateBRDF.ps.hlsl">
+      <Filter>Shaders\Base</Filter>
+    </FxCompile>
+    <FxCompile Include="x64\Assets\Shaders\IrradianceMap.ps.hlsl">
+      <Filter>Shaders\Base</Filter>
+    </FxCompile>
+    <FxCompile Include="x64\Assets\Shaders\RectToCubeMap.ps.hlsl">
+      <Filter>Shaders\Base</Filter>
+    </FxCompile>
+    <FxCompile Include="x64\Assets\Shaders\ShadowMap.ps.hlsl">
+      <Filter>Shaders\Base</Filter>
+    </FxCompile>
+    <FxCompile Include="x64\Assets\Shaders\Skybox.ps.hlsl">
+      <Filter>Shaders\Base</Filter>
+    </FxCompile>
+    <FxCompile Include="x64\Assets\Shaders\Skybox.vs.hlsl">
+      <Filter>Shaders\Base</Filter>
+    </FxCompile>
+    <FxCompile Include="x64\Assets\Shaders\SpecularPreFilter.ps.hlsl">
+      <Filter>Shaders\Base</Filter>
+    </FxCompile>
+    <FxCompile Include="x64\Assets\Shaders\Sprite.ps.hlsl">
+      <Filter>Shaders\Base</Filter>
+    </FxCompile>
+    <FxCompile Include="x64\Assets\Shaders\SSAO.ps.hlsl">
+      <Filter>Shaders\Base</Filter>
+    </FxCompile>
+    <FxCompile Include="x64\Assets\Shaders\ToneMapACES.ps.hlsl">
+      <Filter>Shaders\Base</Filter>
+    </FxCompile>
+    <FxCompile Include="x64\Assets\Shaders\ToneMapReinhard.ps.hlsl">
+      <Filter>Shaders\Base</Filter>
+    </FxCompile>
+    <FxCompile Include="x64\Assets\Shaders\VertexShader.vs.hlsl">
+      <Filter>Shaders\Base</Filter>
+    </FxCompile>
+    <FxCompile Include="x64\Assets\Shaders\WireFrame.ps.hlsl">
+      <Filter>Shaders\Base</Filter>
+    </FxCompile>
+    <FxCompile Include="x64\Assets\Shaders\WireFrame.vs.hlsl">
+      <Filter>Shaders\Base</Filter>
     </FxCompile>
   </ItemGroup>
 </Project>

@@ -15,6 +15,7 @@
 #include "Model.h"
 #include "Light.h"
 #include "Camera.h"
+#include "Fire.h"
 
 const static float pi = XM_PIDIV2 - 0.01f;
 const static float pi2 = XM_PI * 2.f;
@@ -55,6 +56,7 @@ private:
 	std::unique_ptr<BlitPass> m_pBlitPass{};
 	std::unique_ptr<WireFramePass> m_pWireFramePass{};
     std::unique_ptr<GridPass> m_pGridPass{};
+    std::unique_ptr<FirePass> m_pFirePass{};
 
 	//buffers
 	ComPtr<ID3D11Buffer> m_ModelBuffer;
