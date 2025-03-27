@@ -85,7 +85,14 @@ void ShadowMapPass::Initialize(uint32 width, uint32 height)
 			&m_shadowMapDSV
 		)
 	);
-
+	
+	//*****
+	//CD3D11_DEPTH_STENCIL_VIEW_DESC depthStencilViewDescarr(D3D11_DSV_DIMENSION_TEXTURE2DARRAY);
+	//depthStencilViewDescarr.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+	//depthStencilViewDescarr.Texture2DArray.MipSlice = 0;
+	//depthStencilViewDescarr.Texture2DArray.FirstArraySlice = 0;
+	//depthStencilViewDescarr.Texture2DArray.ArraySize = 3;
+	
 	m_shadowCamera.m_isOrthographic = true;
 }
 

@@ -12,6 +12,9 @@ struct alignas(16) ShadowMapConstant
 	float m_shadowMapWidth{};
 	float m_shadowMapHeight{};
 	Mathf::xMatrix m_lightViewProjection{};
+	
+	//3°³Â¥¸® cascade shadow 
+	//Mathf::xMatrix m_lightViewProjection[3]{};
 };
 
 struct ShadowMapRenderDesc
@@ -24,6 +27,8 @@ struct ShadowMapRenderDesc
 	float m_viewHeight{ 1.f };
 	float m_textureWidth{ 8192.f };
 	float m_textureHeight{ 8192.f };
+
+	//8192  4096 1024.f
 };
 
 class ShadowMapPass final : public IRenderPass
@@ -37,4 +42,6 @@ public:
 	Camera m_shadowCamera{};
 	std::unique_ptr<Texture> m_shadowMapTexture{};
 	ID3D11DepthStencilView* m_shadowMapDSV{ nullptr };
+
+	//ID3D11DepthStencilView* m_shadowMapDSV[3]{};
 };

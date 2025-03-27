@@ -13,7 +13,7 @@
 #define LIGHT_ENABLED_W_SHADOWMAP 2
 
 Texture2D ShadowMap : register(t4); // support 1 for now, future use array
-
+//Texture2DArray ShadowMapArr : register(t5);
 struct Light
 {
     float4 position;
@@ -66,7 +66,9 @@ float ShadowFactor(float4 worldPosition) // assumes only one shadow map cbuffer
         //[unroll]
         for (int y = -1; y < 2; ++y)
         {
+          
             float closestDepth = ShadowMap.Sample(LinearSampler, projCoords.xy + float2(x, y) * texelSize).r;
+            //float closestDepth2 = ShadowMapArr.Sample(LinearSampler, float3(projCoords.xy + float2(x, y) * texelSize,2)).r;
             shadow += (closestDepth < currentDepth - epsilon);
         }
     }
