@@ -28,6 +28,16 @@ public:
 		_In_opt_ D3D11_SUBRESOURCE_DATA* data = nullptr
 	);
 
+	static Texture* CreateArray(
+		_In_ uint32 width,
+		_In_ uint32 height,
+		_In_ const std::string_view& name,
+		_In_ DXGI_FORMAT textureFormat,
+		_In_ uint32 bindFlags,
+		_In_ uint32 arrsize,
+		_In_opt_ D3D11_SUBRESOURCE_DATA* data = nullptr,
+		
+	);
 	static Texture* LoadFormPath(_In_ const file::path& path);
 
 	void CreateSRV(
@@ -48,7 +58,7 @@ public:
 	void CreateUAV(_In_ DXGI_FORMAT textureFormat);
 
 	ID3D11RenderTargetView* GetRTV(uint32 index = 0);
-
+	
 	ID3D11Texture2D* m_pTexture{};
 	ID3D11ShaderResourceView* m_pSRV{};
 	ID3D11DepthStencilView* m_pDSV{};

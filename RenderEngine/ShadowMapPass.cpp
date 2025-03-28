@@ -50,8 +50,9 @@ ShadowMapPass::ShadowMapPass()
 
 void ShadowMapPass::Initialize(uint32 width, uint32 height)
 {
-	Texture* shadowMapTexture = Texture::Create(width, height, "Shadow Map",
-		DXGI_FORMAT_R32_TYPELESS, D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE);
+	//배열로만들기 3이 배열사이즈
+	Texture* shadowMapTexture = Texture::CreateArray(width, height, "Shadow Map",
+		DXGI_FORMAT_R32_TYPELESS, D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE,3);
 	shadowMapTexture->CreateRTV(DXGI_FORMAT_R32_FLOAT);
 	shadowMapTexture->CreateSRV(DXGI_FORMAT_R32_FLOAT);
 
@@ -65,6 +66,7 @@ void ShadowMapPass::Initialize(uint32 width, uint32 height)
 		1,
 		D3D11_BIND_DEPTH_STENCIL | D3D11_BIND_SHADER_RESOURCE
 	);
+	
 	ComPtr<ID3D11Texture2D1> depthStencil;
 	DirectX11::ThrowIfFailed(
 		DeviceState::g_pDevice->CreateTexture2D1(
@@ -73,8 +75,11 @@ void ShadowMapPass::Initialize(uint32 width, uint32 height)
 			&depthStencil
 		)
 	);
-	CD3D11_DEPTH_STENCIL_VIEW_DESC depthStencilViewDesc(D3D11_DSV_DIMENSION_TEXTURE2D);
+	CD3D11_DEPTH_STENCIL_VIEW_DESC depthStencilViewDesc(D3D11_DSV_DIMENSION_TEXTURE2DARRAY);
 	depthStencilViewDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+	depthStencilViewDesc.Texture2DArray.ArraySize = 3;
+	depthStencilViewDesc.Texture2DArray.MipSlice = 0;
+	depthStencilViewDesc.Texture2DArray.FirstArraySlice = 0;
 
 	DirectX11::ThrowIfFailed(
 		DeviceState::g_pDevice->CreateDepthStencilView(
