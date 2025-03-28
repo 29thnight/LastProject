@@ -132,6 +132,9 @@ bool DirectX11::Dx11Main::Render()
 		m_imguiRenderer->EndRender();
 	}
 #endif // !EDITOR
+
+	Debug->Flush();
+
 	return true;
 }
 

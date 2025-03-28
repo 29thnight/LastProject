@@ -128,8 +128,8 @@ void PostProcessingPass::BloomPass(Scene& scene, Camera& camera)
 	DirectX11::CSSetShaderResources(0, 1, &m_CopiedTexture->m_pSRV);
 	DirectX11::CSSetUnorderedAccessViews(0, 1, &m_ApplyBloomCurveTexture->m_pUAV, nullptr);
 
-	m_DownSampledConstant.inputSize = { DeviceState::g_ClientRect.width, DeviceState::g_ClientRect.height };
-	m_DownSampledConstant.outputSize = { BloomBufferWidth, BloomBufferHeight };
+	m_DownSampledConstant.inputSize = { (int)DeviceState::g_ClientRect.width, (int)DeviceState::g_ClientRect.height };
+	m_DownSampledConstant.outputSize = { (int)BloomBufferWidth, (int)BloomBufferHeight };
 
 	DirectX11::UpdateBuffer(m_DownSampledBuffer.Get(), &m_DownSampledConstant);
 
@@ -148,7 +148,7 @@ void PostProcessingPass::BloomPass(Scene& scene, Camera& camera)
 	DirectX11::CSSetShaderResources(0, 1, &m_BloomDownSampledTexture1_StepX->m_pSRV);
 	DirectX11::CSSetUnorderedAccessViews(0, 1, &m_BloomDownSampledTexture1_StepY->m_pUAV, nullptr);
 
-	m_BlurConstant.texSize = { BloomBufferWidth / 2, BloomBufferHeight / 2 };
+	m_BlurConstant.texSize = { int(BloomBufferWidth / 2), int(BloomBufferHeight / 2) };
 
 	DirectX11::UpdateBuffer(m_BlurBuffer.Get(), &m_BlurConstant);
 
@@ -164,7 +164,7 @@ void PostProcessingPass::BloomPass(Scene& scene, Camera& camera)
 	DirectX11::CSSetShaderResources(0, 1, &m_BloomDownSampledTexture1_StepY->m_pSRV);
 	DirectX11::CSSetUnorderedAccessViews(0, 1, &m_BloomDownSampledTexture1_StepX->m_pUAV, nullptr);
 	
-	m_BlurConstant.texSize = { BloomBufferWidth / 2, BloomBufferHeight / 2 };
+	m_BlurConstant.texSize = { int(BloomBufferWidth / 2), int(BloomBufferHeight / 2) };
 
 	DirectX11::UpdateBuffer(m_BlurBuffer.Get(), &m_BlurConstant);
 
