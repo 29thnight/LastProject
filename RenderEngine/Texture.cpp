@@ -170,7 +170,6 @@ void Texture::CreateSRV(_In_ DXGI_FORMAT textureFormat, _In_opt_ D3D11_SRV_DIMEN
 		0, 
 		mipLevels
 	};
-
 	DirectX11::ThrowIfFailed(
 		DeviceState::g_pDevice->CreateShaderResourceView(
 			m_pTexture, &srvDesc, &m_pSRV

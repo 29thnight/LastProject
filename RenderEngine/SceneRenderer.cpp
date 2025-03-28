@@ -441,19 +441,10 @@ void SceneRenderer::Initialize(Scene* _pScene)
 		//testUI.SetTexture();
 		//testUI.SetUI({ 200,200 },2);
 
+		//testmm = Model::LoadModel("Cube.fbx");
+		//Model::LoadModelToScene(testmm, *m_currentScene);
 
-		ImGui::ContextRegister("Test UI", true, [&]()
-		{
-			if (ImGui::Button("Add UI"))
-			{
-				m_pUIPass->pushUI(&testUI);
-			}
-			ImGui::SliderFloat3("pos", &testUI.trans.x, -1, 1);
-			ImGui::SliderFloat3("scale", &testUI.scale.x, -1, 1);
-
-		});
-
-	
+		
 		ImGui::ContextRegister("Test Add Model", true, [&]()
 		{
 			if (ImGui::Button("Add Model"))

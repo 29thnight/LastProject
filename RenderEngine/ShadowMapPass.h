@@ -38,10 +38,17 @@ public:
 
 	void Initialize(uint32 width, uint32 height);
 	void Execute(Scene& scene, Camera& camera) override;
-
+	void ControlPanel() override;
 	Camera m_shadowCamera{};
+
 	std::unique_ptr<Texture> m_shadowMapTexture{};
 	ID3D11DepthStencilView* m_shadowMapDSV{ nullptr };
 
+	D3D11_VIEWPORT shadowViewport;
+	ID3D11Texture2D* shadowMapArray = nullptr; //나중에 지우기
+	ID3D11ShaderResourceView* shadowMapSRV = nullptr;
+
+	//메인 라이트 3, 
+	ID3D11ShaderResourceView* m_shadowMapSRV[3];
 	//ID3D11DepthStencilView* m_shadowMapDSV[3]{};
 };

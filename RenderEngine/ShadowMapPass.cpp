@@ -65,7 +65,6 @@ void ShadowMapPass::Initialize(uint32 width, uint32 height)
 		1,
 		D3D11_BIND_DEPTH_STENCIL | D3D11_BIND_SHADER_RESOURCE
 	);
-
 	ComPtr<ID3D11Texture2D1> depthStencil;
 	DirectX11::ThrowIfFailed(
 		DeviceState::g_pDevice->CreateTexture2D1(
@@ -74,7 +73,6 @@ void ShadowMapPass::Initialize(uint32 width, uint32 height)
 			&depthStencil
 		)
 	);
-
 	CD3D11_DEPTH_STENCIL_VIEW_DESC depthStencilViewDesc(D3D11_DSV_DIMENSION_TEXTURE2D);
 	depthStencilViewDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
 
@@ -92,16 +90,27 @@ void ShadowMapPass::Initialize(uint32 width, uint32 height)
 	//depthStencilViewDescarr.Texture2DArray.MipSlice = 0;
 	//depthStencilViewDescarr.Texture2DArray.FirstArraySlice = 0;
 	//depthStencilViewDescarr.Texture2DArray.ArraySize = 3;
-	
+	CD3D11_TEXTURE2D_DESC1 depthstencildesc2{};
+	depthstencildesc2.Width = 8192.f;
+	depthstencildesc2.Height = 8192.f;
+	depthstencildesc2.MipLevels = 1;
+
+
+
 	m_shadowCamera.m_isOrthographic = true;
 }
 
 void ShadowMapPass::Execute(Scene& scene, Camera& camera)
 {
+
+
 	m_pso->Apply();
 
 	ID3D11RenderTargetView* rtv = m_shadowMapTexture->GetRTV();
-	
+	if (!m_abled)
+	{
+		return;
+	}
 	DirectX11::OMSetRenderTargets(1, &rtv, m_shadowMapDSV);
 
 	auto desc = scene.m_LightController.m_shadowMapRenderDesc;
@@ -135,4 +144,10 @@ void ShadowMapPass::Execute(Scene& scene, Camera& camera)
 	//DirectX11::ClearRenderTargetView(rtv, Colors::Transparent);
 	DirectX11::ClearDepthStencilView(m_shadowMapDSV, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 	DirectX11::UnbindRenderTargets();
+}
+
+void ShadowMapPass::ControlPanel()
+{
+	ImGui::Text("ShadowPass");
+	ImGui::Checkbox("Enable2", &m_abled);
 }
