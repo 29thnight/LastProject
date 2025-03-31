@@ -14,7 +14,7 @@ struct ApplyRenderPipelinePass
 	bool m_SpritePass{ true };
 	bool m_WireFramePass{ true };
 	bool m_GridPass{ false };
-	bool m_BlitPass{ false };
+	bool m_BlitPass{ true };
 };
 
 class Camera

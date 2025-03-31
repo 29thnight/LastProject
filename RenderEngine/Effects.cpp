@@ -1,5 +1,6 @@
 #include "Effects.h"
 #include "AssetSystem.h"
+#include "Fire.h"
 
 Effects::Effects()
 {
@@ -127,6 +128,13 @@ void Effects::DrawBillboard(Mathf::Matrix world, Mathf::Matrix view, Mathf::Matr
 	deviceContext->DrawInstanced(1, m_instanceCount, 0, 0);
 }
 
+void Effects::Execute(Scene& scene, Camera& camera)
+{
+	for (auto& [key, effect] : effects) {
+		effect->Render(scene, camera);
+	}
+}
+
 void Effects::SetupBillBoardInstancing(BillBoardInstanceData* instance, UINT count)
 {
 	D3D11_BUFFER_DESC ibDesc = {};
@@ -145,6 +153,37 @@ void Effects::SetupBillBoardInstancing(BillBoardInstanceData* instance, UINT cou
 	
 	m_InstanceBuffer.Attach(instanceBuffer);
 	m_instanceCount = count;
+}
+
+void Effects::UpdateEffects(float delta)
+{
+	for (auto& [key, effect] : effects) {
+		effect->Update(delta);
+	}
+}
+
+void Effects::MakeEffects(Effect type, std::string_view name)
+{
+	switch (type)
+	{
+	case Effect::Explode:
+		effects[name.data()] = std::make_unique<FirePass>();
+		break;
+	}
+}
+
+Effects* Effects::GetEffect(std::string_view name)
+{
+	auto it = effects.find(name.data());
+	if (it != effects.end()) {
+		return it->second.get();
+	}
+	return nullptr;
+}
+
+bool Effects::RemoveEffect(std::string_view name)
+{
+	return effects.erase(name.data()) > 0;
 }
 
 void Effects::CreateBillBoardMatrix(const Mathf::Matrix& view, const Mathf::Matrix& world)

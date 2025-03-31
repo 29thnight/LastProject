@@ -38,6 +38,10 @@ struct alignas(16) ModelConstantBuffer
 	Mathf::Matrix projection;
 };
 
+enum class Effect
+{
+	Explode,
+};
 
 class Effects : public IRenderPass
 {
@@ -55,10 +59,21 @@ public:
 	// 대부분 맨 마지막에 그리는것이 제일 좋음
 	void DrawBillboard(Mathf::Matrix world, Mathf::Matrix view, Mathf::Matrix projection);
 
-	virtual void Execute(Scene& scene, Camera& camera) abstract;
+	virtual void Execute(Scene& scene, Camera& camera);
+
+	virtual void Render(Scene& scene, Camera& camera) {};
 
 	void SetupBillBoardInstancing(BillBoardInstanceData* instance, UINT count);
 
+	virtual void Update(float delta) {};
+
+	void UpdateEffects(float delta);
+
+	void MakeEffects(Effect type, std::string_view name);
+
+	Effects* GetEffect(std::string_view name);
+
+	bool RemoveEffect(std::string_view name);
 protected:
 	ComPtr<ID3D11Buffer> m_constantBuffer{};
 private:
@@ -78,6 +93,8 @@ private:
 	ComPtr<ID3D11Buffer> m_InstanceBuffer;
 	ComPtr<ID3D11Buffer> m_ModelBuffer;			// world view proj전용
 	ModelConstantBuffer m_ModelConstantBuffer{};
+
+	std::unordered_map<std::string, std::unique_ptr<Effects>> effects;
 
 };
 

@@ -7,7 +7,6 @@
 
 FirePass::FirePass()
 {
-	
 	// 특정 셰이더마다 설정
 	m_pso->m_pixelShader = &AssetsSystems->PixelShaders["Fire"];
 	m_pso->m_computeShader = &AssetsSystems->ComputeShaders["FireCompute"];	
@@ -33,10 +32,7 @@ FirePass::FirePass()
 
 	m_baseFireTexture = std::shared_ptr<Texture>(Texture::LoadFormPath("Explosion_01.dds"));
 	m_fireAlphaTexture = std::shared_ptr<Texture>(Texture::LoadFormPath("Explosion_01_a.jpg"));
-}
 
-void FirePass::Initialize()
-{
 	m_resultTexture = std::shared_ptr<Texture>(Texture::Create(
 		512,  // Width
 		512,  // Height
@@ -63,46 +59,7 @@ void FirePass::Initialize()
 	CreateBillboard(&vertex);
 }
 
-void FirePass::LoadTexture(const std::string_view& basePath, const std::string_view& noisePath)
-{
-	//m_noiseTexture = std::shared_ptr<Texture>(Texture::LoadFormPath(noisePath));
-	//m_baseFireTexture = std::shared_ptr<Texture>(Texture::LoadFormPath("Explosion_01.dds"));
-	//m_fireAlphaTexture = std::shared_ptr<Texture>(Texture::LoadFormPath("Explosion_01_a.jpg"));
-}
-
-void FirePass::Update(float delta)
-{
-	m_delta += delta;
-
-	if (m_delta > 10000.0f) {
-		m_delta = 0.0f;
-	}
-	
-	mmParam->time = m_delta;
-
-	// 아마 update마다 cb가 다를테니 계속 써야할지도
-	D3D11_MAPPED_SUBRESOURCE mappedResource;
-	DirectX11::ThrowIfFailed(
-		DeviceState::g_pDeviceContext->Map(
-			m_constantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource
-		)
-	);
-	memcpy(mappedResource.pData, static_cast<ExplodeParameters*>(mmParam), sizeof(ExplodeParameters));
-	DeviceState::g_pDeviceContext->Unmap(m_constantBuffer.Get(), 0);
-}
-
-void FirePass::SetRenderTarget(Texture* renderTargetView)
-{
-	m_renderTarget = renderTargetView;
-}
-
-// 옵젝 붙이는거 고민중..
-void FirePass::PushFireObject(SceneObject* object)
-{
-	EffectedObject.push_back(object);
-}
-
-void FirePass::Execute(Scene& scene, Camera& camera)
+void FirePass::Render(Scene& scene, Camera& camera)
 {
 	// 현재 렌더 상태 저장
 	ID3D11DepthStencilState* prevDepthState;
@@ -204,7 +161,6 @@ void FirePass::Execute(Scene& scene, Camera& camera)
 	}
 	SetupBillBoardInstancing(instances, numBillboards);
 	delete[] instances;
-
 	DrawBillboard(
 		XMMatrixIdentity(),
 		XMMatrixTranspose(camera.CalculateView()),
@@ -225,4 +181,25 @@ void FirePass::Execute(Scene& scene, Camera& camera)
 
 	DirectX11::UnbindRenderTargets();
 	EffectedObject.clear();
+}
+
+void FirePass::Update(float delta)
+{
+	m_delta += delta;
+
+	if (m_delta > 10000.0f) {
+		m_delta = 0.0f;
+	}
+	
+	mmParam->time = m_delta;
+
+	// 아마 update마다 cb가 다를테니 계속 써야할지도
+	D3D11_MAPPED_SUBRESOURCE mappedResource;
+	DirectX11::ThrowIfFailed(
+		DeviceState::g_pDeviceContext->Map(
+			m_constantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource
+		)
+	);
+	memcpy(mappedResource.pData, static_cast<ExplodeParameters*>(mmParam), sizeof(ExplodeParameters));
+	DeviceState::g_pDeviceContext->Unmap(m_constantBuffer.Get(), 0);
 }

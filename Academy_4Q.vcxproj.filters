@@ -354,12 +354,6 @@
     <FxCompile Include="x64\Assets\Shaders\SnowVS.vs.hlsl">
       <Filter>Shaders\Effects</Filter>
     </FxCompile>
-    <FxCompile Include="x64\Assets\Shaders\BillBoard.gs.hlsl">
-      <Filter>Shaders\Base</Filter>
-    </FxCompile>
-    <FxCompile Include="x64\Assets\Shaders\BillBoard.vs.hlsl">
-      <Filter>Shaders\Base</Filter>
-    </FxCompile>
     <FxCompile Include="x64\Assets\Shaders\Blit.ps.hlsl">
       <Filter>Shaders\Base</Filter>
     </FxCompile>
@@ -425,6 +419,12 @@
     </FxCompile>
     <FxCompile Include="x64\Assets\Shaders\WireFrame.vs.hlsl">
       <Filter>Shaders\Base</Filter>
+    </FxCompile>
+    <FxCompile Include="x64\Assets\Shaders\BillBoard.vs.hlsl">
+      <Filter>Shaders\Effects</Filter>
+    </FxCompile>
+    <FxCompile Include="x64\Assets\Shaders\BillBoard.gs.hlsl">
+      <Filter>Shaders\Effects</Filter>
     </FxCompile>
   </ItemGroup>
 </Project>

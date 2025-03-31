@@ -214,8 +214,8 @@ SceneRenderer::SceneRenderer(const std::shared_ptr<DirectX11::DeviceResources>& 
 	//GridPass
     m_pGridPass = std::make_unique<GridPass>();
 
-	m_pFirePass = std::make_unique<FirePass>();
-	m_pFirePass->Initialize();
+	m_pEffectPass = std::make_unique<Effects>();
+	m_pEffectPass->MakeEffects(Effect::Explode, "asd");
 }
 
 
@@ -473,7 +473,7 @@ void SceneRenderer::Update(float deltaTime)
 {
 	m_currentScene->Update(deltaTime);
 	m_pEditorCamera->HandleMovement(deltaTime);
-	m_pFirePass->Update(deltaTime);
+	m_pEffectPass->UpdateEffects(deltaTime);
 	PrepareRender();
 }
 
@@ -546,7 +546,7 @@ void SceneRenderer::Render()
 
 		{
 			//m_pSnowPass->Execute(*m_currentScene);
-			m_pFirePass->Execute(*m_currentScene, *camera);
+			m_pEffectPass->Execute(*m_currentScene, *camera);
 		}
 
 		//[*] GridPass

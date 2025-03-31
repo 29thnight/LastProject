@@ -15,22 +15,13 @@ class FirePass : public Effects
 public:
 	FirePass();
 
-	void LoadTexture(const std::string_view& basePath, const std::string_view& noisePath);
+	virtual void Update(float delta);
 
-	virtual void Execute(Scene& scene, Camera& camera) override;
-
-	void Update(float delta);
-
-	void SetRenderTarget(Texture* renderTargetView);
-
-	void PushFireObject(SceneObject* object);
-
-	void Initialize();
+	virtual void Render(Scene& scene, Camera& camera);
 private:
 	ComPtr<ID3D11Buffer> m_billboardVertexBuffer;
 
 	std::shared_ptr<Texture> m_baseFireTexture;	// 기본 불 텍스처
-	std::shared_ptr<Texture> m_noiseTexture;	// 노이즈 텍스처
 	std::shared_ptr<Texture> m_fireAlphaTexture;// 알파 텍스처
 	std::shared_ptr<Texture> m_resultTexture;	// 결과 텍스처
 
