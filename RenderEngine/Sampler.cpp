@@ -8,6 +8,14 @@ Sampler::Sampler(D3D11_FILTER filter, D3D11_TEXTURE_ADDRESS_MODE addressMode)
 	samplerDesc.AddressU = addressMode;
 	samplerDesc.AddressV = addressMode;
 	samplerDesc.AddressW = addressMode;
+	samplerDesc.BorderColor[0] = 1.0f;
+	samplerDesc.BorderColor[1] = 1.0f;
+	samplerDesc.BorderColor[2] = 1.0f;
+	samplerDesc.BorderColor[3] = 1.0f;
+	if (filter == D3D11_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR)
+	{
+		samplerDesc.ComparisonFunc = D3D11_COMPARISON_LESS_EQUAL;
+	}
 
 	DirectX11::CreateSamplerState(&samplerDesc,	&m_SamplerState);
 	DirectX::SetName(m_SamplerState, GetAddressAsString() + " SamplerType : " + std::to_string(filter));

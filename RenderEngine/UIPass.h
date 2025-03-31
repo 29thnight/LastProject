@@ -15,8 +15,7 @@ public:
 	void pushUI(UIsprite* UI);
 	void Update(float delta);
 
-	void DrawCanvas(Mathf::Matrix world, Mathf::Matrix view, Mathf::Matrix projection);
-	virtual void Execute(RenderScene& scene,Camera& camera);
+	virtual void Execute(RenderScene& scene,Camera& camera) override;
 
 	static bool compareLayer(UIsprite* a, UIsprite* b);
 

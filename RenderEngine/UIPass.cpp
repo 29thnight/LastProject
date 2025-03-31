@@ -115,7 +115,4 @@ bool UIPass::compareLayer(UIsprite* a, UIsprite* b)
 	return a->_layerorder < b->_layerorder;
 }
 
-void UIPass::DrawCanvas(Mathf::Matrix world, Mathf::Matrix view, Mathf::Matrix projection)
-{
 
-}

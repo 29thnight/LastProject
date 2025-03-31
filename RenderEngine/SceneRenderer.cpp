@@ -443,7 +443,8 @@ void SceneRenderer::Initialize(Scene* _pScene)
 		m_renderScene->m_LightController->SetLightWithShadows(0, desc);
 
 		model = Model::LoadModel("bangbooExport.fbx");
-		//model = Model::LoadModel("Link_SwordAnimation.fbx");
+		testmm = Model::LoadModel("Prop_Block.fbx");
+		Model::LoadModelToScene(testmm, *m_currentScene);
 		//testUI.Loadsprite("test2.png");
 		//testUI.SetTexture();
 		//testUI.SetUI({ 200,200 },2);
