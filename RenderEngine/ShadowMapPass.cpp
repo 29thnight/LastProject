@@ -115,6 +115,7 @@ void ShadowMapPass::Execute(RenderScene& scene, Camera& camera)
 	m_shadowCamera.m_viewHeight = desc.m_viewHeight;
 	m_shadowCamera.m_viewWidth = desc.m_viewWidth;
 
+	
 	auto& shadowMapConstant = scene.m_LightController->m_shadowMapConstant;
 
 	shadowMapConstant.m_shadowMapWidth = desc.m_textureWidth;
@@ -125,7 +126,7 @@ void ShadowMapPass::Execute(RenderScene& scene, Camera& camera)
 
 	m_shadowCamera.UpdateBuffer();
 	scene.UseModel();
-
+	//camera.GetFrustum().Intersects();
 	for (auto& obj : scene.GetScene()->m_SceneObjects)
 	{
 		MeshRenderer* meshRenderer = obj->GetComponent<MeshRenderer>();
@@ -133,6 +134,7 @@ void ShadowMapPass::Execute(RenderScene& scene, Camera& camera)
 		if (!meshRenderer->IsEnabled()) continue;
 
 		scene.UpdateModel(obj->m_transform.GetWorldMatrix());
+		
 		meshRenderer->m_Mesh->Draw();
 	}
 

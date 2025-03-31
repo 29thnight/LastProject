@@ -53,13 +53,14 @@ float ShadowFactor(float4 worldPosition) // assumes only one shadow map cbuffer
     if (currentDepth > 1)
         return 0;
 
+    //projCoords = projCoords.xy * 0.5 + 0.5;
     projCoords = (projCoords + 1) / 2.0; // change to [0 - 1]
     projCoords.y = -projCoords.y; // bottom right corner is (1, -1) in NDC so we have to flip it
 
     float2 texelSize = float2(1, 1) / float2(mapWidth, mapHeight);
 
     float shadow = 0;
-    float epsilon = 0.01f;
+    float epsilon = 0.005f;
     //[unroll]
     for (int x = -1; x < 2; ++x)
     {  
@@ -67,12 +68,12 @@ float ShadowFactor(float4 worldPosition) // assumes only one shadow map cbuffer
         for (int y = -1; y < 2; ++y)
         {
           
-            float closestDepth = PointSampler.SampleCmpLevelZero(ShadowSampler, projCoords.xy + float2(x, y) * texelSize, currentDepth - 0.0025);
+            float closestDepth = ShadowMap.Sample(PointSampler, projCoords.xy + float2(x, y) * texelSize).r;
             //float closestDepth = ShadowMapArr.Sample(LinearSampler, float3(projCoords.xy + float2(x, y) * texelSize,0)).r;
             shadow += (closestDepth < currentDepth - epsilon);
         }
     }
-    shadow /= 9;
+    shadow;
     return shadow;
 }
 #endif
