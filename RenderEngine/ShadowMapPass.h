@@ -1,7 +1,7 @@
 #pragma once
+#include "../Utility_Framework/Core.Minimal.h"
 #include "IRenderPass.h"
 #include "Camera.h"
-#include "Texture.h"
 
 class Texture;
 class Scene;
@@ -35,6 +35,7 @@ class ShadowMapPass final : public IRenderPass
 {
 public:
 	ShadowMapPass();
+	~ShadowMapPass() {};
 
 	void Initialize(uint32 width, uint32 height);
 	void Execute(Scene& scene, Camera& camera) override;
