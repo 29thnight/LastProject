@@ -84,7 +84,7 @@
     <Filter Include="RenderPass\SpritePass">
       <UniqueIdentifier>{0bed34a0-f208-4fc6-a002-1e37dceda11a}</UniqueIdentifier>
     </Filter>
-    <Filter Include="RenderPass\BlitPass">
+    <Filter Include="RenderPass\false">
       <UniqueIdentifier>{ad87c5d3-f4f1-40e4-8ec6-7115cb2f02df}</UniqueIdentifier>
     </Filter>
     <Filter Include="RenderPass\ForwardPass">
@@ -218,9 +218,6 @@
     <ClCompile Include="SpritePass.cpp">
       <Filter>RenderPass\SpritePass</Filter>
     </ClCompile>
-    <ClCompile Include="BlitPass.cpp">
-      <Filter>RenderPass\BlitPass</Filter>
-    </ClCompile>
     <ClCompile Include="AAPass.cpp">
       <Filter>RenderPass\AAPass</Filter>
     </ClCompile>
@@ -241,6 +238,9 @@
     </ClCompile>
     <ClCompile Include="PostProcessingPass.cpp">
       <Filter>RenderPass\PostProcessingPass</Filter>
+    </ClCompile>
+    <ClCompile Include="BlitPass.cpp">
+      <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -343,9 +343,6 @@
     <ClInclude Include="SpritePass.h">
       <Filter>RenderPass\SpritePass</Filter>
     </ClInclude>
-    <ClInclude Include="BlitPass.h">
-      <Filter>RenderPass\BlitPass</Filter>
-    </ClInclude>
     <ClInclude Include="AAPass.h">
       <Filter>RenderPass\AAPass</Filter>
     </ClInclude>
@@ -360,6 +357,9 @@
     </ClInclude>
     <ClInclude Include="LightProperty.h">
       <Filter>Objects\NewFilter1</Filter>
+    </ClInclude>
+    <ClInclude Include="BlitPass.h">
+      <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -445,6 +445,9 @@
       <Filter>Shaders\PipelineShader</Filter>
     </FxCompile>
     <FxCompile Include="..\x64\Assets\Shaders\VertexShader.vs.hlsl">
+      <Filter>Shaders\PipelineShader</Filter>
+    </FxCompile>
+    <FxCompile Include="..\x64\Assets\Shaders\Shadow.vs.hlsl">
       <Filter>Shaders\PipelineShader</Filter>
     </FxCompile>
   </ItemGroup>

@@ -60,11 +60,13 @@ Texture* Texture::CreateArray(uint32 width, uint32 height, const std::string_vie
 		textureFormat,
 		width,
 		height,
-		arrsize,
+		1,
 		1,
 		bindFlags,
 		D3D11_USAGE_DEFAULT
 	};
+	textureDesc.ArraySize = arrsize;
+
 	ID3D11Texture2D* texture;
 	DirectX11::ThrowIfFailed(
 		DeviceState::g_pDevice->CreateTexture2D(

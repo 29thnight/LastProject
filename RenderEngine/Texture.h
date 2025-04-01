@@ -34,7 +34,7 @@ public:
 		_In_ const std::string_view& name,
 		_In_ DXGI_FORMAT textureFormat,
 		_In_ uint32 bindFlags,
-		_In_ uint32 arrsize,
+		_In_ uint32 arrsize =3,
 		_In_opt_ D3D11_SUBRESOURCE_DATA* data = nullptr
 	);
 	static Texture* LoadFormPath(_In_ const file::path& path);

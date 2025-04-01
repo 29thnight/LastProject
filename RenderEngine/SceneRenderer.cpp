@@ -430,27 +430,27 @@ void SceneRenderer::Initialize(Scene* _pScene)
 			.SetGlobalAmbient(XMFLOAT4(0.1f, 0.1f, 0.1f, 1.0f));
 
 		ShadowMapRenderDesc desc;
-		desc.m_eyePosition = (m_renderScene->m_LightController->GetLight(0).m_direction) * -5.f;
+		auto dir = (m_renderScene->m_LightController->GetLight(0).m_direction);
 		desc.m_lookAt = XMVectorSet(0, 0, 0, 1);
-		desc.m_viewWidth = 80;
-		desc.m_viewHeight = 80;
+		desc.m_eyePosition = ((m_renderScene->m_LightController->GetLight(0).m_direction) * -10);
+		desc.m_viewWidth = 100;
+		desc.m_viewHeight = 100;
 		desc.m_nearPlane = 1.0f;
-		desc.m_farPlane = 50.0f;
-		desc.m_textureWidth = 1920;
-		desc.m_textureHeight = 1080;
+		desc.m_farPlane = 1000.0f;
+		desc.m_textureWidth = 8192.f;
+		desc.m_textureHeight = 8192.f;
 
 		m_renderScene->m_LightController->Initialize();
 		m_renderScene->m_LightController->SetLightWithShadows(0, desc);
 
-		model = Model::LoadModel("bangbooExport.fbx");
 		testmm = Model::LoadModel("Prop_Block.fbx");
 		Model::LoadModelToScene(testmm, *m_currentScene);
-		//testUI.Loadsprite("test2.png");
-		//testUI.SetTexture();
-		//testUI.SetUI({ 200,200 },2);
+		model = Model::LoadModel("bangbooExport.fbx");
+		Model::LoadModelToScene(model, *m_currentScene);
+		
+		
+	
 
-		//testmm = Model::LoadModel("Cube.fbx");
-		//Model::LoadModelToScene(testmm, *m_currentScene);
 
 		
 		ImGui::ContextRegister("Test Add Model", true, [&]()
