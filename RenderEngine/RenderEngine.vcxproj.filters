@@ -429,9 +429,6 @@
     <FxCompile Include="..\x64\Assets\Shaders\VertexShader.vs.hlsl">
       <Filter>Shaders\PipelineShader</Filter>
     </FxCompile>
-    <FxCompile Include="..\x64\Assets\Shaders\Shadow.vs.hlsl">
-      <Filter>Shaders\PipelineShader</Filter>
-    </FxCompile>
     <FxCompile Include="..\x64\Assets\Shaders\BloomThresholdDownsample.cs.hlsl">
       <Filter>Shaders\PostProcessShader</Filter>
     </FxCompile>
@@ -449,6 +446,9 @@
     </FxCompile>
     <FxCompile Include="..\x64\Assets\Shaders\AutoExposureEval.cs.hlsl">
       <Filter>Shaders\PostProcessShader</Filter>
+    </FxCompile>
+    <FxCompile Include="..\x64\Assets\Shaders\Shadow.gs.hlsl">
+      <Filter>Shaders\PipelineShader</Filter>
     </FxCompile>
   </ItemGroup>
   <ItemGroup>

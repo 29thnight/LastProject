@@ -13,6 +13,7 @@ struct SurfaceInfo
     float3 B;
     float3 V;
     float NdotV;
+    float clipspaceZ;
 };
 
 struct LightingInfo

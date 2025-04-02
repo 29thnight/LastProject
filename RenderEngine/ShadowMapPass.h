@@ -31,11 +31,7 @@ class LightController;
 //	//8192  4096 1024.f
 //};
 
-struct ShadowInfo
-{
-	Mathf::xMatrix ShadowView;
-	Mathf::xMatrix ShadowProjection;
-};
+
 class ShadowMapPass final : public IRenderPass
 {
 public:
@@ -48,16 +44,16 @@ public:
 	Camera m_shadowCamera{};
 
 	std::unique_ptr<Texture> m_shadowMapTexture{};
-	ID3D11DepthStencilView* m_shadowMapDSV{ nullptr };
+	//ID3D11DepthStencilView* m_shadowMapDSV{ nullptr };
 
 
 
 	ComPtr<ID3D11Buffer> m_shadowBuffer;
+	ComPtr<ID3D11Buffer> m_shadowgsBuffer;
 	D3D11_VIEWPORT shadowViewport;
 	ID3D11Texture2D* shadowMapArray = nullptr; //나중에 지우기
 	ID3D11ShaderResourceView* shadowMapSRV = nullptr;
-	ShadowInfo  shadow1;
 	//메인 라이트 3, 
-	ID3D11ShaderResourceView* m_shadowMapSRV[3]{};
-	//ID3D11DepthStencilView* m_shadowMapDSV[3]{};
+	//ID3D11ShaderResourceView* m_shadowMapSRV[3]{};
+	ID3D11DepthStencilView* m_shadowMapDSV[3]{};
 };

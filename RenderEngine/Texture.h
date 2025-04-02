@@ -43,6 +43,7 @@ public:
 		_In_ DXGI_FORMAT textureFormat,
 		_In_opt_ D3D11_SRV_DIMENSION viewDimension = D3D11_SRV_DIMENSION_TEXTURE2D,
 		_In_opt_ uint32 mipLevels = 1
+
 	);
 
 	void CreateRTV(_In_ DXGI_FORMAT textureFormat);

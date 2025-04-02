@@ -65,7 +65,6 @@ float4 main(PixelShaderInput IN) : SV_TARGET
     surf.N = normal;
     surf.V = normalize(eyePosition.xyz - posW);
     surf.NdotV = dot(surf.N, surf.V);
-
     float3 Lo = float3(0, 0, 0);
     float3 F0 = float3(0.04, 0.04, 0.04);
     F0 = lerp(F0, albedo, metallic);

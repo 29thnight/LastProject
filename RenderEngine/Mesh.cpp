@@ -63,6 +63,8 @@ Mesh::~Mesh()
 {
 }
 
+
+
 void Mesh::Draw()
 {
 	UINT offset = 0;

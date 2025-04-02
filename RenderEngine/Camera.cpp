@@ -56,6 +56,11 @@ Mathf::xMatrix Camera::CalculateProjection()
 	}
 }
 
+Mathf::xMatrix Camera::CalculateProjectionshadow(float nearp, float farp)
+{
+	return XMMatrixOrthographicLH(m_viewWidth, m_viewHeight, m_nearPlane, m_farPlane);
+}
+
 Mathf::Vector4 Camera::ConvertScreenToWorld(Mathf::Vector2 screenPosition, float depth)
 {
 	// 1. 스크린 좌표를 NDC 좌표로 변환

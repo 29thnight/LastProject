@@ -441,20 +441,20 @@ void SceneRenderer::Initialize(Scene* _pScene)
 		auto dir = (m_renderScene->m_LightController->GetLight(0).m_direction);
 		desc.m_lookAt = XMVectorSet(0, 0, 0, 1);
 		desc.m_eyePosition = ((m_renderScene->m_LightController->GetLight(0).m_direction) * -10);
-		desc.m_viewWidth = 100;
-		desc.m_viewHeight = 100;
-		desc.m_nearPlane = 1.0f;
+		desc.m_viewWidth = 32;
+		desc.m_viewHeight = 32;
+		desc.m_nearPlane = 100.1f;
 		desc.m_farPlane = 1000.0f;
-		desc.m_textureWidth = 8192.f;
-		desc.m_textureHeight = 8192.f;
+		desc.m_textureWidth = 1024;
+		desc.m_textureHeight = 1024;
 
 		m_renderScene->m_LightController->Initialize();
 		m_renderScene->m_LightController->SetLightWithShadows(0, desc);
 
 		model = Model::LoadModel("plane.fbx");
 		Model::LoadModelToScene(model, *m_currentScene);
-		testmm = Model::LoadModel("Prop_Block.fbx");
-		Model::LoadModelToScene(testmm, *m_currentScene);
+		//testmm = Model::LoadModel("Prop_Block.fbx");
+		//Model::LoadModelToScene(testmm, *m_currentScene);
 		model = Model::LoadModel("bangbooExport.fbx");
 		Model::LoadModelToScene(model, *m_currentScene);
 		

@@ -23,6 +23,7 @@ public:
 	Camera();
 	~Camera();
 	Mathf::xMatrix CalculateProjection();
+	Mathf::xMatrix CalculateProjectionshadow(float nearp, float farp);
 	Mathf::Vector4 ConvertScreenToWorld(Mathf::Vector2 screenPosition, float depth);
 	Mathf::Vector4 RayCast(Mathf::Vector2 screenPosition);
 	Mathf::xMatrix CalculateView() const;

@@ -66,14 +66,13 @@ Texture* Texture::CreateArray(uint32 width, uint32 height, const std::string_vie
 		D3D11_USAGE_DEFAULT
 	};
 	textureDesc.ArraySize = arrsize;
-
 	ID3D11Texture2D* texture;
 	DirectX11::ThrowIfFailed(
 		DeviceState::g_pDevice->CreateTexture2D(
 			&textureDesc, data, &texture
 		)
 	);
-
+	
 	return new Texture(texture, name);
 }
 
@@ -195,12 +194,18 @@ void Texture::CreateSRV(_In_ DXGI_FORMAT textureFormat, _In_opt_ D3D11_SRV_DIMEN
 		0, 
 		mipLevels
 	};
+	if (viewDimension == D3D11_SRV_DIMENSION_TEXTURE2DARRAY)
+	{
+		srvDesc.Texture2DArray.FirstArraySlice = 0;
+		srvDesc.Texture2DArray.ArraySize = 3;
+		
+	}
 	DirectX11::ThrowIfFailed(
 		DeviceState::g_pDevice->CreateShaderResourceView(
 			m_pTexture, &srvDesc, &m_pSRV
 		)
 	);
-
+	
 	DirectX::SetName(m_pSRV, m_name + "SRV");
 }
 

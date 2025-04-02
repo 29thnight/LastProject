@@ -12,8 +12,8 @@
 #define LIGHT_ENABLED 1
 #define LIGHT_ENABLED_W_SHADOWMAP 2
 
-Texture2D ShadowMap : register(t4); // support 1 for now, future use array
-//Texture2DArray ShadowMapArr : register(t4);
+//Texture2D ShadowMap : register(t4); // support 1 for now, future use array
+Texture2DArray<float> ShadowMapArr : register(t4);
 struct Light
 {
     float4 position;
@@ -41,12 +41,15 @@ cbuffer ShadowMapConstants : register(b2) // supports one
 {
     float mapWidth;
     float mapHeight;
-    float4x4 lightViewProjection;
+    float4x4 lightViewProjection[3];
 }
 
 float ShadowFactor(float4 worldPosition) // assumes only one shadow map cbuffer
 {
-    float4 lightSpacePosition = mul(lightViewProjection, worldPosition);
+    
+    
+    float shadowindex = 2;
+    float4 lightSpacePosition = mul(lightViewProjection[2], worldPosition);
 
     float3 projCoords = lightSpacePosition.xyz / lightSpacePosition.w;
     float currentDepth = projCoords.z;
@@ -72,13 +75,15 @@ float ShadowFactor(float4 worldPosition) // assumes only one shadow map cbuffer
             for (int y = -1; y < 2; ++y)
             {
           
-                float closestDepth = ShadowMap.Sample(ShadowSampler, projCoords.xy + float2(x, y) * texelSize).r;
-           //float closestDepth = ShadowMapArr.Sample(LinearSampler, float3(projCoords.xy + float2(x, y) * texelSize,0)).r;
-                shadow += (closestDepth < currentDepth - epsilon);
+                //float closestDepth = ShadowMap.Sample(ClampSampler, projCoords.xy + float2(x, y) * texelSize).r;
+                float closestDepth = ShadowMapArr.Sample(ClampSampler, float3(projCoords.xy + float2(x, y) * texelSize, 0)).r;
+               /// shadow += (closestDepth < currentDepth - epsilon);
+                shadow = closestDepth;
+
             }
         }
     }
-    //shadow /= 9;
+    shadow /= 9;
     
     return shadow;
 }

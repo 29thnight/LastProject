@@ -5,5 +5,5 @@ sampler LinearSampler : register(s0);
 sampler PointSampler : register(s1);
 sampler ClampSampler : register(s2);
 
-sampler ShadowSampler : register(s2);
+//sampler ShadowSampler : register(s3);
 #endif
