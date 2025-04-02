@@ -156,7 +156,7 @@ SceneRenderer::SceneRenderer(const std::shared_ptr<DirectX11::DeviceResources>& 
 	//Buffer 생성
 	XMMATRIX identity = XMMatrixIdentity();
 
-	m_ModelBuffer = DirectX11::CreateBuffer(sizeof(Mathf::xMatrix), D3D11_BIND_FLAG::D3D11_BIND_CONSTANT_BUFFER, &identity);
+	m_ModelBuffer = DirectX11::CreateBuffer(sizeof(Mathf::xMatrix), D3D11_BIND_FLAG::D3D11_BIND_CONSTANT_BUFFER, &Mathf::xMatrixIdentity);
 	DirectX::SetName(m_ModelBuffer.Get(), "ModelBuffer");
 
 	m_pEditorCamera = std::make_unique<Camera>();
@@ -223,6 +223,8 @@ SceneRenderer::SceneRenderer(const std::shared_ptr<DirectX11::DeviceResources>& 
 
 	//AAPass
 	m_pAAPass = std::make_unique<AAPass>();
+
+	m_pPostProcessingPass = std::make_unique<PostProcessingPass>();
 
 	m_renderScene = new RenderScene();
 }
@@ -297,6 +299,12 @@ void SceneRenderer::InitializeImGui()
 		if (ImGui::CollapsingHeader("GridPass"))
 		{
 			m_pGridPass->ControlPanel();
+		}
+
+		ImGui::Spacing();
+		if (ImGui::CollapsingHeader("PostProcessPass"))
+		{
+			m_pPostProcessingPass->ControlPanel();
 		}
 	});
 
@@ -443,6 +451,8 @@ void SceneRenderer::Initialize(Scene* _pScene)
 		m_renderScene->m_LightController->Initialize();
 		m_renderScene->m_LightController->SetLightWithShadows(0, desc);
 
+		model = Model::LoadModel("plane.fbx");
+		Model::LoadModelToScene(model, *m_currentScene);
 		testmm = Model::LoadModel("Prop_Block.fbx");
 		Model::LoadModelToScene(testmm, *m_currentScene);
 		model = Model::LoadModel("bangbooExport.fbx");
@@ -490,18 +500,19 @@ void SceneRenderer::Update(float deltaTime)
 
 void SceneRenderer::Render()
 {
+	DirectX11::ResetCallCount();
 	for(auto& camera : CameraManagement->m_cameras)
 	{
 		if (nullptr == camera) continue;
 		//[1] ShadowMapPass
 		{
 			static int count = 0;
-			//Banchmark banch;
+			Banchmark banch;
 			camera->ClearRenderTarget();
 			m_renderScene->ShadowStage(*camera);
 			Clear(DirectX::Colors::Transparent, 1.0f, 0);
 			UnbindRenderTargets();
-			//std::cout << "ShadowMapPass : " << banch.GetElapsedTime() << std::endl;
+			Debug->Log("ShadowMapPass : " + std::to_string(banch.GetElapsedTime()));
 		}
 
 		//[2] GBufferPass
@@ -516,18 +527,15 @@ void SceneRenderer::Render()
 		{
 			//Banchmark banch;
 			m_pSSAOPass->Execute(*m_renderScene, *camera);
-
 			//std::cout << "GBufferPass : " << banch.GetElapsedTime() << std::endl;
 		}
 
 		//[4] DeferredPass
 		{
-			//Banchmark banch;
+			Banchmark banch;
 			m_pDeferredPass->UseAmbientOcclusion(m_ambientOcclusionTexture.get());
 			m_pDeferredPass->Execute(*m_renderScene, *camera);
-
-
-			//std::cout << "DeferredPass : " << banch.GetElapsedTime() << std::endl;
+			Debug->Log("DeferredPass : " + std::to_string(banch.GetElapsedTime()));
 		}
 
 		//[*] WireFramePass
@@ -552,6 +560,11 @@ void SceneRenderer::Render()
 			//Banchmark banch;
 			m_pAAPass->Execute(*m_renderScene, *camera);
 			//std::cout << "AAPass : " << banch.GetElapsedTime() << std::endl;
+		}
+
+		//[*] PostProcessPass
+		{
+			m_pPostProcessingPass->Execute(*m_renderScene, *camera);
 		}
 
 		//[6] ToneMapPass
@@ -580,19 +593,18 @@ void SceneRenderer::Render()
 
 		//[]  UIPass
 		{
-			
 			m_pUIPass->Execute(*m_renderScene, *camera);
 		}
+
 		//[8] BlitPass
 		{
 			//Banchmark banch;
 			m_pBlitPass->Execute(*m_renderScene, *camera);
 			//std::cout << "BlitPass : " << banch.GetElapsedTime() << std::endl;
 		}
-
-		
 	}
 
+	Debug->Log("Draw Call Count : " + std::to_string(DirectX11::GetDrawCallCount()));
 	m_pGBufferPass->ClearDeferredQueue();
 }
 

@@ -10,17 +10,17 @@ Model::Model()
 
 Model::~Model()
 {
-	for (auto mesh : m_Meshes)
+	for (auto& mesh : m_Meshes)
 	{
 		delete mesh;
 	}
 
-	for (auto material : m_Materials)
+	for (auto& material : m_Materials)
 	{
 		delete material;
 	}
 
-	for (auto texture : m_Textures)
+	for (auto& texture : m_Textures)
 	{
 		delete texture;
 	}
@@ -75,6 +75,10 @@ Model* Model::LoadModelToScene(Model* model, Scene& Scene)
 
 	Banchmark banch;
 	loader.GenerateSceneObjectHierarchy(model->m_nodes[0], true, 0);
+	if (model->m_hasBones)
+	{
+		loader.GenerateSkeletonToSceneObjectHierarchy(model->m_nodes[0], model->m_Skeleton->m_rootBone, true, 0);
+	}
 	std::cout << "LoadModelToScene : " << banch.GetElapsedTime() << std::endl;
 
 	return model;
