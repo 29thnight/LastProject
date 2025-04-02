@@ -1,6 +1,7 @@
 #include "Effects.h"
 #include "AssetSystem.h"
 #include "Fire.h"
+#include "SparkleEffect.h"
 
 Effects::Effects()
 {
@@ -168,6 +169,9 @@ void Effects::MakeEffects(Effect type, std::string_view name)
 	{
 	case Effect::Explode:
 		effects[name.data()] = std::make_unique<FirePass>();
+		break;
+	case Effect::Sparkle:
+		effects[name.data()] = std::make_unique<SparkleEffect>(Mathf::Vector3(-100.0f,-100.0f,0.0f));
 		break;
 	}
 }

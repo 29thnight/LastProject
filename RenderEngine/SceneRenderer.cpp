@@ -215,7 +215,7 @@ SceneRenderer::SceneRenderer(const std::shared_ptr<DirectX11::DeviceResources>& 
     m_pGridPass = std::make_unique<GridPass>();
 
 	m_pEffectPass = std::make_unique<Effects>();
-	m_pEffectPass->MakeEffects(Effect::Explode, "asd");
+	m_pEffectPass->MakeEffects(Effect::Sparkle, "asd");	
 }
 
 

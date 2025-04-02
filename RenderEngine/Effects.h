@@ -41,6 +41,7 @@ struct alignas(16) ModelConstantBuffer
 enum class Effect
 {
 	Explode,
+	Sparkle,
 };
 
 class Effects : public IRenderPass

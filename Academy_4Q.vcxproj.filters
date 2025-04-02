@@ -426,5 +426,8 @@
     <FxCompile Include="x64\Assets\Shaders\BillBoard.gs.hlsl">
       <Filter>Shaders\Effects</Filter>
     </FxCompile>
+    <FxCompile Include="x64\Assets\Shaders\Sparkle.ps.hlsl">
+      <Filter>Shaders\Effects</Filter>
+    </FxCompile>
   </ItemGroup>
 </Project>

@@ -166,6 +166,7 @@
     <ClCompile Include="Mesh.cpp" />
     <ClCompile Include="Model.cpp" />
     <ClCompile Include="ModelLoader.cpp" />
+    <ClCompile Include="NiagaraEffectManager.cpp" />
     <ClCompile Include="PSO.cpp" />
     <ClCompile Include="Sampler.cpp" />
     <ClCompile Include="Scene.cpp" />
@@ -176,6 +177,7 @@
     <ClCompile Include="SkeletonLoader.cpp" />
     <ClCompile Include="SkyBoxPass.cpp" />
     <ClCompile Include="Snow.cpp" />
+    <ClCompile Include="SparkleEffect.cpp" />
     <ClCompile Include="SpritePass.cpp" />
     <ClCompile Include="SSAOPass.cpp" />
     <ClCompile Include="AAPass.cpp" />
@@ -211,9 +213,11 @@
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="Model.h" />
     <ClInclude Include="ModelLoader.h" />
+    <ClInclude Include="NiagaraEffectManager.h" />
     <ClInclude Include="ObjectRenderers.h" />
     <ClInclude Include="PSO.h" />
     <ClInclude Include="RenderType.h" />
+    <ClInclude Include="resource.h" />
     <ClInclude Include="Sampler.h" />
     <ClInclude Include="Scene.h" />
     <ClInclude Include="SceneObject.h" />
@@ -224,6 +228,7 @@
     <ClInclude Include="SkeletonLoader.h" />
     <ClInclude Include="SkyBoxPass.h" />
     <ClInclude Include="Snow.h" />
+    <ClInclude Include="SparkleEffect.h" />
     <ClInclude Include="SpritePass.h" />
     <ClInclude Include="SSAOPass.h" />
     <ClInclude Include="AAPass.h" />
@@ -233,6 +238,9 @@
     <ClInclude Include="widgets.h" />
     <ClInclude Include="WireFramePass.h" />
     <ClInclude Include="GridPass.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="RenderEngine.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

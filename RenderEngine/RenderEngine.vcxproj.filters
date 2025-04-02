@@ -106,6 +106,9 @@
     <Filter Include="RenderPass\EffectPass">
       <UniqueIdentifier>{16165230-a2f1-4c58-bb2c-9a176e3c5156}</UniqueIdentifier>
     </Filter>
+    <Filter Include="RenderPass\EffectPass\Old">
+      <UniqueIdentifier>{be49913d-40ab-4bb2-81de-289e94a8622f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="SceneRenderer.cpp">
@@ -216,13 +219,19 @@
     <ClCompile Include="LightMap.cpp">
       <Filter>LightMap</Filter>
     </ClCompile>
-    <ClCompile Include="Effects.cpp">
+    <ClCompile Include="NiagaraEffectManager.cpp">
       <Filter>RenderPass\EffectPass</Filter>
     </ClCompile>
     <ClCompile Include="Fire.cpp">
-      <Filter>RenderPass\EffectPass</Filter>
+      <Filter>RenderPass\EffectPass\Old</Filter>
     </ClCompile>
     <ClCompile Include="Snow.cpp">
+      <Filter>RenderPass\EffectPass\Old</Filter>
+    </ClCompile>
+    <ClCompile Include="SparkleEffect.cpp">
+      <Filter>RenderPass\EffectPass</Filter>
+    </ClCompile>
+    <ClCompile Include="Effects.cpp">
       <Filter>RenderPass\EffectPass</Filter>
     </ClCompile>
   </ItemGroup>
@@ -359,14 +368,24 @@
     <ClInclude Include="LightMap.h">
       <Filter>LightMap</Filter>
     </ClInclude>
-    <ClInclude Include="Effects.h">
+    <ClInclude Include="NiagaraEffectManager.h">
       <Filter>RenderPass\EffectPass</Filter>
     </ClInclude>
     <ClInclude Include="Fire.h">
-      <Filter>RenderPass\EffectPass</Filter>
+      <Filter>RenderPass\EffectPass\Old</Filter>
     </ClInclude>
     <ClInclude Include="Snow.h">
+      <Filter>RenderPass\EffectPass\Old</Filter>
+    </ClInclude>
+    <ClInclude Include="SparkleEffect.h">
       <Filter>RenderPass\EffectPass</Filter>
     </ClInclude>
+    <ClInclude Include="resource.h" />
+    <ClInclude Include="Effects.h">
+      <Filter>RenderPass\EffectPass</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="RenderEngine.rc" />
   </ItemGroup>
 </Project>
