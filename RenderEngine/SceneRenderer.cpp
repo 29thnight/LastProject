@@ -9,6 +9,7 @@
 #include "../ScriptBinder/Scene.h"
 #include "../ScriptBinder/Renderer.h"
 
+using namespace lm;
 #pragma region ImGuizmo
 #include "ImGuizmo.h"
 
@@ -56,7 +57,7 @@ void SceneRenderer::EditTransform(float* cameraView, float* cameraProjection, fl
 	static ImGuiWindowFlags gizmoWindowFlags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse;
 	if (useWindow)
 	{
-		ImGui::PushStyleColor(ImGuiCol_WindowBg, (ImVec4)ImColor(0.f, 0.f, 0.f, 0.f));
+		ImGui::PushStyleColor(ImGuiCol_WindowBg, (ImVec4)ImColor(0.f, 0.f, 0.f, 1.f));
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0,0));
         ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
 		ImGui::Begin("Gizmo", 0, gizmoWindowFlags);
@@ -156,7 +157,7 @@ SceneRenderer::SceneRenderer(const std::shared_ptr<DirectX11::DeviceResources>& 
 	//Buffer 생성
 	XMMATRIX identity = XMMatrixIdentity();
 
-	m_ModelBuffer = DirectX11::CreateBuffer(sizeof(Mathf::xMatrix), D3D11_BIND_FLAG::D3D11_BIND_CONSTANT_BUFFER, &identity);
+	m_ModelBuffer = DirectX11::CreateBuffer(sizeof(Mathf::xMatrix), D3D11_BIND_FLAG::D3D11_BIND_CONSTANT_BUFFER, &Mathf::xMatrixIdentity);
 	DirectX::SetName(m_ModelBuffer.Get(), "ModelBuffer");
 
 	m_pEditorCamera = std::make_unique<Camera>();
@@ -217,12 +218,21 @@ SceneRenderer::SceneRenderer(const std::shared_ptr<DirectX11::DeviceResources>& 
 	//GridPass
     m_pGridPass = std::make_unique<GridPass>();
 
+	//LightmapShadowPass
+	m_pLightmapShadowPass = std::make_unique<LightmapShadowPass>();
+	m_pLightmapShadowPass->Initialize(8192, 8192);
+
+	//PositionMapPass
+	m_pPositionMapPass = std::make_unique<PositionMapPass>();
+	m_pNormalMapPass = std::make_unique<NormalMapPass>();
 
 	m_pUIPass = std::make_unique<UIPass>();
 	m_pUIPass->Initialize(m_toneMappedColourTexture.get());
 
 	//AAPass
 	m_pAAPass = std::make_unique<AAPass>();
+
+	m_pPostProcessingPass = std::make_unique<PostProcessingPass>();
 
 	m_renderScene = new RenderScene();
 }
@@ -252,6 +262,11 @@ void SceneRenderer::InitializeImGui()
 		if (ImGui::CollapsingHeader("ShadowPass"))
 		{
 			m_renderScene->m_LightController->m_shadowMapPass->ControlPanel();
+
+			ImGui::Image(
+				(ImTextureID)m_renderScene->m_LightController->m_shadowMapPass->m_shadowMapTexture->m_pSRV,
+				ImVec2(512, 512));
+			//ImGui::EndTabItem();
 		}
 
 		if (ImGui::CollapsingHeader("SSAOPass"))
@@ -297,6 +312,12 @@ void SceneRenderer::InitializeImGui()
 		if (ImGui::CollapsingHeader("GridPass"))
 		{
 			m_pGridPass->ControlPanel();
+		}
+
+		ImGui::Spacing();
+		if (ImGui::CollapsingHeader("PostProcessPass"))
+		{
+			m_pPostProcessingPass->ControlPanel();
 		}
 	});
 
@@ -409,6 +430,7 @@ void SceneRenderer::Initialize(Scene* _pScene)
 		Light pointLight;
 		pointLight.m_color = XMFLOAT4(1, 1, 0, 0);
 		pointLight.m_position = XMFLOAT4(4, 3, 0, 0);
+		pointLight.m_direction = XMFLOAT4(1, -1, 0, 0);
 		pointLight.m_lightType = LightType::PointLight;
 
 		Light dirLight;
@@ -490,18 +512,19 @@ void SceneRenderer::Update(float deltaTime)
 
 void SceneRenderer::Render()
 {
+	DirectX11::ResetCallCount();
 	for(auto& camera : CameraManagement->m_cameras)
 	{
 		if (nullptr == camera) continue;
 		//[1] ShadowMapPass
 		{
 			static int count = 0;
-			//Banchmark banch;
+			Banchmark banch;
 			camera->ClearRenderTarget();
 			m_renderScene->ShadowStage(*camera);
 			Clear(DirectX::Colors::Transparent, 1.0f, 0);
 			UnbindRenderTargets();
-			//std::cout << "ShadowMapPass : " << banch.GetElapsedTime() << std::endl;
+			Debug->Log("ShadowMapPass : " + std::to_string(banch.GetElapsedTime()));
 		}
 
 		//[2] GBufferPass
@@ -516,18 +539,15 @@ void SceneRenderer::Render()
 		{
 			//Banchmark banch;
 			m_pSSAOPass->Execute(*m_renderScene, *camera);
-
 			//std::cout << "GBufferPass : " << banch.GetElapsedTime() << std::endl;
 		}
 
 		//[4] DeferredPass
 		{
-			//Banchmark banch;
+			Banchmark banch;
 			m_pDeferredPass->UseAmbientOcclusion(m_ambientOcclusionTexture.get());
 			m_pDeferredPass->Execute(*m_renderScene, *camera);
-
-
-			//std::cout << "DeferredPass : " << banch.GetElapsedTime() << std::endl;
+			Debug->Log("DeferredPass : " + std::to_string(banch.GetElapsedTime()));
 		}
 
 		//[*] WireFramePass
@@ -552,6 +572,11 @@ void SceneRenderer::Render()
 			//Banchmark banch;
 			m_pAAPass->Execute(*m_renderScene, *camera);
 			//std::cout << "AAPass : " << banch.GetElapsedTime() << std::endl;
+		}
+
+		//[*] PostProcessPass
+		{
+			m_pPostProcessingPass->Execute(*m_renderScene, *camera);
 		}
 
 		//[6] ToneMapPass
@@ -580,19 +605,18 @@ void SceneRenderer::Render()
 
 		//[]  UIPass
 		{
-			
 			m_pUIPass->Execute(*m_renderScene, *camera);
 		}
+
 		//[8] BlitPass
 		{
 			//Banchmark banch;
 			m_pBlitPass->Execute(*m_renderScene, *camera);
 			//std::cout << "BlitPass : " << banch.GetElapsedTime() << std::endl;
 		}
-
-		
 	}
 
+	Debug->Log("Draw Call Count : " + std::to_string(DirectX11::GetDrawCallCount()));
 	m_pGBufferPass->ClearDeferredQueue();
 }
 
@@ -681,6 +705,36 @@ void SceneRenderer::EditorView()
 
                 ImGui::EndMenu();
             }
+
+			if (ImGui::BeginMenu("Bake Lightmap"))
+			{
+				if (ImGui::MenuItem("Bake"))
+				{
+					Camera c{};
+					// 메쉬별로 positionMap 생성
+					m_pPositionMapPass->Execute(*m_renderScene, c);
+					m_pNormalMapPass->Execute(*m_renderScene, c);
+					// lightMap에 사용할 shadowMap 생성
+					m_pLightmapShadowPass->Execute(*m_renderScene, c);
+					// lightMap 생성
+					lightMap.GenerateLightMap(m_renderScene, m_pLightmapShadowPass, m_pPositionMapPass, m_pNormalMapPass);
+
+
+					if (lightMap.imgSRV) {
+						ImGui::ContextUnregister("Baked LightMap");
+
+						ImGui::ContextRegister("Baked LightMap", true, [&]() {
+							ImGui::Image((ImTextureID)lightMap.imgSRV, ImVec2(512, 512));
+
+							for (auto& [name, tex] : m_pPositionMapPass->m_positionMapTextures)
+							{
+								ImGui::Image((ImTextureID)tex->m_pSRV, ImVec2(512, 512));
+							}
+							});
+					}
+				}
+				ImGui::EndMenu();
+			}
 
             ImGui::EndMainMenuBar();
         }
