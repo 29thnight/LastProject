@@ -59,7 +59,7 @@ struct alignas(16) ShadowMapConstant
 {
 	float m_shadowMapWidth{};
 	float m_shadowMapHeight{};
-	Mathf::xMatrix m_lightViewProjection[3]{};
+	Mathf::xMatrix m_lightViewProjection{};
 };
 
 struct ShadowMapRenderDesc

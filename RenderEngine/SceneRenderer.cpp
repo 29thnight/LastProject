@@ -219,12 +219,12 @@ SceneRenderer::SceneRenderer(const std::shared_ptr<DirectX11::DeviceResources>& 
     m_pGridPass = std::make_unique<GridPass>();
 
 	//LightmapShadowPass
-	m_pLightmapShadowPass = std::make_unique<LightmapShadowPass>();
-	m_pLightmapShadowPass->Initialize(8192, 8192);
+	//m_pLightmapShadowPass = std::make_unique<LightmapShadowPass>();
+	//m_pLightmapShadowPass->Initialize(8192, 8192);
 
 	//PositionMapPass
-	m_pPositionMapPass = std::make_unique<PositionMapPass>();
-	m_pNormalMapPass = std::make_unique<NormalMapPass>();
+	//m_pPositionMapPass = std::make_unique<PositionMapPass>();
+	//m_pNormalMapPass = std::make_unique<NormalMapPass>();
 
 	m_pUIPass = std::make_unique<UIPass>();
 	m_pUIPass->Initialize(m_toneMappedColourTexture.get());
@@ -263,9 +263,9 @@ void SceneRenderer::InitializeImGui()
 		{
 			m_renderScene->m_LightController->m_shadowMapPass->ControlPanel();
 
-			ImGui::Image(
-				(ImTextureID)m_renderScene->m_LightController->m_shadowMapPass->m_shadowMapTexture->m_pSRV,
-				ImVec2(512, 512));
+			//ImGui::Image(
+			//	(ImTextureID)m_renderScene->m_LightController->m_shadowMapPass->m_shadowMapTexture->m_pSRV,
+			//	ImVec2(512, 512));
 			//ImGui::EndTabItem();
 		}
 
@@ -452,21 +452,20 @@ void SceneRenderer::Initialize(Scene* _pScene)
 			.SetGlobalAmbient(XMFLOAT4(0.1f, 0.1f, 0.1f, 1.0f));
 
 		ShadowMapRenderDesc desc;
-		auto dir = (m_renderScene->m_LightController->GetLight(0).m_direction);
 		desc.m_lookAt = XMVectorSet(0, 0, 0, 1);
 		desc.m_eyePosition = ((m_renderScene->m_LightController->GetLight(0).m_direction) * -10);
 		desc.m_viewWidth = 32;
 		desc.m_viewHeight = 32;
-		desc.m_nearPlane = 100.1f;
+		desc.m_nearPlane = 1.0f;
 		desc.m_farPlane = 1000.0f;
-		desc.m_textureWidth = 1024;
-		desc.m_textureHeight = 1024;
+		desc.m_textureWidth = 1024.f;
+		desc.m_textureHeight = 1024.f;
 
 		m_renderScene->m_LightController->Initialize();
 		m_renderScene->m_LightController->SetLightWithShadows(0, desc);
 
-		model = Model::LoadModel("plane.fbx");
-		Model::LoadModelToScene(model, *m_currentScene);
+		testmm = Model::LoadModel("plane.fbx");
+		Model::LoadModelToScene(testmm, *m_currentScene);
 		//testmm = Model::LoadModel("Prop_Block.fbx");
 		//Model::LoadModelToScene(testmm, *m_currentScene);
 		model = Model::LoadModel("bangbooExport.fbx");

@@ -38,7 +38,6 @@ struct VertexShaderOutput
     float3 tangent : TANGENT;
     float3 binormal : BINORMAL;
     float2 texCoord : TEXCOORD0;
-    float clipspaceZ : TEXCOORD1;
 };
 
 VertexShaderOutput main(AppData IN)
@@ -60,7 +59,6 @@ VertexShaderOutput main(AppData IN)
     OUT.wPosition = mul(model, float4(IN.position, 1.0f));
     matrix vp = mul(projection, view);
     OUT.position = mul(vp, OUT.wPosition);
-    OUT.clipspaceZ = OUT.position.z;
     OUT.pos = OUT.position;
     OUT.texCoord = IN.texCoord;
 

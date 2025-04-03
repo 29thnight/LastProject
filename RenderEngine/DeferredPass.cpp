@@ -119,6 +119,7 @@ void DeferredPass::Execute(RenderScene& scene, Camera& camera)
         m_EmissiveTexture->m_pSRV
     };
 
+
     DirectX11::PSSetShaderResources(0, 10, srvs);
 
     DirectX11::Draw(4, 0);
