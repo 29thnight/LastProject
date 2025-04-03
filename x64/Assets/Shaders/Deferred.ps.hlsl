@@ -23,6 +23,9 @@ Texture2D MetalRough : register(t2);
 Texture2D Normals : register(t3);
 Texture2D AO : register(t5);
 
+Texture2D shadow1 : register(t19);
+Texture2D shadow2 : register(t20);
+
 TextureCube EnvMap : register(t6);
 TextureCube PrefilteredSpecMap : register(t7);
 Texture2D BrdfLUT : register(t8);
@@ -70,6 +73,7 @@ float4 main(PixelShaderInput IN) : SV_TARGET
     float3 F0 = float3(0.04, 0.04, 0.04);
     F0 = lerp(F0, albedo, metallic);
 
+    [unroll]
     for (int i = 0; i < MAX_LIGHTS; ++i)
     {
         Light light = Lights[i];

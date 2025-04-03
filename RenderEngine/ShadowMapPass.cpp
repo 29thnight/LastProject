@@ -36,6 +36,12 @@ ShadowMapPass::ShadowMapPass()
 
 	CD3D11_RASTERIZER_DESC rasterizerDesc{ CD3D11_DEFAULT() };
 
+	//rasterizerDesc.FillMode = D3D11_FILL_SOLID;
+	//rasterizerDesc.CullMode = D3D11_CULL_BACK;
+	//rasterizerDesc.DepthBias = 1500;              
+	//rasterizerDesc.SlopeScaledDepthBias = 2.0f;   
+	//rasterizerDesc.DepthBiasClamp = 0.0f;         
+
 	DirectX11::ThrowIfFailed(
 		DeviceState::g_pDevice->CreateRasterizerState(
 			&rasterizerDesc,
@@ -43,17 +49,16 @@ ShadowMapPass::ShadowMapPass()
 		)
 	);
 
-	auto linearSampler = std::make_shared<Sampler>(D3D11_FILTER_MIN_MAG_MIP_LINEAR, D3D11_TEXTURE_ADDRESS_WRAP);
-	auto pointSampler = std::make_shared<Sampler>(D3D11_FILTER_MIN_MAG_MIP_LINEAR, D3D11_TEXTURE_ADDRESS_CLAMP);
-	auto shaodwSampler = std::make_shared<Sampler>(D3D11_FILTER_MIN_MAG_MIP_LINEAR, D3D11_TEXTURE_ADDRESS_CLAMP);
+	auto linearSampler = std::make_shared<Sampler>(D3D11_FILTER_MIN_MAG_MIP_LINEAR, D3D11_TEXTURE_ADDRESS_CLAMP);
+	auto pointSampler = std::make_shared<Sampler>(D3D11_FILTER_MIN_MAG_MIP_POINT, D3D11_TEXTURE_ADDRESS_CLAMP);
  	m_pso->m_samplers.push_back(linearSampler);
 	m_pso->m_samplers.push_back(pointSampler);
-	m_pso->m_samplers.push_back(shaodwSampler);
+	
 
 	shadowViewport.TopLeftX = 0;
 	shadowViewport.TopLeftY = 0;
-	shadowViewport.Width = 8192.f;
-	shadowViewport.Height = 8192.f;
+	shadowViewport.Width = 1024;
+	shadowViewport.Height = 1024;
 	shadowViewport.MinDepth = 0.0f;
 	shadowViewport.MaxDepth = 1.0f;
 
@@ -66,7 +71,6 @@ void ShadowMapPass::Initialize(uint32 width, uint32 height)
 		DXGI_FORMAT_R32_TYPELESS, D3D11_BIND_DEPTH_STENCIL | D3D11_BIND_SHADER_RESOURCE);
 	//shadowMapTexture->CreateRTV(DXGI_FORMAT_R32_FLOAT);
 
-
 	CD3D11_DEPTH_STENCIL_VIEW_DESC depthStencilViewDesc{};
 	depthStencilViewDesc.Format = DXGI_FORMAT_D32_FLOAT;
 	depthStencilViewDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
@@ -78,32 +82,33 @@ void ShadowMapPass::Initialize(uint32 width, uint32 height)
 		)
 	);
 	shadowMapTexture->CreateSRV(DXGI_FORMAT_R32_FLOAT);
-	
-
-
 	m_shadowMapTexture = std::unique_ptr<Texture>(shadowMapTexture);
-	m_shadowMapDSV = m_shadowMapTexture->m_pDSV;
-	/*CD3D11_TEXTURE2D_DESC1 depthStencilDesc(
-		DXGI_FORMAT_R24G8_TYPELESS,
-		width,
-		height,
-		1,
-		1,
-		D3D11_BIND_DEPTH_STENCIL | D3D11_BIND_SHADER_RESOURCE
-	);*/
 
-	//ComPtr<ID3D11Texture2D1> depthStencil;
-	//DirectX11::ThrowIfFailed(
-	//	DeviceState::g_pDevice->CreateTexture2D1(
-	//		&depthStencilDesc,
-	//		nullptr,
-	//		&depthStencil
-	//	)
-	//);
+	//m_shadowMapDSV = m_shadowMapTexture->m_pDSV;
+
+	Texture* shadowMapTexture2 = Texture::Create(width, height, "Shadow Map2",
+		DXGI_FORMAT_R32_TYPELESS, D3D11_BIND_DEPTH_STENCIL | D3D11_BIND_SHADER_RESOURCE);
+	//shadowMapTexture->CreateRTV(DXGI_FORMAT_R32_FLOAT);
+	CD3D11_DEPTH_STENCIL_VIEW_DESC depthStencilViewDesc2{};
+	depthStencilViewDesc2.Format = DXGI_FORMAT_D32_FLOAT;
+	depthStencilViewDesc2.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
+	DirectX11::ThrowIfFailed(
+		DeviceState::g_pDevice->CreateDepthStencilView(
+			shadowMapTexture2->m_pTexture,
+			&depthStencilViewDesc2,
+			&shadowMapTexture2->m_pDSV
+		)
+	);
+	shadowMapTexture2->CreateSRV(DXGI_FORMAT_R32_FLOAT);
+
+	m_shadowMapTexture2 = std::unique_ptr<Texture>(shadowMapTexture2);
+	//m_shadowMapDSV = m_shadowMapTexture->m_pDSV;
 
 	
+
 
 	m_shadowCamera.m_isOrthographic = true;
+	m_shadowCamera2.m_isOrthographic = true;
 }
 
 void ShadowMapPass::Execute(RenderScene& scene, Camera& camera)
@@ -115,54 +120,84 @@ void ShadowMapPass::Execute(RenderScene& scene, Camera& camera)
 	//ID3D11RenderTargetView* rtv = m_shadowMapTexture->GetRTV();
 	if (!m_abled)
 	{
-		DirectX11::ClearDepthStencilView(m_shadowMapDSV, D3D11_CLEAR_DEPTH, 1.0f, 0);
+		DirectX11::ClearDepthStencilView(m_shadowMapTexture->m_pDSV, D3D11_CLEAR_DEPTH, 1.0f, 0);
 		return;
 	}
-	DirectX11::ClearDepthStencilView(m_shadowMapDSV, D3D11_CLEAR_DEPTH, 1.0f, 0);
-	DirectX11::OMSetRenderTargets(0, nullptr, m_shadowMapDSV);
-	DeviceState::g_pDeviceContext->RSSetViewports(1, &shadowViewport);
-	DirectX11::PSSetShader(NULL, NULL, 0);
-	auto desc = scene.m_LightController->m_shadowMapRenderDesc;
-
-	m_shadowCamera.m_eyePosition = XMLoadFloat4(&(scene.m_LightController->GetLight(0).m_direction)) * -10;
-	m_shadowCamera.m_lookAt = desc.m_lookAt;
-	m_shadowCamera.m_nearPlane = desc.m_nearPlane;
-	m_shadowCamera.m_farPlane = desc.m_farPlane;
-	m_shadowCamera.m_viewHeight = desc.m_viewHeight;
-	m_shadowCamera.m_viewWidth = desc.m_viewWidth;
-
-	
-	auto& shadowMapConstant = scene.m_LightController->m_shadowMapConstant;
-
-	shadowMapConstant.m_shadowMapWidth = desc.m_textureWidth;
-	shadowMapConstant.m_shadowMapHeight = desc.m_textureHeight;
-	shadowMapConstant.m_lightViewProjection = m_shadowCamera.CalculateView() * m_shadowCamera.CalculateProjection();
-
-	shadow1.ShadowView = m_shadowCamera.CalculateView();
-	shadow1.ShadowProjection = m_shadowCamera.CalculateProjection();
-	DirectX11::UpdateBuffer(scene.m_LightController->m_shadowMapBuffer, &shadowMapConstant);
-
-	m_shadowCamera.UpdateBuffer();
-	scene.UseModel();
-	//camera.GetFrustum().Intersects();
-	auto abc = scene.GetScene()->m_SceneObjects;
-	for (auto& obj : scene.GetScene()->m_SceneObjects)
+	for (int i = 0; i < 2; i++)
 	{
+		if (i == 0)
+		{
+			DirectX11::ClearDepthStencilView(m_shadowMapTexture->m_pDSV, D3D11_CLEAR_DEPTH, 1.0f, 0);
+			DirectX11::OMSetRenderTargets(0, nullptr, m_shadowMapTexture->m_pDSV);
+			auto desc = scene.m_LightController->m_shadowMapRenderDesc;
+			m_shadowCamera.m_eyePosition = XMLoadFloat4(&(scene.m_LightController->GetLight(0).m_direction)) * -50;
+			m_shadowCamera.m_lookAt = desc.m_lookAt;
+			m_shadowCamera.m_viewHeight = 50;
+			m_shadowCamera.m_viewWidth = 50;
+			m_shadowCamera.m_nearPlane = 0.1f;
+			m_shadowCamera.m_farPlane =  100.f;
+			DeviceState::g_pDeviceContext->RSSetViewports(1, &shadowViewport);
+			DirectX11::PSSetShader(NULL, NULL, 0);
+			auto& shadowMapConstant = scene.m_LightController->m_shadowMapConstant;
+
+			shadowMapConstant.m_shadowMapWidth = desc.m_textureWidth;
+			shadowMapConstant.m_shadowMapHeight = desc.m_textureHeight;
+			
+			shadowMapConstant.m_lightViewProjection[0] = m_shadowCamera.CalculateView() * m_shadowCamera.CalculateProjection(true);
+			scene.m_LightController->m_shadowMapConstant.m_lightViewProjection[0] = shadowMapConstant.m_lightViewProjection[0];
+			shadowMapConstant.m_lightViewProjection[1] = scene.m_LightController->m_shadowMapConstant.m_lightViewProjection[1];
+
+			DirectX11::UpdateBuffer(scene.m_LightController->m_shadowMapBuffer, &shadowMapConstant);
+
+			m_shadowCamera.UpdateBuffer(true);
+		}
+		else if(i == 1)
+		{
+			DirectX11::ClearDepthStencilView(m_shadowMapTexture2->m_pDSV, D3D11_CLEAR_DEPTH, 1.0f, 0);
+			DirectX11::OMSetRenderTargets(0, nullptr, m_shadowMapTexture2->m_pDSV);
+			auto desc = scene.m_LightController->m_shadowMapRenderDesc;
+			m_shadowCamera.m_eyePosition = XMLoadFloat4(&(scene.m_LightController->GetLight(0).m_direction)) * -50;
+			m_shadowCamera.m_lookAt = desc.m_lookAt;
+			m_shadowCamera.m_viewHeight = 50;
+			m_shadowCamera.m_viewWidth = 50;
+			m_shadowCamera.m_nearPlane = 0.1f;
+			m_shadowCamera.m_farPlane = 200.0f;
+			DeviceState::g_pDeviceContext->RSSetViewports(1, &shadowViewport);
+
+			auto& shadowMapConstant = scene.m_LightController->m_shadowMapConstant;
+
+			shadowMapConstant.m_shadowMapWidth = desc.m_textureWidth;
+			shadowMapConstant.m_shadowMapHeight = desc.m_textureHeight;
+			shadowMapConstant.m_lightViewProjection[1] = m_shadowCamera.CalculateView() * m_shadowCamera.CalculateProjection(true);
+			scene.m_LightController->m_shadowMapConstant.m_lightViewProjection[1] = shadowMapConstant.m_lightViewProjection[1];
+			shadowMapConstant.m_lightViewProjection[0] = scene.m_LightController->m_shadowMapConstant.m_lightViewProjection[0];
+			
+			DirectX11::UpdateBuffer(scene.m_LightController->m_shadowMapBuffer, &shadowMapConstant);
 	
-		if ( obj->ToString() == "Cube")
-			continue;
-		MeshRenderer* meshRenderer = obj->GetComponent<MeshRenderer>();
-		if (nullptr == meshRenderer) continue;
-		if (!meshRenderer->IsEnabled()) continue;
-
-		scene.UpdateModel(obj->m_transform.GetWorldMatrix());
+			m_shadowCamera.UpdateBuffer(true);
+		}
 		
-		meshRenderer->m_Mesh->Draw();
-	}
+	
+		scene.UseModel();
+		//camera.GetFrustum().Intersects();
+		for (auto& obj : scene.GetScene()->m_SceneObjects)
+		{
 
-	//DirectX11::ClearRenderTargetView(rtv, Colors::Transparent);
-	DeviceState::g_pDeviceContext->RSSetViewports(1, &DeviceState::g_Viewport);
-	DirectX11::UnbindRenderTargets();
+			if (obj->ToString() == "Cube")
+				continue;
+			MeshRenderer* meshRenderer = obj->GetComponent<MeshRenderer>();
+			if (nullptr == meshRenderer) continue;
+			if (!meshRenderer->IsEnabled()) continue;
+
+			scene.UpdateModel(obj->m_transform.GetWorldMatrix());
+
+			meshRenderer->m_Mesh->Draw();
+		}
+
+		//DirectX11::ClearRenderTargetView(rtv, Colors::Transparent);
+		DeviceState::g_pDeviceContext->RSSetViewports(1, &DeviceState::g_Viewport);
+		DirectX11::UnbindRenderTargets();
+	}
 }
 
 void ShadowMapPass::ControlPanel()
@@ -170,4 +205,5 @@ void ShadowMapPass::ControlPanel()
 	ImGui::Text("ShadowPass");
 	ImGui::Checkbox("Enable2", &m_abled);
 	ImGui::Image((ImTextureID)m_shadowMapTexture->m_pSRV, ImVec2(512, 512));
+	ImGui::Image((ImTextureID)m_shadowMapTexture2->m_pSRV, ImVec2(512, 512));
 }

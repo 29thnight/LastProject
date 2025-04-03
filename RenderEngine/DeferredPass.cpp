@@ -42,10 +42,10 @@ DeferredPass::DeferredPass()
 
     auto linearSampler = std::make_shared<Sampler>(D3D11_FILTER_MIN_MAG_MIP_LINEAR, D3D11_TEXTURE_ADDRESS_WRAP);
     auto pointSampler = std::make_shared<Sampler>(D3D11_FILTER_MIN_MAG_MIP_POINT, D3D11_TEXTURE_ADDRESS_CLAMP);
-    auto shaodwSampler = std::make_shared<Sampler>(D3D11_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR, D3D11_TEXTURE_ADDRESS_CLAMP);
+    auto shadowSampler = std::make_shared<Sampler>(D3D11_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR, D3D11_TEXTURE_ADDRESS_CLAMP);
     m_pso->m_samplers.push_back(linearSampler);
     m_pso->m_samplers.push_back(pointSampler);
-    m_pso->m_samplers.push_back(shaodwSampler);
+    m_pso->m_samplers.push_back(shadowSampler);
     m_Buffer = DirectX11::CreateBuffer(sizeof(DeferredBuffer), D3D11_BIND_CONSTANT_BUFFER, nullptr);
 }
 
@@ -121,6 +121,7 @@ void DeferredPass::Execute(RenderScene& scene, Camera& camera)
 
     DirectX11::PSSetShaderResources(0, 10, srvs);
 
+    DirectX11::PSSetShaderResources(20, 1, &lightManager->m_shadowMapPass->m_shadowMapTexture2->m_pSRV);
     DirectX11::Draw(4, 0);
 
     ID3D11ShaderResourceView* nullSRV[10] = {

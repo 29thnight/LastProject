@@ -29,7 +29,7 @@ public:
 	Texture* GetShadowMapTexture();
 
 	uint32 m_lightCount{ 0 };
-
+	std::unique_ptr<ShadowMapPass> m_shadowMapPass;
 private:
 	friend class ForwardPass;
 	friend class DeferredPass;
@@ -43,5 +43,5 @@ private:
 	LightProperties m_lightProperties;
 	bool hasLightWithShadows{ false };
 	ID3D11Buffer* m_shadowMapBuffer{ nullptr };
-	std::unique_ptr<ShadowMapPass> m_shadowMapPass;
+	//std::unique_ptr<ShadowMapPass> m_shadowMapPass;
 };

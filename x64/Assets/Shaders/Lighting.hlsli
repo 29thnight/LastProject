@@ -13,6 +13,7 @@
 #define LIGHT_ENABLED_W_SHADOWMAP 2
 
 Texture2D ShadowMap : register(t4); // support 1 for now, future use array
+Texture2D ShadowMap2 : register(t20);
 //Texture2DArray ShadowMapArr : register(t4);
 struct Light
 {
@@ -40,12 +41,12 @@ cbuffer ShadowMapConstants : register(b2) // supports one
 {
     float mapWidth;
     float mapHeight;
-    float4x4 lightViewProjection;
+    float4x4 lightViewProjection[2];
 }
 
 float ShadowFactor(float4 worldPosition) // assumes only one shadow map cbuffer
 {
-    float4 lightSpacePosition = mul(lightViewProjection, worldPosition);
+    float4 lightSpacePosition = mul(lightViewProjection[1], worldPosition);
 
     float3 projCoords = lightSpacePosition.xyz / lightSpacePosition.w;
     float currentDepth = projCoords.z;
@@ -60,9 +61,9 @@ float ShadowFactor(float4 worldPosition) // assumes only one shadow map cbuffer
     float2 texelSize = float2(1, 1) / float2(mapWidth, mapHeight);
 
     float shadow = 0;
-    float epsilon = 0.005f;
+    float epsilon = 0.0025f;
     //[unroll]
-    if (projCoords.x >= 0.0 && projCoords.x <= 1.0 && projCoords.y >= 0.0 && projCoords.y <=1.0)
+    //if (projCoords.x >= 0.0 && projCoords.x <= 1.0 && projCoords.y >= 0.0 && projCoords.y <=1.0)
     {
     
         for (int x = -1; x < 2; ++x)
@@ -71,13 +72,14 @@ float ShadowFactor(float4 worldPosition) // assumes only one shadow map cbuffer
             for (int y = -1; y < 2; ++y)
             {
           
-                float closestDepth = ShadowMap.Sample(ShadowSampler, projCoords.xy + float2(x, y) * texelSize).r;
+                //float closestDepth = ShadowMap.Sample(PointSampler, projCoords.xy + float2(x, y) * texelSize).r;
+                float closestDepth = ShadowMap2.Sample(PointSampler, projCoords.xy + float2(x, y) * texelSize).r;
            //float closestDepth = ShadowMapArr.Sample(LinearSampler, float3(projCoords.xy + float2(x, y) * texelSize,0)).r;
                 shadow += (closestDepth < currentDepth - epsilon);
             }
         }
     }
-    //shadow /= 9;
+    shadow /= 9;
     
     return shadow;
 }

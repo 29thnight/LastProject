@@ -22,7 +22,7 @@ class Camera
 public:
 	Camera();
 	~Camera();
-	Mathf::xMatrix CalculateProjection();
+	Mathf::xMatrix CalculateProjection(bool shadow = false);
 	Mathf::Vector4 ConvertScreenToWorld(Mathf::Vector2 screenPosition, float depth);
 	Mathf::Vector4 RayCast(Mathf::Vector2 screenPosition);
 	Mathf::xMatrix CalculateView() const;
@@ -33,7 +33,7 @@ public:
 
 	void RegisterContainer();
 	void HandleMovement(float deltaTime);
-	void UpdateBuffer();
+	void UpdateBuffer(bool shadow =false);
 	void ClearRenderTarget();
 
 	static constexpr Mathf::xVector FORWARD = { 0.f, 0.f, 1.f };

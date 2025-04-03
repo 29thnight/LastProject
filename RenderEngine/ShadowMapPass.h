@@ -47,9 +47,10 @@ public:
 	void ControlPanel() override;
 	Camera m_shadowCamera{};
 
+	Camera m_shadowCamera2{};
 	std::unique_ptr<Texture> m_shadowMapTexture{};
 	ID3D11DepthStencilView* m_shadowMapDSV{ nullptr };
-
+	std::unique_ptr<Texture> m_shadowMapTexture2{};
 
 
 	ComPtr<ID3D11Buffer> m_shadowBuffer;
@@ -58,6 +59,5 @@ public:
 	ID3D11ShaderResourceView* shadowMapSRV = nullptr;
 	ShadowInfo  shadow1;
 	//메인 라이트 3, 
-	ID3D11ShaderResourceView* m_shadowMapSRV[3]{};
 	//ID3D11DepthStencilView* m_shadowMapDSV[3]{};
 };
