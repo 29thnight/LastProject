@@ -27,7 +27,6 @@ struct Light
 
     int lightType;
     int status;
-    float intencity;
 };
 
 cbuffer LightProperties : register(b1)

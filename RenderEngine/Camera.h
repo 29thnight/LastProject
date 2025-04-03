@@ -34,7 +34,6 @@ public:
 	void RegisterContainer();
 	void HandleMovement(float deltaTime);
 	void UpdateBuffer();
-	void UpdateBuffer(ID3D11DeviceContext* deferredContext);
 	void ClearRenderTarget();
 
 	static constexpr Mathf::xVector FORWARD = { 0.f, 0.f, 1.f };

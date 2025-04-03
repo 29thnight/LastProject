@@ -17,7 +17,6 @@ public:
 	IRenderPass() = default;
 	virtual ~IRenderPass() = default;
 
-	//virtual std::string ToString() abstract;
 	virtual void Execute(RenderScene& scene, Camera& camera) abstract;
 	virtual void ControlPanel() {};
 

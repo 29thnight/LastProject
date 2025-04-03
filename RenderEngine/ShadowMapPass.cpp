@@ -103,12 +103,12 @@ void ShadowMapPass::Initialize(uint32 width, uint32 height)
 
 	
 
-
 	m_shadowCamera.m_isOrthographic = true;
 }
 
 void ShadowMapPass::Execute(RenderScene& scene, Camera& camera)
 {
+
 
 	m_pso->Apply();
 
@@ -122,7 +122,6 @@ void ShadowMapPass::Execute(RenderScene& scene, Camera& camera)
 	DirectX11::OMSetRenderTargets(0, nullptr, m_shadowMapDSV);
 	DeviceState::g_pDeviceContext->RSSetViewports(1, &shadowViewport);
 	DirectX11::PSSetShader(NULL, NULL, 0);
-
 	auto desc = scene.m_LightController->m_shadowMapRenderDesc;
 
 	m_shadowCamera.m_eyePosition = XMLoadFloat4(&(scene.m_LightController->GetLight(0).m_direction)) * -10;

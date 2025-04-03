@@ -14,7 +14,7 @@ public:
 	~RenderScene();
 
 	Camera m_MainCamera;
-	LightController* m_LightController{};
+	LightController* m_LightController;
 
 	void Initialize();
 	void SetScene(Scene* scene) { m_currentScene = scene; }
@@ -24,9 +24,7 @@ public:
 	void Update(float deltaSecond);
 	void ShadowStage(Camera& camera);
 	void UseModel();
-	void UseModel(ID3D11DeviceContext* deferredContext);
 	void UpdateModel(const Mathf::xMatrix& model);
-	void UpdateModel(const Mathf::xMatrix& model, ID3D11DeviceContext* deferredContext);
 
 	void EditorSceneObjectHierarchy();
 	void EditorSceneObjectInspector();
@@ -43,6 +41,4 @@ private:
 	GameObject* m_selectedSceneObject = nullptr;
 	ID3D11Buffer* m_ModelBuffer;
 	bool m_isPlaying = false;
-
-	std::thread animationJobThread{};
 };

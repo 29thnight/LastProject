@@ -1,5 +1,5 @@
 #pragma once
-#include "cbuffers.h"
+#include "IRenderPass.h"
 #include "Texture.h"
 
 struct PostProcessingApply
@@ -7,6 +7,31 @@ struct PostProcessingApply
 	bool m_Bloom{ true };
 };
 
+cbuffer BloomBuffer
+{
+	float threshold{ 0.8f };
+	float knee{ 1.0f };
+};
+
+cbuffer DownSampledBuffer
+{
+	//***** float2-> int2
+	int2 inputSize;
+	int2 outputSize;
+};
+
+cbuffer BlurBuffer
+{
+	int2 texSize;
+};
+
+cbuffer UpsampleBuffer
+{
+	int2 inputSize;
+	int2 outputSize;
+};
+
+class Camera;
 class PostProcessingPass final : public IRenderPass
 {
 public:
@@ -19,41 +44,37 @@ public:
 private:
 	void TextureInitialization();
 	void BloomPass(RenderScene& scene, Camera& camera);
-	void GaussianBlurComputeKernel();
 
 private:
 	//***** uint32
-	uint32 BloomBufferWidth = 240;
-	uint32 BloomBufferHeight = 135;
+	const uint32 BloomBufferWidth = 240;
+	const uint32 BloomBufferHeight = 135;
 
 	PostProcessingApply m_PostProcessingApply;
 	Texture* m_CopiedTexture;
-#pragma region Bloom Pass
-	//Bloom Pass Begin --------------------------------
-	Texture* m_BloomFilterSRV1;
-	Texture* m_BloomFilterSRV2;
-	Texture* m_BloomFilterUAV1;
-	Texture* m_BloomFilterUAV2;
-	Texture* m_BloomResult;
+	//Bloom Pass
+	Texture* m_ApplyBloomCurveTexture;
+	Texture* m_BloomDownSampledTexture1_StepX;
+	Texture* m_BloomDownSampledTexture1_StepY;
+	Texture* m_BloomDownSampledTexture2_StepX;
+	Texture* m_BloomDownSampledTexture2_StepY;
+	Texture* m_BloomDownSampledTextureFinal_StepX;
+	Texture* m_BloomDownSampledTextureFinal_StepY;
 
-	VertexShader* m_pFullScreenVS;
-	PixelShader* m_pBloomCompositePS;
 	ComputeShader* m_pBloomDownSampledCS;
-	ComputeShader* m_pGaussianBlurCS;
+	ComputeShader* m_pGaussianBlur6x6_AxisX_CS;
+	ComputeShader* m_pGaussianBlur6x6_AxisY_CS;
+	ComputeShader* m_pGaussianBlur11x11_AxisX_CS;
+	ComputeShader* m_pGaussianBlur11x11_AxisY_CS;
 
-	ThresholdParams m_bloomThreshold;
-	BlurParams m_bloomBlur;
-	CompositeParams m_bloomComposite;
+	BloomBuffer m_BloomConstant;
+	DownSampledBuffer m_DownSampledConstant;
+	BlurBuffer m_BlurConstant;
+	UpsampleBuffer m_UpsampleConstant;
 
-	ComPtr<ID3D11Buffer> m_bloomThresholdBuffer;
-	ComPtr<ID3D11Buffer> m_bloomBlurBuffer;
-	ComPtr<ID3D11Buffer> m_bloomCompositeBuffer;
-	//Bloom Pass End --------------------------------
-#pragma endregion
+	ComPtr<ID3D11Buffer> m_BloomBuffer;
+	ComPtr<ID3D11Buffer> m_DownSampledBuffer;
+	ComPtr<ID3D11Buffer> m_BlurBuffer;
+	ComPtr<ID3D11Buffer> m_UpsampleBuffer;
 
-#pragma region Color Grading Pass
-	//Color Grading Pass Begin --------------------------------
-	Texture* m_ColorGradingTexture;
-	//Color Grading Pass End --------------------------------
-#pragma endregion
 };

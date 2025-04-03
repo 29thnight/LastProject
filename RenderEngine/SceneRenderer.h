@@ -12,18 +12,12 @@
 #include "WireFramePass.h"
 #include "GridPass.h"
 #include "AAPass.h"
-#include "PostProcessingPass.h"
 
 #include "Model.h"
 #include "Light.h"
 #include "Camera.h"
 #include "UIsprite.h"
 #include "UIPass.h"
-
-#include "LightMap.h"
-#include "LightmapShadowPass.h"
-#include "PositionMapPass.h"
-#include "NormalMapPass.h"
 
 const static float pi = XM_PIDIV2 - 0.01f;
 const static float pi2 = XM_PI * 2.f;
@@ -66,11 +60,6 @@ private:
 	std::unique_ptr<WireFramePass> m_pWireFramePass{};
     std::unique_ptr<GridPass> m_pGridPass{};
 	std::unique_ptr<AAPass> m_pAAPass{};
-	std::unique_ptr<PostProcessingPass> m_pPostProcessingPass{};
-
-	std::unique_ptr<LightmapShadowPass> m_pLightmapShadowPass{};
-	std::unique_ptr<PositionMapPass> m_pPositionMapPass{};
-	std::unique_ptr<NormalMapPass> m_pNormalMapPass{};
 
 	std::unique_ptr<UIPass> m_pUIPass{};
 	//buffers

@@ -2,72 +2,63 @@
 #include "ImGuiRegister.h"
 #include "../ScriptBinder/Scene.h"
 #include "LightProperty.h"
-#include "../ScriptBinder/Renderer.h"
-#include "Skeleton.h"
 #include "Light.h"
-#include "Banchmark.hpp"
-#include "TimeSystem.h"
-
-// 콜백 함수: 입력 텍스트 버퍼 크기가 부족할 때 std::string을 재조정
-int InputTextCallback(ImGuiInputTextCallbackData* data)
-{
-	if (data->EventFlag == ImGuiInputTextFlags_CallbackResize)
-	{
-		// UserData에 저장된 std::string 포인터를 가져옴
-		std::string* str = static_cast<std::string*>(data->UserData);
-		// 새로운 길이에 맞춰 std::string의 크기 재조정
-		str->resize(data->BufTextLen);
-		data->Buf = const_cast<char*>(str->c_str());
-	}
-	return 0;
-}
 
 RenderScene::RenderScene()
 {
+
 }
 
 RenderScene::~RenderScene()
 {
 	//TODO : ComPtr이라 자동 해제 -> default로 변경할 것
-    ImGui::ContextUnregister("GameObject Hierarchy");
-    ImGui::ContextUnregister("GameObject Inspector");
+    ImGui::ContextUnregister("SceneObject Hierarchy");
+    ImGui::ContextUnregister("SceneObject Inspector");
 
 	Memory::SafeDelete(m_LightController);
 }
+//
+//std::shared_ptr<SceneObject> Scene::AddSceneObject(const std::shared_ptr<SceneObject>& sceneObject)
+//{
+//	m_SceneObjects.push_back(sceneObject);
+//
+//    const_cast<SceneObject::Index&>(sceneObject->m_index) = m_SceneObjects.size() - 1;
+//
+//	m_SceneObjects[0]->m_childrenIndices.push_back(sceneObject->m_index);
+//
+//	return sceneObject;
+//}
+//
+//std::shared_ptr<SceneObject> Scene::CreateSceneObject(const std::string_view& name, SceneObject::Index parentIndex)
+//{
+//    SceneObject::Index index = m_SceneObjects.size();
+//
+//	m_SceneObjects.push_back(std::make_shared<SceneObject>(name, index, parentIndex));
+//	auto parentObj = GetSceneObject(parentIndex);
+//	if(parentObj->m_index != index)
+//	{
+//		parentObj->m_childrenIndices.push_back(index);
+//	}
+//	return m_SceneObjects[index];
+//}
+//
+//std::shared_ptr<SceneObject> Scene::GetSceneObject(SceneObject::Index index)
+//{
+//	if (index < m_SceneObjects.size())
+//	{
+//		return m_SceneObjects[index];
+//	}
+//	return m_SceneObjects[0];
+//}
 
 void RenderScene::Initialize()
 {
+
+	m_currentScene->CreateGameObject("Root", 0);
 	m_MainCamera.RegisterContainer();
 	m_LightController = new LightController();
 	EditorSceneObjectHierarchy();
 	EditorSceneObjectInspector();
-
-	animationJobThread = std::thread([&]
-	{
-		using namespace std::chrono;
-
-		auto prev = high_resolution_clock::now();
-
-		while (true)
-		{
-			auto now = high_resolution_clock::now();
-			duration<float> elapsed = now - prev;
-
-			// 16.6ms ~ 60fps 에 맞춰 제한
-			if (elapsed.count() >= (1.0f / 60.0f))
-			{
-				prev = now;
-				float delta = elapsed.count();
-				m_animationJob.Update(*this, delta);
-			}
-			else
-			{
-				std::this_thread::sleep_for(microseconds(1)); // CPU 낭비 방지
-			}
-		}
-	});
-
-	animationJobThread.detach();
 }
 
 void RenderScene::SetBuffers(ID3D11Buffer* modelBuffer)
@@ -77,6 +68,8 @@ void RenderScene::SetBuffers(ID3D11Buffer* modelBuffer)
 
 void RenderScene::Update(float deltaSecond)
 {
+	m_animationJob.Update(*this, deltaSecond);
+
 	for (auto& objIndex : m_currentScene->m_SceneObjects[0]->m_childrenIndices)
 	{
 		UpdateModelRecursive(objIndex, XMMatrixIdentity());
@@ -95,61 +88,36 @@ void RenderScene::UseModel()
 	DirectX11::VSSetConstantBuffer(0, 1, &m_ModelBuffer);
 }
 
-void RenderScene::UseModel(ID3D11DeviceContext* deferredContext)
-{
-	deferredContext->VSSetConstantBuffers(0, 1, &m_ModelBuffer);
-}
-
 void RenderScene::UpdateModel(const Mathf::xMatrix& model)
 {
 	DirectX11::UpdateBuffer(m_ModelBuffer, &model);
 }
 
-void RenderScene::UpdateModel(const Mathf::xMatrix& model, ID3D11DeviceContext* deferredContext)
-{
-	deferredContext->UpdateSubresource(m_ModelBuffer, 0, nullptr, &model, 0, 0);
-}
-
 void RenderScene::EditorSceneObjectHierarchy()
 {
-	ImGui::ContextRegister("GameObject Hierarchy", [&]()
+	ImGui::ContextRegister("SceneObject Hierarchy", [&]()
 	{
 		ImGui::BringWindowToDisplayBack(ImGui::GetCurrentWindow());
 
-		if (ImGui::TreeNodeEx(m_currentScene->m_SceneObjects[0]->m_name.ToString().c_str(), ImGuiTreeNodeFlags_DefaultOpen))
+		for (auto& obj : m_currentScene->m_SceneObjects)
 		{
-			for (auto& obj : m_currentScene->m_SceneObjects)
-			{
-				if (0 == obj->m_index || obj->m_parentIndex > 0) continue;
+			if (obj->m_index == 0 || obj->m_parentIndex > 0) continue;
 
-				ImGui::PushID((int)&obj);
-				DrawSceneObject(obj);
-				ImGui::PopID();
-			}
-			ImGui::TreePop();
+			ImGui::PushID((int)&obj);
+			DrawSceneObject(obj);
+			ImGui::PopID();
 		}
 	},ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoFocusOnAppearing);
 }
 
 void RenderScene::EditorSceneObjectInspector()
 {
-	ImGui::ContextRegister("GameObject Inspector", [&]()
+	ImGui::ContextRegister("SceneObject Inspector", [&]()
 	{
 		ImGui::BringWindowToDisplayBack(ImGui::GetCurrentWindow());
 
 		if (m_selectedSceneObject)
 		{
-			// 객체의 이름을 std::string으로 가져옴 (매 프레임마다 갱신되면 안되면 static이 아니어야 함)
-			std::string name = m_selectedSceneObject->m_name.ToString();
-			if (ImGui::InputText("name",
-				&name[0],
-				name.capacity() + 1,
-				ImGuiInputTextFlags_CallbackResize | ImGuiInputTextFlags_EnterReturnsTrue,
-				InputTextCallback,
-				static_cast<void*>(&name)))
-			{
-				m_selectedSceneObject->m_name.SetString(name);
-			}
 			Mathf::Vector4 position = m_selectedSceneObject->m_transform.position;
 			Mathf::Vector4 rotation = m_selectedSceneObject->m_transform.rotation;
 			Mathf::Vector4 scale = m_selectedSceneObject->m_transform.scale;
@@ -162,67 +130,41 @@ void RenderScene::EditorSceneObjectInspector()
 				pyr[i] = XMConvertToDegrees(pyr[i]);
 			}
 
-			if(ImGui::CollapsingHeader("Transform", ImGuiTreeNodeFlags_DefaultOpen))
-			{
-				ImGui::Text("Position ");
-				ImGui::SameLine();
-				ImGui::DragFloat3("##Position", &position.x, 0.08f, -1000, 1000);
-				ImGui::Text("Rotation");
-				ImGui::SameLine();
-				ImGui::DragFloat3("##Rotation", &pyr[0], 0.1f);
-				ImGui::Text("Scale     ");
-				ImGui::SameLine();
-				ImGui::DragFloat3("##Scale", &scale.x, 0.1f, 10);
+			ImGui::Text(m_selectedSceneObject->m_name.ToString().c_str());
+			ImGui::Separator();
+			ImGui::Text("Position");	
+			ImGui::DragFloat3("##Position", &position.x, 0.08f, -1000, 1000);
+			ImGui::Text("Rotation");
+			ImGui::DragFloat3("##Rotation", &pyr[0], 0.1f);
+			ImGui::Text("Scale");
+			ImGui::DragFloat3("##Scale", &scale.x, 0.1f, 10);
+			ImGui::Text("Index");
+			ImGui::InputInt("##Index", const_cast<int*>(&m_selectedSceneObject->m_index), 0, 0, ImGuiInputTextFlags_ReadOnly);
+			ImGui::Text("Parent Index");
+			ImGui::InputInt("##ParentIndex", const_cast<int*>(&m_selectedSceneObject->m_parentIndex), 0, 0, ImGuiInputTextFlags_ReadOnly);
 
-				{
-					for (int i = 0; i < 3; i++)
-					{
-						pyr[i] = XMConvertToRadians(pyr[i]);
-					}
-
-					rotation = XMQuaternionRotationRollPitchYaw(pyr[0], pyr[1], pyr[2]);
-
-					m_selectedSceneObject->m_transform.position = position;
-					m_selectedSceneObject->m_transform.rotation = rotation;
-					m_selectedSceneObject->m_transform.scale = scale;
-					m_selectedSceneObject->m_transform.m_dirty = true;
-
-					m_selectedSceneObject->m_transform.GetLocalMatrix();
-				}
+			for (int i = 0; i < 3; i++)
+            {
+				pyr[i] = XMConvertToRadians(pyr[i]);
 			}
 
-			for (auto& component : m_selectedSceneObject->m_components)
-			{
-				const auto& type = Meta::Find(component->ToString());
-				if (!type) continue;
+			rotation = XMQuaternionRotationRollPitchYaw(pyr[0], pyr[1], pyr[2]);
 
-				if(ImGui::CollapsingHeader(component->ToString().c_str(), ImGuiTreeNodeFlags_DefaultOpen));
-				{
-					Meta::DrawObject(component, *type);
-				}
-			}
+			m_selectedSceneObject->m_transform.position = position;
+			m_selectedSceneObject->m_transform.rotation = rotation;
+			m_selectedSceneObject->m_transform.scale = scale;
+			m_selectedSceneObject->m_transform.m_dirty = true;
+
+			m_selectedSceneObject->m_transform.GetLocalMatrix();
 		}
 	}, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoFocusOnAppearing);
 }
 
 void RenderScene::UpdateModelRecursive(GameObject::Index objIndex, Mathf::xMatrix model)
 {
-	const auto& obj = m_currentScene->GetGameObject(objIndex);
-
-	if(GameObject::Type::Bone == obj->GetType())
-	{
-		const auto& animator = m_currentScene->GetGameObject(obj->m_rootIndex)->GetComponent<Animator>();
-		const auto& bone = animator->m_Skeleton->FindBone(obj->m_name.ToString());
-		if (bone)
-		{
-			obj->m_transform.SetAndDecomposeMatrix(bone->m_globalTransform);
-		}
-	}
-	else
-	{
-		model = XMMatrixMultiply(obj->m_transform.GetLocalMatrix(), model);
-		obj->m_transform.SetAndDecomposeMatrix(model);
-	}
+	auto obj = m_currentScene->GetGameObject(objIndex);
+	model = XMMatrixMultiply(obj->m_transform.GetLocalMatrix(), model);
+	obj->m_transform.SetAndDecomposeMatrix(model);
 	for (auto& childIndex : obj->m_childrenIndices)
 	{
 		UpdateModelRecursive(childIndex, model);
@@ -231,56 +173,14 @@ void RenderScene::UpdateModelRecursive(GameObject::Index objIndex, Mathf::xMatri
 
 void RenderScene::DrawSceneObject(const std::shared_ptr<GameObject>& obj)
 {
-	ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnDoubleClick;
+	ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick;
 	if (obj.get() == m_selectedSceneObject)
-	{
 		flags |= ImGuiTreeNodeFlags_Selected;
-	}
-	else if (0 == obj->m_parentIndex)
-	{
-		flags |= ImGuiTreeNodeFlags_DefaultOpen;
-	}
-
-	if (0 == obj->m_childrenIndices.size())
-	{
-		flags |= ImGuiTreeNodeFlags_Leaf;
-	}
 
 	bool opened = ImGui::TreeNodeEx(obj->m_name.ToString().c_str(), flags);
 
 	if (ImGui::IsItemClicked())
 		m_selectedSceneObject = obj.get();
-
-	if (ImGui::BeginDragDropSource())
-	{
-		ImGui::SetDragDropPayload("SCENE_OBJECT", &obj->m_index, sizeof(GameObject::Index));
-		ImGui::Text("Moving %s", obj->m_name.ToString().c_str());
-		ImGui::EndDragDropSource();
-	}
-
-	if (ImGui::BeginDragDropTarget())
-	{
-		if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("SCENE_OBJECT"))
-		{
-			GameObject::Index draggedIndex = *(GameObject::Index*)payload->Data;
-
-			// 부모 변경 로직
-			if (draggedIndex != obj->m_index) // 자기 자신에 드롭하는 것 방지
-			{
-				const auto& draggedObj = m_currentScene->GetGameObject(draggedIndex);
-				const auto& oldParent = m_currentScene->GetGameObject(draggedObj->m_parentIndex);
-
-				// 1. 기존 부모에서 제거
-				auto& siblings = oldParent->m_childrenIndices;
-				std::erase_if(siblings, [&](auto index) { return index == draggedIndex; });
-
-				// 2. 새로운 부모에 추가
-				draggedObj->m_parentIndex = obj->m_index;
-				obj->m_childrenIndices.push_back(draggedIndex);
-			}
-		}
-		ImGui::EndDragDropTarget();
-	}
 
 	if (opened)
 	{

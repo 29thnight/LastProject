@@ -27,7 +27,6 @@ public:
 	Animator*   m_animator{};
     Skeleton*   m_Skeleton{};
 	bool m_hasBones{ false };
-    int m_numTotalMeshes{};
 
 private:
 	friend class SceneRenderer;
