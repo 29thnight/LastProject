@@ -63,7 +63,7 @@ float ShadowFactor(float4 worldPosition) // assumes only one shadow map cbuffer
     float shadow = 0;
     float epsilon = 0.0025f;
     //[unroll]
-    //if (projCoords.x >= 0.0 && projCoords.x <= 1.0 && projCoords.y >= 0.0 && projCoords.y <=1.0)
+    if (projCoords.x >= 0.0 && projCoords.x <= 1.0 && projCoords.y >= 0.0 && projCoords.y <=1.0)
     {
     
         for (int x = -1; x < 2; ++x)
