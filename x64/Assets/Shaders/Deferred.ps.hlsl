@@ -16,7 +16,7 @@ cbuffer DeferredCBuffer : register(b3)
     int useAO;
     int useEnvMap;
 }
-
+//a
 Texture2D DepthTexture : register(t0);
 Texture2D Diffuse : register(t1);
 Texture2D MetalRough : register(t2);

@@ -39,11 +39,15 @@ struct alignas(16) LightProperties
 	Light m_lights[MAX_LIGHTS];
 };
 
-struct alignas(16) ShadowMapConstant
+struct ShadowMapConstant
 {
 	float m_shadowMapWidth{};
 	float m_shadowMapHeight{};
-	Mathf::xMatrix m_lightViewProjection[2]{};
+	Mathf::xMatrix m_lightViewProjection[3]{};
+	float m_casCadeEnd1{};
+	float m_casCadeEnd2{};
+	float m_casCadeEnd3{};
+	//float m_casCadeEnd[3];
 };
 
 struct ShadowMapRenderDesc

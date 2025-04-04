@@ -7,35 +7,23 @@ class Texture;
 class Scene;
 class LightController;
 
-//struct alignas(16) ShadowMapConstant
-//{
-//	float m_shadowMapWidth{};
-//	float m_shadowMapHeight{};
-//	Mathf::xMatrix m_lightViewProjection{};
-//	
-//	//3개짜리 cascade shadow 
-//	//Mathf::xMatrix m_lightViewProjection[3]{};
-//};
-//
-//struct ShadowMapRenderDesc
-//{
-//	Mathf::xVector m_eyePosition{};
-//	Mathf::xVector m_lookAt{};
-//	float m_nearPlane{ 0.1f };
-//	float m_farPlane{ 200.f };
-//	float m_viewWidth{ 1.f };
-//	float m_viewHeight{ 1.f };
-//	float m_textureWidth{ 8192.f };
-//	float m_textureHeight{ 8192.f };
-//
-//	//8192  4096 1024.f
-//};
+constexpr int cascadeCount = 3;
 
 struct ShadowInfo
 {
-	Mathf::xMatrix ShadowView;
-	Mathf::xMatrix ShadowProjection;
+	Mathf::xVector m_eyePosition{};
+	Mathf::xVector m_lookAt{};
+	float m_nearPlane{};
+	float m_farPlane{};
+	float m_viewWidth{};
+	float m_viewHeight{};
+	Mathf::xMatrix m_lightViewProjection{};
 };
+
+//cascade마다 값 나눠주기
+std::vector<float>      devideCascadeEnd(Camera& camera, std::vector<float> ratios);
+std::vector<ShadowInfo> devideShadowInfo(Camera& camera, std::vector<float> cascadeEnd,Mathf::Vector4 LightDir);
+
 class ShadowMapPass final : public IRenderPass
 {
 public:
@@ -47,7 +35,6 @@ public:
 	void ControlPanel() override;
 	Camera m_shadowCamera{};
 
-	Camera m_shadowCamera2{};
 	std::unique_ptr<Texture> m_shadowMapTexture{};
 	ID3D11DepthStencilView* m_shadowMapDSV{ nullptr };
 	std::unique_ptr<Texture> m_shadowMapTexture2{};
@@ -57,7 +44,10 @@ public:
 	D3D11_VIEWPORT shadowViewport;
 	ID3D11Texture2D* shadowMapArray = nullptr; //나중에 지우기
 	ID3D11ShaderResourceView* shadowMapSRV = nullptr;
-	ShadowInfo  shadow1;
+
 	//메인 라이트 3, 
-	//ID3D11DepthStencilView* m_shadowMapDSV[3]{};
+	ID3D11DepthStencilView* m_shadowMapDSVarr[cascadeCount]{};
+
+	
 };
+

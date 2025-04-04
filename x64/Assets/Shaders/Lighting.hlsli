@@ -12,9 +12,8 @@
 #define LIGHT_ENABLED 1
 #define LIGHT_ENABLED_W_SHADOWMAP 2
 
-Texture2D ShadowMap : register(t4); // support 1 for now, future use array
-Texture2D ShadowMap2 : register(t20);
-//Texture2DArray ShadowMapArr : register(t4);
+//Texture2D ShadowMap : register(t4); // support 1 for now, future use array
+Texture2DArray ShadowMapArr : register(t4);
 struct Light
 {
     float4 position;
@@ -41,12 +40,37 @@ cbuffer ShadowMapConstants : register(b2) // supports one
 {
     float mapWidth;
     float mapHeight;
-    float4x4 lightViewProjection[2];
+   
+    float4x4 lightViewProjection[3];
+    float  m_casCadeEnd1;
+    float m_casCadeEnd2;
+    float m_casCadeEnd3;
+   // float m_casCadeEnd[3];
 }
 
 float ShadowFactor(float4 worldPosition) // assumes only one shadow map cbuffer
 {
-    float4 lightSpacePosition = mul(lightViewProjection[1], worldPosition);
+    
+    int shadowIndex = 5;
+    
+    
+    //for (int i = 0; i < 3; i++)
+    //{
+    //    if (worldPosition.z <= m_casCadeEnd[i])
+    //    {
+    //        shadowIndex = i;
+    //        break;
+    //    }
+        
+    //}
+    shadowIndex = (worldPosition.z <= m_casCadeEnd1) ? 0 :
+              (worldPosition.z <= m_casCadeEnd2) ? 1 :
+              (worldPosition.z <= m_casCadeEnd3) ? 2 : 0;
+  
+       
+   // shadowIndex = 2;
+    
+    float4 lightSpacePosition = mul(lightViewProjection[shadowIndex], worldPosition);
 
     float3 projCoords = lightSpacePosition.xyz / lightSpacePosition.w;
     float currentDepth = projCoords.z;
@@ -73,8 +97,8 @@ float ShadowFactor(float4 worldPosition) // assumes only one shadow map cbuffer
             {
           
                 //float closestDepth = ShadowMap.Sample(PointSampler, projCoords.xy + float2(x, y) * texelSize).r;
-                float closestDepth = ShadowMap2.Sample(PointSampler, projCoords.xy + float2(x, y) * texelSize).r;
-           //float closestDepth = ShadowMapArr.Sample(LinearSampler, float3(projCoords.xy + float2(x, y) * texelSize,0)).r;
+                //float closestDepth = ShadowMap2.Sample(PointSampler, projCoords.xy + float2(x, y) * texelSize).r;
+                float closestDepth = ShadowMapArr.Sample(PointSampler, float3(projCoords.xy + float2(x, y) * texelSize, shadowIndex)).r;
                 shadow += (closestDepth < currentDepth - epsilon);
             }
         }

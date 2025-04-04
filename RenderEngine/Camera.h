@@ -51,7 +51,9 @@ public:
 	float m_yaw{ 0.f };
 	float m_roll{ 0.f };
 	float m_nearPlane{ 0.1f };
-	float m_farPlane{ 10000.f };
+
+	//*****
+	float m_farPlane{ 100000.f };
 	float m_speed{ 10.f };
 
 	float m_aspectRatio{};

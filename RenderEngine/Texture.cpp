@@ -195,6 +195,12 @@ void Texture::CreateSRV(_In_ DXGI_FORMAT textureFormat, _In_opt_ D3D11_SRV_DIMEN
 		0, 
 		mipLevels
 	};
+
+	if (viewDimension == D3D11_SRV_DIMENSION_TEXTURE2DARRAY)
+	{
+		srvDesc.Texture2DArray.ArraySize = 3;
+		srvDesc.Texture2DArray.FirstArraySlice = 0;
+	}
 	DirectX11::ThrowIfFailed(
 		DeviceState::g_pDevice->CreateShaderResourceView(
 			m_pTexture, &srvDesc, &m_pSRV
