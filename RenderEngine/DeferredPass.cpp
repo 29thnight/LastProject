@@ -121,7 +121,7 @@ void DeferredPass::Execute(RenderScene& scene, Camera& camera)
 
     DirectX11::PSSetShaderResources(0, 10, srvs);
 
-    DirectX11::Draw(4, 0);z
+    DirectX11::Draw(4, 0);
 
     ID3D11ShaderResourceView* nullSRV[10] = {
         nullptr,
