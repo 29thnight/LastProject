@@ -52,7 +52,7 @@ public:
 	float m_roll{ 0.f };
 	float m_nearPlane{ 0.1f };
 
-	//*****
+	//***** ~500 정도해야 잘나옴
 	float m_farPlane{ 100000.f };
 	float m_speed{ 10.f };
 

@@ -51,7 +51,7 @@ cbuffer ShadowMapConstants : register(b2) // supports one
 float ShadowFactor(float4 worldPosition) // assumes only one shadow map cbuffer
 {
     
-    int shadowIndex = 5;
+    int shadowIndex = 0;
     
     
     //for (int i = 0; i < 3; i++)
