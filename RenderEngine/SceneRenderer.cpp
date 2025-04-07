@@ -344,6 +344,9 @@ SceneRenderer::SceneRenderer(const std::shared_ptr<DirectX11::DeviceResources>& 
 	m_pLightMapPass = std::make_unique<LightMapPass>();
 
 	m_renderScene = new RenderScene();
+
+	m_pEffectPass = std::make_unique<EffectManager>();
+	m_pEffectPass->MakeEffects(Effect::Sparkle, "asd", float3(0, 0, 0));
 }
 
 
@@ -602,6 +605,7 @@ void SceneRenderer::OnWillRenderObject(float deltaTime)
 {
 	m_renderScene->Update(deltaTime);
 	m_pEditorCamera->HandleMovement(deltaTime);
+	m_pEffectPass->UpdateEffects(deltaTime);
 	PrepareRender();
 	m_pUIPass->Update(deltaTime);
 }
@@ -697,6 +701,10 @@ void SceneRenderer::SceneRendering()
 			m_pToneMapPass->Execute(*m_renderScene, *camera);
 
 			//std::cout << "ToneMapPass : " << banch.GetElapsedTime() << std::endl;
+		}
+
+		{
+			m_pEffectPass->Execute(*m_renderScene, *camera);
 		}
 
 		//[*] GridPass

@@ -152,10 +152,14 @@
     <ClCompile Include="AssetSystem.cpp" />
     <ClCompile Include="BlitPass.cpp" />
     <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="EffectManager.cpp" />
+    <ClCompile Include="EffectModules.cpp" />
     <ClCompile Include="LightMapPass.cpp" />
     <ClCompile Include="LightmapShadowPass.cpp" />
     <ClCompile Include="NormalMapPass.cpp" />
     <ClCompile Include="PositionMapPass.cpp" />
+    <ClCompile Include="RenderModules.cpp" />
+    <ClCompile Include="SparkleEffect.cpp" />
     <ClCompile Include="Text.cpp" />
     <ClCompile Include="UIsprite.cpp" />
     <ClCompile Include="UIPass.cpp" />
@@ -194,11 +198,15 @@
     <ClInclude Include="BlitPass.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="cbuffers.h" />
+    <ClInclude Include="EffectManager.h" />
+    <ClInclude Include="EffectModules.h" />
     <ClInclude Include="LightMapPass.h" />
     <ClInclude Include="LightmapShadowPass.h" />
     <ClInclude Include="LightProperty.h" />
     <ClInclude Include="NormalMapPass.h" />
     <ClInclude Include="PositionMapPass.h" />
+    <ClInclude Include="RenderModules.h" />
+    <ClInclude Include="SparkleEffect.h" />
     <ClInclude Include="Text.h" />
     <ClInclude Include="UIsprite.h" />
     <ClInclude Include="UIPass.h" />
@@ -259,6 +267,12 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </FxCompile>
+    <FxCompile Include="..\x64\Assets\Shaders\BillBoard.gs.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </FxCompile>
+    <FxCompile Include="..\x64\Assets\Shaders\BillBoard.vs.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </FxCompile>
     <FxCompile Include="..\x64\Assets\Shaders\Blit.ps.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
@@ -302,6 +316,15 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </FxCompile>
+    <FxCompile Include="..\x64\Assets\Shaders\Explode.cs.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </FxCompile>
+    <FxCompile Include="..\x64\Assets\Shaders\Fire.ps.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </FxCompile>
+    <FxCompile Include="..\x64\Assets\Shaders\FireCompute.cs.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
     </FxCompile>
     <FxCompile Include="..\x64\Assets\Shaders\Forward.ps.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
@@ -415,6 +438,18 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </FxCompile>
+    <FxCompile Include="..\x64\Assets\Shaders\SnowGS.gs.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </FxCompile>
+    <FxCompile Include="..\x64\Assets\Shaders\SnowPS.ps.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </FxCompile>
+    <FxCompile Include="..\x64\Assets\Shaders\SnowVS.vs.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </FxCompile>
+    <FxCompile Include="..\x64\Assets\Shaders\Sparkle.ps.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </FxCompile>
     <FxCompile Include="..\x64\Assets\Shaders\SpecularPreFilter.ps.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
@@ -518,6 +553,9 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </None>
+    <None Include="..\x64\Assets\Shaders\Snow.hlsli">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
     </None>
   </ItemGroup>
   <ItemGroup>

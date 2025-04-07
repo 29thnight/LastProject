@@ -120,9 +120,6 @@
     <Filter Include="Shaders\Common">
       <UniqueIdentifier>{a37c6bd8-a67c-4c9c-b2e8-12cd1128d3d2}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Shaders\EditorUseShader">
-      <UniqueIdentifier>{621bea8c-d333-4b90-9e2c-6527e1866ab4}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Shaders\PipelineShader">
       <UniqueIdentifier>{8e767fa1-c4da-49fb-8661-5c3ac7f2f281}</UniqueIdentifier>
     </Filter>
@@ -131,6 +128,15 @@
     </Filter>
     <Filter Include="LightMap\Result">
       <UniqueIdentifier>{76b9fbf7-7a07-447f-ba7e-c2fe118fd105}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="RenderPass\EffectPass">
+      <UniqueIdentifier>{2e185eb1-e713-4fb2-b7fd-e38695a6721e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shaders\Effect">
+      <UniqueIdentifier>{f7debbfa-d702-4deb-b9ee-d71f8a4b7aee}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shaders\EditorUseShader">
+      <UniqueIdentifier>{621bea8c-d333-4b90-9e2c-6527e1866ab4}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -147,12 +153,6 @@
       <Filter>Renderer</Filter>
     </ClCompile>
     <ClCompile Include="DataSystem.cpp">
-      <Filter>Asset\ManagerSystem</Filter>
-    </ClCompile>
-    <ClCompile Include="FontManager.cpp">
-      <Filter>Asset\ManagerSystem</Filter>
-    </ClCompile>
-    <ClCompile Include="UI_DataSystem.cpp">
       <Filter>Asset\ManagerSystem</Filter>
     </ClCompile>
     <ClCompile Include="AssetSystem.cpp">
@@ -257,6 +257,18 @@
     <ClCompile Include="LightMapPass.cpp">
       <Filter>LightMap\Result</Filter>
     </ClCompile>
+    <ClCompile Include="EffectManager.cpp">
+      <Filter>RenderPass\EffectPass</Filter>
+    </ClCompile>
+    <ClCompile Include="EffectModules.cpp">
+      <Filter>RenderPass\EffectPass</Filter>
+    </ClCompile>
+    <ClCompile Include="SparkleEffect.cpp">
+      <Filter>RenderPass\EffectPass</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderModules.cpp">
+      <Filter>RenderPass\EffectPass</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="IRenderPass.h">
@@ -284,12 +296,6 @@
       <Filter>Renderer</Filter>
     </ClInclude>
     <ClInclude Include="DataSystem.h">
-      <Filter>Asset\ManagerSystem</Filter>
-    </ClInclude>
-    <ClInclude Include="FontManager.h">
-      <Filter>Asset\ManagerSystem</Filter>
-    </ClInclude>
-    <ClInclude Include="UI_DataSystem.h">
       <Filter>Asset\ManagerSystem</Filter>
     </ClInclude>
     <ClInclude Include="AssetSystem.h">
@@ -390,6 +396,18 @@
     </ClInclude>
     <ClInclude Include="LightMapPass.h">
       <Filter>LightMap\Result</Filter>
+    </ClInclude>
+    <ClInclude Include="EffectManager.h">
+      <Filter>RenderPass\EffectPass</Filter>
+    </ClInclude>
+    <ClInclude Include="EffectModules.h">
+      <Filter>RenderPass\EffectPass</Filter>
+    </ClInclude>
+    <ClInclude Include="SparkleEffect.h">
+      <Filter>RenderPass\EffectPass</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderModules.h">
+      <Filter>RenderPass\EffectPass</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -495,6 +513,33 @@
     <FxCompile Include="..\x64\Assets\Shaders\NeighborSampling.cs.hlsl">
       <Filter>Shaders\EditorUseShader</Filter>
     </FxCompile>
+    <FxCompile Include="..\x64\Assets\Shaders\BillBoard.gs.hlsl">
+      <Filter>Shaders\Effect</Filter>
+    </FxCompile>
+    <FxCompile Include="..\x64\Assets\Shaders\BillBoard.vs.hlsl">
+      <Filter>Shaders\Effect</Filter>
+    </FxCompile>
+    <FxCompile Include="..\x64\Assets\Shaders\Explode.cs.hlsl">
+      <Filter>Shaders\Effect</Filter>
+    </FxCompile>
+    <FxCompile Include="..\x64\Assets\Shaders\Fire.ps.hlsl">
+      <Filter>Shaders\Effect</Filter>
+    </FxCompile>
+    <FxCompile Include="..\x64\Assets\Shaders\FireCompute.cs.hlsl">
+      <Filter>Shaders\Effect</Filter>
+    </FxCompile>
+    <FxCompile Include="..\x64\Assets\Shaders\SnowGS.gs.hlsl">
+      <Filter>Shaders\Effect</Filter>
+    </FxCompile>
+    <FxCompile Include="..\x64\Assets\Shaders\SnowPS.ps.hlsl">
+      <Filter>Shaders\Effect</Filter>
+    </FxCompile>
+    <FxCompile Include="..\x64\Assets\Shaders\SnowVS.vs.hlsl">
+      <Filter>Shaders\Effect</Filter>
+    </FxCompile>
+    <FxCompile Include="..\x64\Assets\Shaders\Sparkle.ps.hlsl">
+      <Filter>Shaders\Effect</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\x64\Assets\Shaders\Lighting.hlsli">
@@ -529,6 +574,9 @@
     </ClInclude>
     <None Include="..\x64\Assets\Shaders\AutoExposureShared.hlsli">
       <Filter>Shaders\Common</Filter>
+    </None>
+    <None Include="..\x64\Assets\Shaders\Snow.hlsli">
+      <Filter>Shaders\Effect</Filter>
     </None>
   </ItemGroup>
 </Project>
