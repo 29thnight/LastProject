@@ -22,11 +22,9 @@ public:
 
     void Render(RenderScene& scene, Camera& camera) override;
 
-    void SetPosition(const Mathf::Vector3& position);
-
     void SpawnSparklesBurst(int count);
 
-    void UpdateSparkleConstantBuffer();
+    void UpdateConstantBuffer();
 
     void UpdateInstanceData();
 
@@ -36,7 +34,6 @@ private:
     BillboardModule* m_billboardModule;
 
     float m_delta;
-    Mathf::Vector3 m_position;
     SparkleParameters* m_sparkleParams;
     std::shared_ptr<Texture> m_sparkleTexture;
     ComPtr<ID3D11Buffer> m_constantBuffer;

@@ -20,6 +20,7 @@ struct BillBoardInstanceData
     Mathf::Vector4 position;
     Mathf::Vector2 size;
     UINT id;
+    Mathf::Vector4 color;
 };
 
 struct ModelConstantBuffer

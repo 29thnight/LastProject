@@ -5,6 +5,14 @@
 void SpawnModule::Initialize()
 {
 	m_uniform = std::uniform_real_distribution<float>(0.0f, 1.0f);
+
+	m_particleTemplate.age = 0.0f;
+	m_particleTemplate.lifeTime = 1.0f;
+	m_particleTemplate.rotation = 0.0f;
+	m_particleTemplate.rotatespeed = 1.0f;
+	m_particleTemplate.size = float2(1.0f, 1.0f);
+	m_particleTemplate.color = float4(1.0f, 1.0f, 1.0f, 1.0f);
+	m_particleTemplate.velocity = float3(0.0f, 0.0f, 0.0f);
 }
 
 void SpawnModule::Update(float delta, std::vector<ParticleData>& particles)
@@ -36,13 +44,7 @@ void SpawnModule::SpawnParticle(std::vector<ParticleData>& particles)
 
 void SpawnModule::InitializeParticle(ParticleData& particle)
 {
-	// 기본 초기화
-	particle.age = 0.0f;
-	particle.lifeTime = 1.0f; // 1초 수명
-	particle.rotation = 0.0f;
-	particle.rotatespeed = 1.0f;
-	particle.size = float2(1.0f, 1.0f);
-	particle.color = float4(1.0f, 1.0f, 1.0f, 1.0f);
+	particle = m_particleTemplate;
 
 	switch (m_emitterType)
 	{
@@ -73,11 +75,13 @@ void SpawnModule::InitializeParticle(ParticleData& particle)
 	case EmitterType::cone:
 	{
 		float theta = m_uniform(m_random) * 6.28f;
-		float radius = m_uniform(m_random) * 0.5f;
+		float height = m_uniform(m_random) * 1.0f;
+		float radiusAtHeight = 0.5f * (1.0f - height);
+
 		particle.position = Mathf::Vector3(
-			radius * cos(theta),
-			0.0f,
-			radius * sin(theta)
+			radiusAtHeight * cos(theta),
+			height,  // y축이 원뿔의 높이 방향
+			radiusAtHeight * sin(theta)
 		);
 		break;
 	}
@@ -92,14 +96,8 @@ void SpawnModule::InitializeParticle(ParticleData& particle)
 		);
 		break;
 	}
-	} // switch 문 끝
+	}
 
-	// 모든 emitterType에 대해 실행되는 코드
-	particle.velocity = float3(
-		(m_uniform(m_random) - 0.5f) * 2.0f,
-		1.0f + m_uniform(m_random) * 2.0f,
-		(m_uniform(m_random) - 0.5f) * 2.0f
-	);
 
 	// 아래로 가속 (중력)
 	particle.acceleration = float3(0.0f, -9.8f, 0.0f);
@@ -245,9 +243,25 @@ void EffectModules::Play()
 
 void EffectModules::Update(float delta)
 {
-	if (!m_isRunning)
+	if (!m_isRunning) // 완전히 정지된 상태
 		return;
 
+	if (m_isPaused) // 일시 정지 상태
+	{
+		m_activeParticleCount = 0;
+		for (const auto& particle : m_particleData)
+		{
+			if (particle.isActive)
+			{
+				m_activeParticleCount++;
+			}
+		}
+		return;
+	}
+
+	std::cout << m_activeParticleCount << std::endl;
+
+	// 정상 실행 상태
 	for (auto* module : m_modules)
 	{
 		module->Update(delta, m_particleData);
@@ -261,7 +275,6 @@ void EffectModules::Update(float delta)
 			m_activeParticleCount++;
 		}
 	}
-
 }
 
 void EffectModules::Render(RenderScene& scene, Camera& camera)
@@ -296,19 +309,16 @@ void EffectModules::Render(RenderScene& scene, Camera& camera)
 
 }
 
-void EffectModules::CleanupRenderState()
+void EffectModules::SetPosition(const Mathf::Vector3& position)
 {
-	// 셰이더 리소스 뷰 초기화
-	ID3D11ShaderResourceView* nullSRV = nullptr;
-	DeviceState::g_pDeviceContext->PSSetShaderResources(0, 1, &nullSRV);
-	DeviceState::g_pDeviceContext->VSSetShaderResources(0, 1, &nullSRV);
-
-	// 셰이더 초기화
-	DeviceState::g_pDeviceContext->GSSetShader(nullptr, nullptr, 0);
-	DeviceState::g_pDeviceContext->PSSetShader(nullptr, nullptr, 0);
-
-	// 렌더 타겟 초기화
-	ID3D11RenderTargetView* nullRTV = nullptr;
-	DeviceState::g_pDeviceContext->OMSetRenderTargets(1, &nullRTV, nullptr);
+	m_position = position;
+	// SpawnModule은 위치를 직접 저장하지 않으므로, 모든 파티클의 위치를 이동
+	for (auto& particle : m_particleData) {
+		if (particle.isActive) {
+			// 기존 위치에서 새 위치로의 오프셋 적용
+			particle.position += position - m_position;
+		}
+	}
 }
+
 

@@ -49,8 +49,8 @@ public:
 class SpawnModule : public ParticleModule
 {
 public:
-	SpawnModule(int maxParticles, float spawnRate, EmitterType emitterType)
-	: m_maxParticles(maxParticles), m_spawnRate(spawnRate), m_emitterType(emitterType),
+	SpawnModule(float spawnRate, EmitterType emitterType)
+	: m_spawnRate(spawnRate), m_emitterType(emitterType),
 		m_Time(0.0f), m_random(std::random_device{}()) {}
 	 
 	void Initialize() override;
@@ -58,18 +58,21 @@ public:
 
 	void SetEmitterShape(EmitterType type) { m_emitterType = type; }
 	void SetSpawnRate(float rate) { m_spawnRate = rate; }
-	void SetMaxParticles(int count) { m_maxParticles = count; }
+
+public:
+	ParticleData m_particleTemplate;
+
 private:
 	void SpawnParticle(std::vector<ParticleData>& particles);
 	void InitializeParticle(ParticleData& particle);
 
 private:
-	int m_maxParticles;
 	float m_spawnRate;
 	float m_Time;
 	EmitterType m_emitterType;
 	std::mt19937 m_random;
 	std::uniform_real_distribution<float> m_uniform;
+
 
 	float m_lifeTime;
 	float m_rotateSpeed;
@@ -140,8 +143,10 @@ public:
 
 	void Update(float delta, std::vector<ParticleData>& particles) override;
 
+	// m_sizeoverlife function을 설정 안했을때의 기본으로 쓰이는 크기
 	void SetStartSize(float size) { m_startSize = size; }
 	void SetEndSize(float size) { m_endSize = size; }
+
 	void SetSizeOverLifeFunction(std::function<Mathf::Vector2(float)> func) { m_sizeOverLife = func; }
 
 private:
@@ -228,28 +233,29 @@ public:
 
 	void Stop() { m_isRunning = false; }
 
-	void Pause() { m_isRunning = false; }
+	void Pause() { m_isPaused = true; }
 
-	void Resume() { m_isRunning = true; }
+	void Resume() { m_isPaused = false; }
 
 	virtual void Update(float delta);
 
 	virtual void Render(RenderScene& scene, Camera& camera);
 
+	void SetPosition(const Mathf::Vector3& position);
 
+	void SetMaxParticles(int max) { m_particleData.resize(max); m_instanceData.resize(max); }
 protected:
-	virtual void CleanupRenderState(); // New method to cleanup after rendering
-	void SaveRenderState();
-	void RestoreRenderState();
+	// 렌더 초기화 메소드는 rendermodule에서 정의.
 
 	// data members
 	bool m_isRunning;
+	bool m_isPaused;
 	std::vector<ParticleData> m_particleData;
 	std::vector<ParticleModule*> m_modules;
 	int m_activeParticleCount = 0;
 	int m_maxParticles;
 	std::vector<BillBoardInstanceData> m_instanceData;
-
+	Mathf::Vector3 m_position;
 	std::vector<RenderModules*> m_renderModules;
 };
 
