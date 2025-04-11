@@ -38,7 +38,7 @@ SparkleEffect::SparkleEffect(const Mathf::Vector3& position, int maxParticles) :
     {
         ImGui::ContextRegister("Sparkle Effect", [&]()
             {
-                ImGui::SetWindowFocus("Sparkle Effect");
+                //ImGui::SetWindowFocus("Sparkle Effect");
 
                 if (ImGui::BeginTabBar("Setting"))
                 {
@@ -143,19 +143,18 @@ SparkleEffect::~SparkleEffect()
 void SparkleEffect::InitializeModules()
 {
     // 스폰 모듈 추가 (이펙트의 위치는 m_position)
-    m_spawnModule = AddModule<SpawnModule>(1000.0f, EmitterType::box);
-    m_spawnModule->m_particleTemplate.lifeTime = 10.0f;
-    SetMaxParticles(1000000);
+    m_spawnModule = AddModule<SpawnModule>(m_maxParticles, EmitterType::point);
+    m_spawnModule->m_particleTemplate.lifeTime = 0.0f;
 
     // 수명 모듈 추가
     AddModule<LifeModule>();
 
     // 움직임 모듈 추가 (중력 없음, 자유롭게 움직이는 반짝임)
     auto movementModule = AddModule<MovementModule>();
-    movementModule->SetUseGravity(true);
+    movementModule->SetUseGravity(false);
 
     // 색상 모듈 추가 (반짝이는 효과를 위한 투명도 변화)
-    auto colorModule = AddModule<ColorModule>();
+    //auto colorModule = AddModule<ColorModule>();
     //colorModule->SetColorGradient({
     //    {0.0f, Mathf::Vector4(m_sparkleParams->color.x, m_sparkleParams->color.y, m_sparkleParams->color.z, 0.0f)},
     //    {0.1f, Mathf::Vector4(m_sparkleParams->color.x, m_sparkleParams->color.y, m_sparkleParams->color.z, 0.9f)},
@@ -165,28 +164,28 @@ void SparkleEffect::InitializeModules()
     //    });
     
     // 무지개 색
-    std::vector<std::pair<float, Mathf::Vector4>> rainbowGradient = {
-    {0.0f, Mathf::Vector4(1.0f, 0.0f, 0.0f, 1.0f)},  // 빨강
-    {0.16f, Mathf::Vector4(1.0f, 0.5f, 0.0f, 1.0f)}, // 주황
-    {0.33f, Mathf::Vector4(1.0f, 1.0f, 0.0f, 1.0f)}, // 노랑
-    {0.5f, Mathf::Vector4(0.0f, 1.0f, 0.0f, 1.0f)},  // 초록
-    {0.66f, Mathf::Vector4(0.0f, 0.0f, 1.0f, 1.0f)}, // 파랑
-    {0.83f, Mathf::Vector4(0.3f, 0.0f, 0.5f, 1.0f)}, // 남색
-    {1.0f, Mathf::Vector4(0.5f, 0.0f, 0.5f, 1.0f)}   // 보라
-    };
-
-    colorModule->SetColorGradient(rainbowGradient);
+    //std::vector<std::pair<float, Mathf::Vector4>> rainbowGradient = {
+    //{0.0f, Mathf::Vector4(1.0f, 0.0f, 0.0f, 1.0f)},  // 빨강
+    //{0.16f, Mathf::Vector4(1.0f, 0.5f, 0.0f, 1.0f)}, // 주황
+    //{0.33f, Mathf::Vector4(1.0f, 1.0f, 0.0f, 1.0f)}, // 노랑
+    //{0.5f, Mathf::Vector4(0.0f, 1.0f, 0.0f, 1.0f)},  // 초록
+    //{0.66f, Mathf::Vector4(0.0f, 0.0f, 1.0f, 1.0f)}, // 파랑
+    //{0.83f, Mathf::Vector4(0.3f, 0.0f, 0.5f, 1.0f)}, // 남색
+    //{1.0f, Mathf::Vector4(0.5f, 0.0f, 0.5f, 1.0f)}   // 보라
+    //};
+    //
+    //colorModule->SetColorGradient(rainbowGradient);
 
     // 크기 모듈 추가 (깜빡이는 효과)
-    auto sizeModule = AddModule<SizeModule>();
+    //auto sizeModule = AddModule<SizeModule>();
     //sizeModule->SetStartSize(0.2f);
     //sizeModule->SetEndSize(1.0f);
-    sizeModule->SetSizeOverLifeFunction([this](float t) {
-        // 반짝이는 효과를 위한 사인 파동
-        float pulse = 0.7f + 0.3f * sin(t * m_sparkleParams->speed * 10.0f);
-        float baseSize = 0.2f + t * (0.05f - 0.2f);
-        return Mathf::Vector2(baseSize * pulse, baseSize * pulse);
-       });
+    //sizeModule->SetSizeOverLifeFunction([this](float t) {
+    //    // 반짝이는 효과를 위한 사인 파동
+    //    float pulse = 0.7f + 0.3f * sin(t * m_sparkleParams->speed * 10.0f);
+    //    float baseSize = 0.2f + t * (0.05f - 0.2f);
+    //    return Mathf::Vector2(baseSize * pulse, baseSize * pulse);
+    //   });
 }
 
 void SparkleEffect::Update(float delta)

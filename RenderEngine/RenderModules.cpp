@@ -57,6 +57,9 @@ void BillboardModule::Initialize()
 	);
 
 	CD3D11_RASTERIZER_DESC rasterizerDesc{ CD3D11_DEFAULT() };
+	rasterizerDesc.DepthBias = -100;
+	rasterizerDesc.SlopeScaledDepthBias = -1.0f;
+
 	DirectX11::ThrowIfFailed(
 		DeviceState::g_pDevice->CreateRasterizerState(
 			&rasterizerDesc,
@@ -65,7 +68,7 @@ void BillboardModule::Initialize()
 	);
 
 	CD3D11_DEPTH_STENCIL_DESC depthDesc{ CD3D11_DEFAULT() };
-	depthDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+	depthDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
 	depthDesc.DepthEnable = true;
 	depthDesc.DepthFunc = D3D11_COMPARISON_LESS;
 	DeviceState::g_pDevice->CreateDepthStencilState(&depthDesc, &m_pso->m_depthStencilState);
@@ -163,6 +166,8 @@ void BillboardModule::Render(Mathf::Matrix world, Mathf::Matrix view, Mathf::Mat
 
 	deviceContext->IASetVertexBuffers(0, 2, buffers, strides, offsets);
 	deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_POINTLIST);
+
+	deviceContext->OMSetDepthStencilState(m_pso->m_depthStencilState, 1);
 
 	deviceContext->DrawInstanced(1, m_instanceCount, 0, 0);
 

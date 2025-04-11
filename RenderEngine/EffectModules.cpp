@@ -130,7 +130,7 @@ void LifeModule::Update(float delta, std::vector<ParticleData>& particles)
 		{
 			particle.age += delta;
 
-			if (particle.age >= particle.lifeTime)
+			if (particle.lifeTime > 0.0f && particle.age >= particle.lifeTime)
 			{
 				particle.isActive = false;
 			}

@@ -31,6 +31,7 @@ private:
 	BillboardModule* m_billboardModule;
 	AtlasParameters* m_atlasParams;
 	std::shared_ptr<Texture> m_atlasTexture;
+	std::shared_ptr<Texture> m_atlasAlphaTexture;
 	ComPtr<ID3D11Buffer> m_constantBuffer;
 	SpawnModule* m_spawnModule;
 };

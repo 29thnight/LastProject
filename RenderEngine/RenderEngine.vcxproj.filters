@@ -130,6 +130,12 @@
     <Filter Include="Shaders\EditorUseShader">
       <UniqueIdentifier>{621bea8c-d333-4b90-9e2c-6527e1866ab4}</UniqueIdentifier>
     </Filter>
+    <Filter Include="RenderPass\EffectPass\Modules">
+      <UniqueIdentifier>{10da6df3-cd86-482d-9178-b1d9ff75be7f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="RenderPass\EffectPass\Effect">
+      <UniqueIdentifier>{81878511-ee1b-479d-989b-03825b971d43}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="SceneRenderer.cpp">
@@ -252,17 +258,20 @@
     <ClCompile Include="EffectManager.cpp">
       <Filter>RenderPass\EffectPass</Filter>
     </ClCompile>
-    <ClCompile Include="EffectModules.cpp">
-      <Filter>RenderPass\EffectPass</Filter>
+    <ClCompile Include="AtlasEffect.cpp">
+      <Filter>RenderPass\EffectPass\Effect</Filter>
     </ClCompile>
     <ClCompile Include="SparkleEffect.cpp">
-      <Filter>RenderPass\EffectPass</Filter>
+      <Filter>RenderPass\EffectPass\Effect</Filter>
+    </ClCompile>
+    <ClCompile Include="DOTween.cpp">
+      <Filter>RenderPass\EffectPass\Modules</Filter>
+    </ClCompile>
+    <ClCompile Include="EffectModules.cpp">
+      <Filter>RenderPass\EffectPass\Modules</Filter>
     </ClCompile>
     <ClCompile Include="RenderModules.cpp">
-      <Filter>RenderPass\EffectPass</Filter>
-    </ClCompile>
-    <ClCompile Include="AtlasEffect.cpp">
-      <Filter>RenderPass\EffectPass</Filter>
+      <Filter>RenderPass\EffectPass\Modules</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -395,17 +404,20 @@
     <ClInclude Include="EffectManager.h">
       <Filter>RenderPass\EffectPass</Filter>
     </ClInclude>
-    <ClInclude Include="EffectModules.h">
-      <Filter>RenderPass\EffectPass</Filter>
+    <ClInclude Include="AtlasEffect.h">
+      <Filter>RenderPass\EffectPass\Effect</Filter>
     </ClInclude>
     <ClInclude Include="SparkleEffect.h">
-      <Filter>RenderPass\EffectPass</Filter>
+      <Filter>RenderPass\EffectPass\Effect</Filter>
+    </ClInclude>
+    <ClInclude Include="DOTween.h">
+      <Filter>RenderPass\EffectPass\Modules</Filter>
+    </ClInclude>
+    <ClInclude Include="EffectModules.h">
+      <Filter>RenderPass\EffectPass\Modules</Filter>
     </ClInclude>
     <ClInclude Include="RenderModules.h">
-      <Filter>RenderPass\EffectPass</Filter>
-    </ClInclude>
-    <ClInclude Include="AtlasEffect.h">
-      <Filter>RenderPass\EffectPass</Filter>
+      <Filter>RenderPass\EffectPass\Modules</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

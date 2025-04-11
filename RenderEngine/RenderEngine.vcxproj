@@ -153,6 +153,9 @@
     <ClCompile Include="AtlasEffect.cpp" />
     <ClCompile Include="BlitPass.cpp" />
     <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="DOTween.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="EffectManager.cpp" />
     <ClCompile Include="EffectModules.cpp" />
     <ClCompile Include="LightMapPass.cpp" />
@@ -200,6 +203,9 @@
     <ClInclude Include="BlitPass.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="cbuffers.h" />
+    <ClInclude Include="DOTween.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClInclude>
     <ClInclude Include="EffectManager.h" />
     <ClInclude Include="EffectModules.h" />
     <ClInclude Include="LightMapPass.h" />
