@@ -22,7 +22,7 @@ public:
 		Light,
 		Mesh,
 		Bone,
-		TypeMax
+		TypeMax,
 	};
 
 	GameObject(const std::string_view& name, GameObject::Type type, GameObject::Index index, GameObject::Index parentIndex);

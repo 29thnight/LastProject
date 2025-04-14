@@ -233,6 +233,42 @@ Texture* DataSystem::LoadTexture(const std::string_view& filePath)
 	return nullptr;
 }
 
+Texture* DataSystem::LoadEffectTexture(const std::string_view& filePath)
+{
+	file::path source = filePath;
+	file::path destination = PathFinder::Relative("Effect\\") / file::path(filePath).filename();
+	if (source != destination && file::exists(source) && !file::exists(destination))
+	{
+		file::copy_file(source, destination, file::copy_options::update_existing);
+	}
+	std::string name = file::path(filePath).stem().string();
+	if (Textures.find(name) != Textures.end())
+	{
+		Debug->Log("TextureLoader::LoadTexture : Texture already loaded");
+		return Textures[name].get();
+	}
+
+	Texture* texture = Texture::LoadFormPath(destination.string());
+
+	if (texture)
+	{
+		Textures[name] = std::shared_ptr<Texture>(texture, [&](Texture* texture)
+			{
+				if (texture)
+				{
+					DeallocateResource<Texture>(texture);
+				}
+			});
+		return texture;
+	}
+	else
+	{
+		Debug->LogError("ModelLoader::LoadModel : Model file not found");
+	}
+
+	return nullptr;
+}
+
 Texture* DataSystem::LoadMaterialTexture(const std::string_view& filePath)
 {
     file::path destination = PathFinder::Relative("Materials\\") / file::path(filePath).filename();

@@ -222,11 +222,23 @@ EffectModules::EffectModules(int maxParticles) : m_maxParticles(maxParticles), m
 
 EffectModules::~EffectModules()
 {
-	for (auto& module : m_modules)
+	auto it = m_moduleList.begin();
+	ParticleModule* current = nullptr;
+
+	while (it != m_moduleList.end())
+	{
+		current = &(*it);
+		++it;
+		delete current;
+	}
+
+	m_moduleList.ClearLink();
+
+	for (auto* module : m_renderModules)
 	{
 		delete module;
 	}
-	m_modules.clear();
+	m_renderModules.clear();
 }
 
 void EffectModules::Play()
@@ -259,12 +271,13 @@ void EffectModules::Update(float delta)
 		return;
 	}
 
-	std::cout << m_activeParticleCount << std::endl;
+	//std::cout << m_activeParticleCount << std::endl;
 
 	// 정상 실행 상태
-	for (auto* module : m_modules)
+	for (auto it = m_moduleList.begin(); it != m_moduleList.end(); ++it)
 	{
-		module->Update(delta, m_particleData);
+		ParticleModule& module = *it;
+		module.Update(delta, m_particleData);
 	}
 
 	m_activeParticleCount = 0;

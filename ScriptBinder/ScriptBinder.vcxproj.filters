@@ -72,6 +72,9 @@
     <ClCompile Include="Object.cpp">
       <Filter>Classes\Object</Filter>
     </ClCompile>
+    <ClCompile Include="EffectComponent.cpp">
+      <Filter>Classes\Components</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ModuleBehavior.h">
@@ -139,6 +142,9 @@
     </ClInclude>
     <ClInclude Include="IFixedUpdatable.h">
       <Filter>Classes\RegistrableSceneEvents</Filter>
+    </ClInclude>
+    <ClInclude Include="EffectComponent.h">
+      <Filter>Classes\Components</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

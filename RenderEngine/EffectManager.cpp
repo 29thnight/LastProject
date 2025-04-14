@@ -9,7 +9,7 @@ void EffectManager::Execute(RenderScene& scene, Camera& camera)
 	}
 }
 
-void EffectManager::UpdateEffects(float delta)
+void EffectManager::Update(float delta)
 {
 	for (auto& [key, effect] : effects) {
 		effect->Update(delta);

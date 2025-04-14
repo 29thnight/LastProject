@@ -1,6 +1,8 @@
 #include "SparkleEffect.h"
 #include "ImGuiRegister.h"
 #include "Camera.h"
+#include "RenderModules.h"
+#include "DataSystem.h"
 
 SparkleEffect::SparkleEffect(const Mathf::Vector3& position, int maxParticles) : EffectModules(maxParticles), m_delta(0.0f)
 {
@@ -26,15 +28,11 @@ SparkleEffect::SparkleEffect(const Mathf::Vector3& position, int maxParticles) :
     // 렌더 모듈 설정
     m_billboardModule = AddRenderModule<BillboardModule>();
     m_billboardModule->Initialize();
-    BillboardVertex vertex;
-    vertex.position = float4(position.x, position.y, position.z, 1.0f);
-    m_billboardModule->CreateBillboard(&vertex, BillBoardType::Basic);
 
     m_billboardModule->GetPSO()->m_pixelShader = &ShaderSystem->PixelShaders["Sparkle"];
 
     // 실제 텍스처 사진
-    m_sparkleTexture = std::shared_ptr<Texture>(Texture::LoadFormPath("God.jpg"));
-
+    m_sparkleTexture = DataSystems->LoadEffectTexture("star.png");
     {
         ImGui::ContextRegister("Sparkle Effect", [&]()
             {
@@ -120,9 +118,6 @@ SparkleEffect::SparkleEffect(const Mathf::Vector3& position, int maxParticles) :
                     ImGui::EndTabBar();
                 }
 
-             
-
-                
             });
     }
 
@@ -143,8 +138,8 @@ SparkleEffect::~SparkleEffect()
 void SparkleEffect::InitializeModules()
 {
     // 스폰 모듈 추가 (이펙트의 위치는 m_position)
-    m_spawnModule = AddModule<SpawnModule>(m_maxParticles, EmitterType::point);
-    m_spawnModule->m_particleTemplate.lifeTime = 0.0f;
+    m_spawnModule = AddModule<SpawnModule>(50.0f, EmitterType::sphere);
+    m_spawnModule->m_particleTemplate.lifeTime = 1.0f;
 
     // 수명 모듈 추가
     AddModule<LifeModule>();
@@ -162,7 +157,7 @@ void SparkleEffect::InitializeModules()
     //    {0.7f, Mathf::Vector4(m_sparkleParams->color.x, m_sparkleParams->color.y, m_sparkleParams->color.z, 0.7f)},
     //    {1.0f, Mathf::Vector4(m_sparkleParams->color.x * 0.5f, m_sparkleParams->color.y * 0.5f, m_sparkleParams->color.z * 0.5f, 0.0f)}
     //    });
-    
+
     // 무지개 색
     //std::vector<std::pair<float, Mathf::Vector4>> rainbowGradient = {
     //{0.0f, Mathf::Vector4(1.0f, 0.0f, 0.0f, 1.0f)},  // 빨강
@@ -177,15 +172,15 @@ void SparkleEffect::InitializeModules()
     //colorModule->SetColorGradient(rainbowGradient);
 
     // 크기 모듈 추가 (깜빡이는 효과)
-    //auto sizeModule = AddModule<SizeModule>();
-    //sizeModule->SetStartSize(0.2f);
-    //sizeModule->SetEndSize(1.0f);
-    //sizeModule->SetSizeOverLifeFunction([this](float t) {
-    //    // 반짝이는 효과를 위한 사인 파동
-    //    float pulse = 0.7f + 0.3f * sin(t * m_sparkleParams->speed * 10.0f);
-    //    float baseSize = 0.2f + t * (0.05f - 0.2f);
-    //    return Mathf::Vector2(baseSize * pulse, baseSize * pulse);
-    //   });
+    auto sizeModule = AddModule<SizeModule>();
+    sizeModule->SetStartSize(0.2f);
+    sizeModule->SetEndSize(1.0f);
+    sizeModule->SetSizeOverLifeFunction([this](float t) {
+        // 반짝이는 효과를 위한 사인 파동
+        float pulse = 0.7f + 0.3f * sin(t * m_sparkleParams->speed * 10.0f);
+        float baseSize = 0.2f + t * (0.05f - 0.2f);
+        return Mathf::Vector2(baseSize * pulse, baseSize * pulse);
+       });
 }
 
 void SparkleEffect::Update(float delta)
@@ -221,7 +216,7 @@ void SparkleEffect::Render(RenderScene& scene, Camera& camera)
     DeviceState::g_pDeviceContext->PSSetConstantBuffers(3, 1, m_constantBuffer.GetAddressOf());
 
     ID3D11RenderTargetView* rtv = camera.m_renderTarget->GetRTV();
-    deviceContext->OMSetRenderTargets(1, &rtv, DeviceState::g_pDepthStencilView);
+    deviceContext->OMSetRenderTargets(1, &rtv, camera.m_depthStencil->m_pDSV);
 
     ID3D11ShaderResourceView* srv = m_sparkleTexture->m_pSRV;
     DirectX11::PSSetShaderResources(0, 1, &srv);
@@ -309,16 +304,16 @@ void SparkleEffect::UpdateInstanceData()
             }
 
             worldPos = particle.position + m_position;
-            m_instanceData[instanceIndex].position = Mathf::Vector4(
+            m_instanceData[instanceIndex].Position = Mathf::Vector4(
                 worldPos.x,
                 worldPos.y,
                 worldPos.z,
                 1.0f
             );
 
-            m_instanceData[instanceIndex].size = particle.size * m_sparkleParams->size;
-            m_instanceData[instanceIndex].id = static_cast<UINT>(particle.age / particle.lifeTime * 10) % 10;
-            m_instanceData[instanceIndex].color = particle.color;
+            m_instanceData[instanceIndex].TexCoord = particle.size * m_sparkleParams->size;
+            m_instanceData[instanceIndex].TexIndex = static_cast<UINT>(particle.age / particle.lifeTime * 10) % 10;
+            m_instanceData[instanceIndex].Color = particle.color;
             instanceIndex++;
         }
     }

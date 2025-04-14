@@ -17,28 +17,26 @@ Texture2D sparkleTexture : register(t0);
 SamplerState linearSampler : register(s0);
 
 // 픽셀 셰이더 입력 구조체
-struct GSOutput
+struct VSOutput
 {
-    float4 position : SV_POSITION;
-    float2 texCoord : TEXCOORD0;
-    //float depth : TEXCOORD1;
-    //float distToCamera : TEXCOORD2;
-    float4 color : COLOR0;
+    float4 Position : SV_POSITION;
+    float2 TexCoord : TEXCOORD0;
+    uint TexIndex : TEXCOORD1;
+    float4 Color : COLOR0;
 };
 
 // 메인 픽셀 셰이더 함수
-float4 main(GSOutput input): SV_TARGET
+float4 main(VSOutput input): SV_TARGET
 {
     
     // 기본 텍스처 색상 가져오기
-    float4 texColor = sparkleTexture.Sample(linearSampler, input.texCoord);
-
+    float4 texColor = sparkleTexture.Sample(linearSampler, input.TexCoord);
     // 시간에 따른 반짝임 효과 계산
     float sparkle = 0.7f + 0.3f * sin((time * speed) * 10.0f);
     
     // 중심에서 가장자리로 갈수록 투명해지는 거리 계산
     float2 center = float2(0.5f, 0.5f);
-    float dist = length(input.texCoord - center) * 2.0f; // 0~1 범위로 정규화
+    float dist = length(input.TexCoord - center) * 2.0f; // 0~1 범위로 정규화
     float edgeFade = 1.0f - saturate(dist);
     
     // 두 가지 다른 시간 함수로 반짝임에 변화 추가
@@ -59,7 +57,8 @@ float4 main(GSOutput input): SV_TARGET
     
     // 가장 밝은 부분에 흰색 반짝임 추가
     finalColor = lerp(finalColor, float3(1.0f, 1.0f, 1.0f), pow(sparkle * sparkle2 - 0.5f, 2) * 0.5f);
-
     return float4(finalColor, texColor.a);
-    //return input.color;
+    //return input.Color;
+    //float depth = input.Position.z / input.Position.w;
+    //return float4(depth.xxx, 1.0);
 }

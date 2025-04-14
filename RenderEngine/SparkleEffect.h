@@ -35,7 +35,7 @@ private:
 
     float m_delta;
     SparkleParameters* m_sparkleParams;
-    std::shared_ptr<Texture> m_sparkleTexture;
+    Texture* m_sparkleTexture;
     ComPtr<ID3D11Buffer> m_constantBuffer;
     SpawnModule* m_spawnModule;
 };

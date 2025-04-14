@@ -4,6 +4,7 @@
 #include "Texture.h"
 #include "RenderModules.h"
 #include "IRenderPass.h"
+#include "LinkedListLib.hpp"
 
 struct alignas(16) EffectParameters		// °øÅë effectparams
 {
@@ -38,9 +39,10 @@ enum class EmitterType
 	circle,
 };
 
-class ParticleModule
+class ParticleModule : public LinkProperty<ParticleModule>
 {
 public:
+	ParticleModule() : LinkProperty<ParticleModule>(this) {}
 	virtual ~ParticleModule() = default;
 	virtual void Initialize() {}
 	virtual void Update(float delta, std::vector<ParticleData>& particles) = 0;
@@ -184,7 +186,7 @@ public:
 
 		T* module = new T(std::forward<Args>(args)...);
 		module->Initialize();
-		m_modules.push_back(module);
+		m_moduleList.Link(module);
 		return module;
 	}
 
@@ -193,9 +195,10 @@ public:
 	{
 		static_assert(std::is_base_of<ParticleModule, T>::value, "T must derive from ParticleModule");
 
-		for (auto* module : m_modules)
+		for (auto it = m_moduleList.begin(); it != m_moduleList.end(); ++it)
 		{
-			if (T* t = dynamic_cast<T*>(module))
+			ParticleModule& module = *it;
+			if (T* t = dynamic_cast<T*>(&module))
 			{
 				return t;
 			}
@@ -251,7 +254,7 @@ protected:
 	bool m_isRunning;
 	bool m_isPaused;
 	std::vector<ParticleData> m_particleData;
-	std::vector<ParticleModule*> m_modules;
+	LinkedList<ParticleModule> m_moduleList;
 	int m_activeParticleCount = 0;
 	int m_maxParticles;
 	std::vector<BillBoardInstanceData> m_instanceData;

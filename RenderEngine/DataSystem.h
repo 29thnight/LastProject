@@ -54,6 +54,7 @@ public:
 	void LoadTextures();
 	void LoadMaterials();
 	Texture* LoadTexture(const std::string_view& filePath);
+	Texture* LoadEffectTexture(const std::string_view& filePath);
     Texture* LoadMaterialTexture(const std::string_view& filePath);
 
 	void OpenFile(const file::path& filepath);

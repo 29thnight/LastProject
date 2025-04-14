@@ -426,8 +426,8 @@ SceneRenderer::SceneRenderer(const std::shared_ptr<DirectX11::DeviceResources>& 
 
 	m_renderScene = new RenderScene();
 
-	//m_pEffectPass = std::make_unique<EffectManager>();
-	//m_pEffectPass->MakeEffects(Effect::Sparkle, "asd", float3(0, 0, 0));
+	m_pEffectPass = std::make_unique<EffectManager>();
+	m_pEffectPass->MakeEffects(Effect::Sparkle, "asd", float3(0, 0, 0));
 
     m_newSceneCreatedEventHandle = SceneManagers->newSceneCreatedEvent.AddRaw(this, &SceneRenderer::NewCreateSceneInitialize);
 
@@ -766,7 +766,7 @@ void SceneRenderer::OnWillRenderObject(float deltaTime)
 	}
 	//컴포넌트업데이트 확인용 추가
 	m_renderScene->Update(deltaTime);
-
+	m_pEffectPass->Update(deltaTime);
 	m_pEditorCamera->HandleMovement(deltaTime);
 
 	PrepareRender();
@@ -896,11 +896,11 @@ void SceneRenderer::SceneRendering()
 		}
 
 		{
-			//DirectX11::BeginEvent(L"EffectPass");
-			//Benchmark banch;
-			//m_pEffectPass->Execute(*m_renderScene, *camera);
-			//RenderStatistics->UpdateRenderState("EffectPass", banch.GetElapsedTime());
-			//DirectX11::EndEvent();
+			DirectX11::BeginEvent(L"EffectPass");
+			Benchmark banch;
+			m_pEffectPass->Execute(*m_renderScene, *camera);
+			RenderStatistics->UpdateRenderState("EffectPass", banch.GetElapsedTime());
+			DirectX11::EndEvent();
 		}
 
 		//[*] GridPass

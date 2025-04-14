@@ -19,9 +19,7 @@ public:
 
 	virtual void Render(RenderScene& scene, Camera& camera) {};
 
-	virtual void Update(float delta) {};
-
-	void UpdateEffects(float delta);
+	void Update(float delta);
 
 	void MakeEffects(Effect type, std::string_view name, Mathf::Vector3 pos, int maxParticle = 100);
 
