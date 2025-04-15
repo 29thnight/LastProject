@@ -113,6 +113,13 @@ SparkleEffect::SparkleEffect(const Mathf::Vector3& position, int maxParticles) :
                             SpawnSparklesBurst(20);
                         }
 
+                        static bool isG = false;
+                        if (ImGui::Checkbox("Gravity", &isG))
+                        {
+                            auto module = GetModule<MovementModule>();
+                            module->SetUseGravity(isG);
+                        }
+
                         ImGui::EndTabItem();
                     }
                     ImGui::EndTabBar();

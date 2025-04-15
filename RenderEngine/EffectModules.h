@@ -40,7 +40,7 @@ enum class EmitterType
 };
 
 class ParticleModule : public LinkProperty<ParticleModule>
-{
+{	
 public:
 	ParticleModule() : LinkProperty<ParticleModule>(this) {}
 	virtual ~ParticleModule() = default;

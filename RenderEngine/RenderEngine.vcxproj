@@ -149,6 +149,7 @@
   <ItemGroup>
     <ClCompile Include="AnimationJob.cpp" />
     <ClCompile Include="AnimationLoader.cpp" />
+    <ClCompile Include="EaseInOut.cpp" />
     <ClCompile Include="EffectManager.cpp" />
     <ClCompile Include="EffectModules.cpp" />
     <ClCompile Include="ForwardPass.cpp" />
@@ -194,6 +195,7 @@
   <ItemGroup>
     <ClInclude Include="AnimationJob.h" />
     <ClInclude Include="AnimationLoader.h" />
+    <ClInclude Include="EaseInOut.h" />
     <ClInclude Include="EffectManager.h" />
     <ClInclude Include="EffectModules.h" />
     <ClInclude Include="Interfaces\ISceneRenderer.h" />

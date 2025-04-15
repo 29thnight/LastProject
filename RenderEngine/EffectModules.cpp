@@ -222,17 +222,17 @@ EffectModules::EffectModules(int maxParticles) : m_maxParticles(maxParticles), m
 
 EffectModules::~EffectModules()
 {
-	auto it = m_moduleList.begin();
-	ParticleModule* current = nullptr;
-
-	while (it != m_moduleList.end())
-	{
-		current = &(*it);
-		++it;
-		delete current;
-	}
-
-	m_moduleList.ClearLink();
+	//auto it = m_moduleList.begin();
+	//ParticleModule* current = nullptr;
+	//
+	//while (it != m_moduleList.end())
+	//{
+	//	current = &(*it);
+	//	++it;
+	//	delete current;
+	//}
+	//
+	//m_moduleList.ClearLink();
 
 	for (auto* module : m_renderModules)
 	{
