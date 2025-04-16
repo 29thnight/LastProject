@@ -5,6 +5,7 @@
 #include "RenderModules.h"
 #include "IRenderPass.h"
 #include "LinkedListLib.hpp"
+#include "EaseInOut.h"
 
 struct alignas(16) EffectParameters		// °øÅë effectparams
 {
@@ -46,8 +47,49 @@ public:
 	virtual ~ParticleModule() = default;
 	virtual void Initialize() {}
 	virtual void Update(float delta, std::vector<ParticleData>& particles) = 0;
+
+	void SetEasingType(EasingEffect type) 
+	{
+		m_easingType = type;
+		m_useEasing = true;
+	}
+
+	void SetAnimationType(StepAnimation type) 
+	{
+		m_animationType = type;
+		m_useEasing = true;
+	}
+
+	void SetEasingDuration(float duration) 
+	{
+		m_easingDuration = duration;
+	}
+
+	void EnableEasing(bool enable) 
+	{
+		m_useEasing = enable;
+	}
+
+	bool IsEasingEnabled() const 
+	{
+		return m_useEasing;
+	}
+
+	float ApplyEasing(float normalizedTime);
+
+	EaseInOut CreateEasingObject() 
+	{
+		return EaseInOut(m_easingType, m_animationType, m_easingDuration);
+	}
+
+protected:
+	bool m_useEasing;
+	EasingEffect m_easingType;
+	StepAnimation m_animationType;
+	float m_easingDuration;
 };
 
+// spawn rate, emittertype
 class SpawnModule : public ParticleModule
 {
 public:
@@ -87,6 +129,7 @@ private:
 	float m_horizontalVelocityRange;
 };
 
+// gravity, gravity strength
 class MovementModule : public ParticleModule
 {
 public:
@@ -102,6 +145,7 @@ private:
 	float m_gravityStrength;
 };
 
+// none
 class LifeModule : public ParticleModule
 {
 public:
@@ -109,6 +153,7 @@ public:
 private:
 };
 
+// colorgradient
 class ColorModule : public ParticleModule
 {
 public:
@@ -133,6 +178,7 @@ private:
 	std::vector<std::pair<float, Mathf::Vector4>> m_colorGradient;
 };
 
+// startsize, endsize, sizefunction
 class SizeModule : public ParticleModule
 {
 public:
@@ -157,6 +203,7 @@ private:
 	std::function<Mathf::Vector2(float)> m_sizeOverLife;
 };
 
+// floorheight, bouncefactor 
 class CollisionModule : public ParticleModule
 {
 public:
@@ -173,6 +220,7 @@ private:
 	float m_bounceFactor;
 };
 
+// maxparticles
 class EffectModules
 {
 public:

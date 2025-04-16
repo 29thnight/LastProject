@@ -2,6 +2,20 @@
 #include "Camera.h"
 #include "ShaderSystem.h"
 
+float ParticleModule::ApplyEasing(float normalizedTime)
+{
+	if (!m_useEasing) return normalizedTime;
+
+	int easingIndex = static_cast<int>(m_easingType);
+	if (easingIndex >= 0 && easingIndex < static_cast<int>(EasingEffect::EasingEffectEnd)) 
+	{
+		return EasingFunction[easingIndex](normalizedTime);
+	}
+
+	return normalizedTime;
+}
+
+
 void SpawnModule::Initialize()
 {
 	m_uniform = std::uniform_real_distribution<float>(0.0f, 1.0f);
@@ -53,7 +67,7 @@ void SpawnModule::InitializeParticle(ParticleData& particle)
 		break;
 	case EmitterType::sphere:
 	{
-		float theta = m_uniform(m_random) * 6.28f;  // 0 ~ 2π (방위각)
+		float theta = m_uniform(m_random) * XM_2PI;  // 0 ~ 2π (방위각)
 		float phi = m_uniform(m_random) * 3.14f;    // 0 ~ π (고도각)
 		float radius = 1.0f;                        // 반지름
 		particle.position = float3(
@@ -109,15 +123,23 @@ void MovementModule::Update(float delta, std::vector<ParticleData>& particles)
 	{
 		if (particle.isActive)
 		{
+			float normalizedAge = particle.age / particle.lifeTime;
+
+			float easingFactor = 1.0f;
+			if (m_useEasing)
+			{
+				easingFactor = ApplyEasing(normalizedAge);
+			}
+
 			if (m_gravity)
 			{
 				// 중력 적용 시 가속도 추가
-				particle.velocity += particle.acceleration * m_gravityStrength * delta;
+				particle.velocity += particle.acceleration * m_gravityStrength * delta * easingFactor;
 			}
 
-			particle.position += particle.velocity * delta;
+			particle.position += particle.velocity * delta * easingFactor;
 
-			particle.rotation += particle.rotatespeed * delta;
+			particle.rotation += particle.rotatespeed * delta * easingFactor;
 		}
 	}
 }
@@ -138,6 +160,7 @@ void LifeModule::Update(float delta, std::vector<ParticleData>& particles)
 	}
 }
 
+// 테스트용 이징 컬러만.
 void ColorModule::Update(float delta, std::vector<ParticleData>& particles)
 {
 	for (auto& particle : particles)
@@ -145,6 +168,15 @@ void ColorModule::Update(float delta, std::vector<ParticleData>& particles)
 		if (particle.isActive)
 		{
 			float normalizedAge = particle.age / particle.lifeTime;
+
+			// 이징 함수 적용
+			if (IsEasingEnabled())
+			{
+				// 부모 클래스의 ApplyEasing 메서드 사용
+				normalizedAge = ApplyEasing(normalizedAge);
+			}
+
+			// 이징이 적용된 normalizedAge로 색상 계산
 			particle.color = EvaluateGradient(normalizedAge);
 		}
 	}
@@ -183,6 +215,10 @@ void SizeModule::Update(float delta, std::vector<ParticleData>& particles)
 		if (particle.isActive)
 		{
 			float normalizedAge = particle.age / particle.lifeTime;
+			if (IsEasingEnabled())
+			{
+				normalizedAge = ApplyEasing(normalizedAge);
+			}
 			particle.size = m_sizeOverLife(normalizedAge);
 		}
 	}
@@ -218,6 +254,7 @@ EffectModules::EffectModules(int maxParticles) : m_maxParticles(maxParticles), m
 	}
 
 	m_instanceData.resize(maxParticles);
+
 }
 
 EffectModules::~EffectModules()
@@ -303,15 +340,18 @@ void EffectModules::Render(RenderScene& scene, Camera& camera)
 	Mathf::Matrix view = XMMatrixTranspose(camera.CalculateView());
 	Mathf::Matrix projection = XMMatrixTranspose(camera.CalculateProjection());
 
-    //SetupBillBoardInstancing(m_instanceData.data(), m_activeParticleCount);
+	//for (auto* renderModule : m_renderModules)
+	//{
+	//	if (auto* billboardModule = dynamic_cast<BillboardModule*>(renderModule))
+	//	{
+	//		billboardModule->SetupInstancing(m_instanceData.data(), m_activeParticleCount);
+	//	}
+	//}
 
 	for (auto* renderModule : m_renderModules)
 	{
 		if (m_activeParticleCount > 0)
 		{
-			// 인스턴스 데이터 설정
-			renderModule->SetupInstancing(m_instanceData.data(), m_activeParticleCount);
-
 			// PSO 적용
 			renderModule->GetPSO()->Apply();
 
@@ -333,5 +373,3 @@ void EffectModules::SetPosition(const Mathf::Vector3& position)
 		}
 	}
 }
-
-

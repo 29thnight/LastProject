@@ -25,40 +25,47 @@ struct VSOutput
     float4 Color : COLOR0;
 };
 
-// 메인 픽셀 셰이더 함수
-float4 main(VSOutput input): SV_TARGET
+float4 main(VSOutput input) : SV_TARGET
 {
-    
     // 기본 텍스처 색상 가져오기
     float4 texColor = sparkleTexture.Sample(linearSampler, input.TexCoord);
+    
     // 시간에 따른 반짝임 효과 계산
     float sparkle = 0.7f + 0.3f * sin((time * speed) * 10.0f);
-    
-    // 중심에서 가장자리로 갈수록 투명해지는 거리 계산
-    float2 center = float2(0.5f, 0.5f);
-    float dist = length(input.TexCoord - center) * 2.0f; // 0~1 범위로 정규화
-    float edgeFade = 1.0f - saturate(dist);
-    
-    // 두 가지 다른 시간 함수로 반짝임에 변화 추가
     float sparkle2 = 0.8f + 0.2f * sin((time * speed * 0.7f) * 12.0f);
+    float combinedSparkle = sparkle * sparkle2;
     
-    // 최종 색상 계산
-    float4 baseColor = texColor * color; // 시스템 색상과 파티클 색상 결합
+    // 외곽선 두께 및 색상 설정
+    float outlineThickness = 0.04f; // 외곽선 두께 조절 (값이 작을수록 얇은 선)
+    float outlineIntensity = 2.0f; // 외곽선 밝기 조절
+    float3 outlineColor = float3(1.0f, 1.0f, 1.0f); // 흰색 외곽선 (원하는 색상으로 변경 가능)
     
-    // 반짝임 효과를 위한 추가 밝기 계산
-    float baseValue = 1.0f;
-    float sparkleEffect = (sparkle * sparkle2 - 0.7f) * intensity; // 0.7은 대략적인 평균값
-    float brightness = baseValue + max(0.0f, sparkleEffect);
+    // Quad의 가장자리 검출 (텍스처 좌표가 0 또는 1에 가까운지 확인)
+    float2 border;
+    border.x = min(input.TexCoord.x, 1.0f - input.TexCoord.x);
+    border.y = min(input.TexCoord.y, 1.0f - input.TexCoord.y);
+    float borderDist = min(border.x, border.y);
     
-    float3 finalColor = baseColor.rgb * brightness;
+    // 외곽선 효과 계산 (0에 가까울수록 가장자리)
+    float outlineEffect = 1.0f - smoothstep(0.0f, outlineThickness, borderDist);
     
-    if (texColor.a < 0.01f)
+    // 시간에 따른 외곽선 반짝임 효과 (선택적)
+    outlineEffect *= combinedSparkle * outlineIntensity;
+    
+    // 기본 컬러 (텍스처 색상 × 입력 색상)
+    float4 baseColor = texColor * input.Color;
+    
+    // 알파값이 너무 낮으면 픽셀 폐기
+    if (baseColor.a < 0.01f)
         discard;
     
-    // 가장 밝은 부분에 흰색 반짝임 추가
-    finalColor = lerp(finalColor, float3(1.0f, 1.0f, 1.0f), pow(sparkle * sparkle2 - 0.5f, 2) * 0.5f);
-    return float4(finalColor, texColor.a);
-    //return input.Color;
-    //float depth = input.Position.z / input.Position.w;
-    //return float4(depth.xxx, 1.0);
+    // 최종 색상 계산 (기본 색상과 외곽선 색상 혼합)
+    float3 finalColor = lerp(baseColor.rgb, outlineColor, outlineEffect);
+    
+    // 기존 반짝임 효과 적용 (내부 영역)
+    float innerSparkleEffect = max(0.0f, (combinedSparkle - 0.7f) * intensity);
+    float innerBrightness = 1.0f + innerSparkleEffect * (1.0f - outlineEffect); // 외곽선이 아닌 부분만
+    finalColor *= innerBrightness;
+    
+    return float4(finalColor, baseColor.a);
 }

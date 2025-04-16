@@ -67,6 +67,7 @@ public:
 
     void Initialize() override;
     void CreateBillboard();
+    void InitializeInstance(UINT count);
     void SetupInstancing(BillBoardInstanceData* instance, UINT count);
     void Render(Mathf::Matrix world, Mathf::Matrix view, Mathf::Matrix projection) override;
 
@@ -82,7 +83,7 @@ public:
 private:
     BillBoardType m_BillBoardType;
     UINT m_instanceCount;
-
+    UINT m_maxCount;
     BillboardVertex* mVertex;
 
     Microsoft::WRL::ComPtr<ID3D11Buffer> billboardVertexBuffer;
@@ -104,4 +105,12 @@ private:
 
     std::vector<BillboardVertex> m_vertices;
     std::vector<uint32> m_indices;
+};
+
+class MeshModule : public RenderModules
+{
+public:
+    virtual void Initialize() {}
+    virtual void Render(Mathf::Matrix world, Mathf::Matrix view, Mathf::Matrix projection) {}
+    virtual void SetupInstancing(void* instanceData, UINT count) = 0;
 };

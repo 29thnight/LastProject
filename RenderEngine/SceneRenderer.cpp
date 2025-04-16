@@ -1047,6 +1047,19 @@ void SceneRenderer::EditorView()
 				}
 				ImGui::EndMenu();
 			}
+
+			if (ImGui::BeginMenu("Effect"))
+			{
+				if (ImGui::MenuItem("Effect"))
+				{
+					if (!ImGui::GetContext("Sparkle Effect").IsOpened())
+					{
+						ImGui::GetContext("Sparkle Effect").Open();
+					}
+				}
+				ImGui::EndMenu();
+			}
+
             ImGui::EndMainMenuBar();
         }
         ImGui::End();

@@ -25,16 +25,12 @@ SparkleEffect::SparkleEffect(const Mathf::Vector3& position, int maxParticles) :
     m_sparkleParams->range = Mathf::Vector2(4.0f, 2.0f);
     SetParameters(m_sparkleParams);
 
-    // 렌더 모듈 설정
-    m_billboardModule = AddRenderModule<BillboardModule>();
-    m_billboardModule->Initialize();
-
-    m_billboardModule->GetPSO()->m_pixelShader = &ShaderSystem->PixelShaders["Sparkle"];
+   
 
     // 실제 텍스처 사진
     m_sparkleTexture = DataSystems->LoadEffectTexture("star.png");
     {
-        ImGui::ContextRegister("Sparkle Effect", [&]()
+        ImGui::ContextRegister("Sparkle Effect", true, [&]()
             {
                 //ImGui::SetWindowFocus("Sparkle Effect");
 
@@ -62,6 +58,36 @@ SparkleEffect::SparkleEffect(const Mathf::Vector3& position, int maxParticles) :
                         {
                             Pause();
                         }
+                        
+                        if (ImGui::Button("Show Module List"))
+                        {
+                            ImGui::OpenPopup("Module List");
+                        }
+
+                        if (ImGui::BeginPopup("Module List"))
+                        {
+                            ImGui::Text("Particle Modules");
+                            ImGui::Separator();
+
+                            int index = 0;
+                            for (auto it = m_moduleList.begin(); it != m_moduleList.end(); ++it)
+                            {
+                                ParticleModule& module = *it;
+                                ImGui::Text("Node %d: %s", index++, typeid(module).name());
+
+                                // 각 모듈에 대한 추가 정보를 표시하려면:
+                                ImGui::Indent();
+                                ImGui::Text("Easing: %s", module.IsEasingEnabled() ? "Enabled" : "Disabled");
+                                // 여기에 더 많은 모듈 속성 표시
+                                ImGui::Unindent();
+                            }
+
+                            ImGui::Separator();
+                            ImGui::Text("Total nodes: %d", index);
+
+                            ImGui::EndPopup();
+                        }
+
                         ImGui::EndTabItem();
                     }
 
@@ -122,6 +148,20 @@ SparkleEffect::SparkleEffect(const Mathf::Vector3& position, int maxParticles) :
 
                         ImGui::EndTabItem();
                     }
+
+                    if (ImGui::BeginTabItem("Tab 4"))
+                    {
+                        auto& particleTemplate = m_spawnModule->m_particleTemplate;
+                        ImGui::SliderFloat3("velocity", &particleTemplate.velocity.x, -50.f, 50.f);
+                        ImGui::SliderFloat3("accelaration", &particleTemplate.acceleration.x, -50.f, 50.f);
+                        ImGui::SliderFloat2("size", &particleTemplate.size.x, -50.f, 50.f);
+                        ImGui::ColorEdit4("color", &particleTemplate.color.x);
+                        ImGui::SliderFloat("lifetime", &particleTemplate.lifeTime, 0.0f, 50.0f);
+                        ImGui::SliderFloat("rotation", &particleTemplate.rotation, -50.0f, 50.0f);
+                        ImGui::SliderFloat("rotatespeed", &particleTemplate.rotatespeed, -50.0f, 50.0f);
+
+                        ImGui::EndTabItem();
+                    }
                     ImGui::EndTabBar();
                 }
 
@@ -145,8 +185,8 @@ SparkleEffect::~SparkleEffect()
 void SparkleEffect::InitializeModules()
 {
     // 스폰 모듈 추가 (이펙트의 위치는 m_position)
-    m_spawnModule = AddModule<SpawnModule>(50.0f, EmitterType::sphere);
-    m_spawnModule->m_particleTemplate.lifeTime = 1.0f;
+    m_spawnModule = AddModule<SpawnModule>(1.0f, EmitterType::point);
+    m_spawnModule->m_particleTemplate.lifeTime = 10.0f;
 
     // 수명 모듈 추가
     AddModule<LifeModule>();
@@ -156,7 +196,7 @@ void SparkleEffect::InitializeModules()
     movementModule->SetUseGravity(false);
 
     // 색상 모듈 추가 (반짝이는 효과를 위한 투명도 변화)
-    //auto colorModule = AddModule<ColorModule>();
+    auto colorModule = AddModule<ColorModule>();
     //colorModule->SetColorGradient({
     //    {0.0f, Mathf::Vector4(m_sparkleParams->color.x, m_sparkleParams->color.y, m_sparkleParams->color.z, 0.0f)},
     //    {0.1f, Mathf::Vector4(m_sparkleParams->color.x, m_sparkleParams->color.y, m_sparkleParams->color.z, 0.9f)},
@@ -166,28 +206,37 @@ void SparkleEffect::InitializeModules()
     //    });
 
     // 무지개 색
-    //std::vector<std::pair<float, Mathf::Vector4>> rainbowGradient = {
-    //{0.0f, Mathf::Vector4(1.0f, 0.0f, 0.0f, 1.0f)},  // 빨강
-    //{0.16f, Mathf::Vector4(1.0f, 0.5f, 0.0f, 1.0f)}, // 주황
-    //{0.33f, Mathf::Vector4(1.0f, 1.0f, 0.0f, 1.0f)}, // 노랑
-    //{0.5f, Mathf::Vector4(0.0f, 1.0f, 0.0f, 1.0f)},  // 초록
-    //{0.66f, Mathf::Vector4(0.0f, 0.0f, 1.0f, 1.0f)}, // 파랑
-    //{0.83f, Mathf::Vector4(0.3f, 0.0f, 0.5f, 1.0f)}, // 남색
-    //{1.0f, Mathf::Vector4(0.5f, 0.0f, 0.5f, 1.0f)}   // 보라
-    //};
-    //
-    //colorModule->SetColorGradient(rainbowGradient);
+    std::vector<std::pair<float, Mathf::Vector4>> rainbowGradient = {
+    {0.0f, Mathf::Vector4(1.0f, 0.0f, 0.0f, 1.0f)},  // 빨강
+    {0.5f, Mathf::Vector4(0.0f, 1.0f, 0.0f, 1.0f)},  // 초록
+    {1.0f, Mathf::Vector4(0.0f, 0.0f, 1.0f, 1.0f)}, // 파랑
+    };
+    
+    colorModule->SetColorGradient(rainbowGradient);
+    colorModule->SetEasingType(EasingEffect::InOutSine);
+    colorModule->EnableEasing(true);
+
+    auto collisionModule = AddModule<CollisionModule>();
+    collisionModule->SetBounceFactor(1.0f);
+    collisionModule->SetFloorHeight(-10.0f);
 
     // 크기 모듈 추가 (깜빡이는 효과)
-    auto sizeModule = AddModule<SizeModule>();
-    sizeModule->SetStartSize(0.2f);
-    sizeModule->SetEndSize(1.0f);
-    sizeModule->SetSizeOverLifeFunction([this](float t) {
-        // 반짝이는 효과를 위한 사인 파동
-        float pulse = 0.7f + 0.3f * sin(t * m_sparkleParams->speed * 10.0f);
-        float baseSize = 0.2f + t * (0.05f - 0.2f);
-        return Mathf::Vector2(baseSize * pulse, baseSize * pulse);
-       });
+    //auto sizeModule = AddModule<SizeModule>();
+    //sizeModule->SetStartSize(0.2f);
+    //sizeModule->SetEndSize(1.0f);
+    //sizeModule->SetSizeOverLifeFunction([this](float t) {
+    //    // 반짝이는 효과를 위한 사인 파동
+    //    float pulse = 0.7f + 0.3f * sin(t * m_sparkleParams->speed * 10.0f);
+    //    float baseSize = 0.2f + t * (0.05f - 0.2f);
+    //    return Mathf::Vector2(baseSize * pulse, baseSize * pulse);
+    //   });
+
+     // 렌더 모듈 설정
+    m_billboardModule = AddRenderModule<BillboardModule>();
+    m_billboardModule->Initialize();
+
+    m_billboardModule->GetPSO()->m_pixelShader = &ShaderSystem->PixelShaders["Sparkle"];
+    m_billboardModule->InitializeInstance(m_maxParticles);
 }
 
 void SparkleEffect::Update(float delta)
@@ -227,6 +276,10 @@ void SparkleEffect::Render(RenderScene& scene, Camera& camera)
 
     ID3D11ShaderResourceView* srv = m_sparkleTexture->m_pSRV;
     DirectX11::PSSetShaderResources(0, 1, &srv);
+
+    if (m_billboardModule && m_activeParticleCount > 0) {
+        m_billboardModule->SetupInstancing(m_instanceData.data(), m_activeParticleCount);
+    }
 
     EffectModules::Render(scene, camera);
 

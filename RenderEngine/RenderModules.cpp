@@ -141,23 +141,54 @@ void BillboardModule::CreateBillboard()
 	);
 }
 
-void BillboardModule::SetupInstancing(BillBoardInstanceData* instance, UINT count)
+void BillboardModule::InitializeInstance(UINT count)
 {
 	D3D11_BUFFER_DESC ibDesc = {};
-	ibDesc.Usage = D3D11_USAGE_DEFAULT;
+	ibDesc.Usage = D3D11_USAGE_DYNAMIC;
 	ibDesc.ByteWidth = sizeof(BillBoardInstanceData) * count;
 	ibDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-	ibDesc.CPUAccessFlags = 0;
-
-	D3D11_SUBRESOURCE_DATA ibData = {};
-	ibData.pSysMem = instance;
+	ibDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;  // CPU에서 쓰기 가능하도록
+	ibDesc.MiscFlags = 0;
 
 	ID3D11Buffer* instanceBuffer;
 	DirectX11::ThrowIfFailed(
-		DeviceState::g_pDevice->CreateBuffer(&ibDesc, &ibData, &instanceBuffer)
+		DeviceState::g_pDevice->CreateBuffer(&ibDesc, nullptr, &instanceBuffer)
 	);
 
 	m_InstanceBuffer.Attach(instanceBuffer);
+	m_maxCount = count;
+}
+
+void BillboardModule::SetupInstancing(BillBoardInstanceData* instance, UINT count)
+{
+	// 버퍼가 없거나 크기가 부족하면 재생성
+	if (m_InstanceBuffer == nullptr || count > m_maxCount)
+	{
+		UINT newMaxCount = static_cast<UINT>(count * 1.5f);
+		InitializeInstance(newMaxCount);
+	}
+
+	// 버퍼 데이터 업데이트
+	D3D11_MAPPED_SUBRESOURCE mappedResource;
+	auto& deviceContext = DeviceState::g_pDeviceContext;
+
+	HRESULT hr = deviceContext->Map(
+		m_InstanceBuffer.Get(),
+		0,
+		D3D11_MAP_WRITE_DISCARD,
+		0,
+		&mappedResource
+	);
+
+	if (SUCCEEDED(hr))
+	{
+		// 메모리 복사
+		memcpy(mappedResource.pData, instance, sizeof(BillBoardInstanceData) * count);
+
+		// 언맵
+		deviceContext->Unmap(m_InstanceBuffer.Get(), 0);
+	}
+
 	m_instanceCount = count;
 }
 

@@ -15,6 +15,8 @@ public:
 
 	virtual ~EffectManager() {}
 
+	void Initialize();
+
 	virtual void Execute(RenderScene& scene, Camera& camera);
 
 	virtual void Render(RenderScene& scene, Camera& camera) {};
@@ -26,6 +28,8 @@ public:
 	EffectModules* GetEffect(std::string_view name);
 
 	bool RemoveEffect(std::string_view name);
+
+	void InitializeImgui();
 protected:
 	ComPtr<ID3D11Buffer> m_constantBuffer{};
 private:

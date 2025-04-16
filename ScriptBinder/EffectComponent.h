@@ -14,8 +14,30 @@ public:
 
 	std::string ToString() const override
 	{
-
+		return std::string("EffectComponent");
 	}
 
+	bool IsEnabled() const override
+	{
+		return m_IsEnabled;
+	}
+
+	void SetEnabled(bool able) override
+	{
+		m_IsEnabled = able;
+	}
+
+	virtual void Update(float tick) override;
+
+	ReflectionField(EffectComponent, PropertyOnly)
+	{
+		PropertyField
+		({
+			meta_property(m_IsEnabled)
+		});
+		ReturnReflectionPropertyOnly(EffectComponent)
+	};
+private:
+	bool m_IsEnabled = true;
 };
 

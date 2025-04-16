@@ -1,6 +1,15 @@
 #include "EffectManager.h"
 #include "ShaderSystem.h"
 #include "SparkleEffect.h"
+#include "ImGuiRegister.h"
+#include "imgui-node-editor/imgui_node_editor.h"
+
+namespace ed = ax::NodeEditor;
+
+void EffectManager::Initialize()
+{
+
+}
 
 void EffectManager::Execute(RenderScene& scene, Camera& camera)
 {
@@ -20,9 +29,9 @@ void EffectManager::MakeEffects(Effect type, std::string_view name, Mathf::Vecto
 {
 	switch (type)
 	{
-	//case Effect::Explode:
-	//	effects[name.data()] = std::make_unique<FirePass>();
-	//	break;
+		//case Effect::Explode:
+		//	effects[name.data()] = std::make_unique<FirePass>();
+		//	break;
 	case Effect::Sparkle:
 		effects[name.data()] = std::make_unique<SparkleEffect>(pos, maxParticle);
 		break;
@@ -41,4 +50,9 @@ EffectModules* EffectManager::GetEffect(std::string_view name)
 bool EffectManager::RemoveEffect(std::string_view name)
 {
 	return effects.erase(name.data()) > 0;
+}
+
+void EffectManager::InitializeImgui()
+{
+
 }
