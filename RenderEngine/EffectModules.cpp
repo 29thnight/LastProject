@@ -126,7 +126,7 @@ void MovementModule::Update(float delta, std::vector<ParticleData>& particles)
 			float normalizedAge = particle.age / particle.lifeTime;
 
 			float easingFactor = 1.0f;
-			if (m_useEasing)
+			if (IsEasingEnabled())
 			{
 				easingFactor = ApplyEasing(normalizedAge);
 			}
@@ -177,8 +177,28 @@ void ColorModule::Update(float delta, std::vector<ParticleData>& particles)
 			}
 
 			// 이징이 적용된 normalizedAge로 색상 계산
-			particle.color = EvaluateGradient(normalizedAge);
+			particle.color = EvaluateColor(normalizedAge);
 		}
+	}
+}
+
+Mathf::Vector4 ColorModule::EvaluateColor(float t)
+{
+	switch (m_transitionMode)
+	{
+	case ColorTransitionMode::Gradient:
+		return EvaluateGradient(t);
+
+	case ColorTransitionMode::Discrete:
+		return EvaluateDiscrete(t);
+
+	case ColorTransitionMode::Custom:
+		if (m_customEvaluator)
+			return m_customEvaluator(t);
+		return Mathf::Vector4(1, 1, 1, 1); // 기본값
+
+	default:
+		return Mathf::Vector4(1, 1, 1, 1); // 기본값
 	}
 }
 
@@ -206,6 +226,17 @@ Mathf::Vector4 ColorModule::EvaluateGradient(float t)
 		}
 	}
 	return m_colorGradient[0].second;
+}
+
+Mathf::Vector4 ColorModule::EvaluateDiscrete(float t)
+{
+	if (m_discreteColors.empty())
+		return Mathf::Vector4(1, 1, 1, 1);
+
+	// t값에 따라 해당 인덱스의 색상 반환
+	size_t index = static_cast<size_t>(t * m_discreteColors.size());
+	index = std::min(index, m_discreteColors.size() - 1);
+	return m_discreteColors[index];
 }
 
 void SizeModule::Update(float delta, std::vector<ParticleData>& particles)

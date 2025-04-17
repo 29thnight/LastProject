@@ -2,6 +2,7 @@
 #include "Core.Minimal.h"
 #include "PSO.h"
 #include "DeviceState.h"
+#include "GameObject.h"
 
 enum class BillBoardType
 {
@@ -107,10 +108,16 @@ private:
     std::vector<uint32> m_indices;
 };
 
+class GameObject;
 class MeshModule : public RenderModules
 {
 public:
-    virtual void Initialize() {}
-    virtual void Render(Mathf::Matrix world, Mathf::Matrix view, Mathf::Matrix projection) {}
-    virtual void SetupInstancing(void* instanceData, UINT count) = 0;
+    virtual void Initialize();
+    virtual void Render(Mathf::Matrix world, Mathf::Matrix view, Mathf::Matrix projection);
+    virtual void SetupInstancing(void* instanceData, UINT count);
+
+    void SetGameObject(GameObject* obj) { m_gameObject = obj; }
+    
+private:
+    GameObject* m_gameObject;
 };

@@ -3,12 +3,6 @@
 #include "ShaderSystem.h"
 #include "Effects.h"
 
-struct SparkleParameters : public EffectParameters
-{
-    Mathf::Vector2 size;
-    Mathf::Vector2 range;
-};
-
 class SparkleEffect : public EffectModules
 {
 public:
@@ -24,17 +18,11 @@ public:
 
     void SpawnSparklesBurst(int count);
 
-    void UpdateConstantBuffer();
-
     void UpdateInstanceData();
-
-    void SetParameters(SparkleParameters* params);
-
 private:
     BillboardModule* m_billboardModule;
 
     float m_delta;
-    SparkleParameters* m_sparkleParams;
     Texture* m_sparkleTexture;
     ComPtr<ID3D11Buffer> m_constantBuffer;
     SpawnModule* m_spawnModule;

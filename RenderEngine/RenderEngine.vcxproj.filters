@@ -139,6 +139,12 @@
     <Filter Include="Renderer\Interfaces">
       <UniqueIdentifier>{de3c7e02-c901-4df2-837b-51979ec790aa}</UniqueIdentifier>
     </Filter>
+    <Filter Include="RenderPass\EffectPass\Modules">
+      <UniqueIdentifier>{b0704745-a036-43a8-854b-d2c59fd4f042}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="RenderPass\EffectPass\Example">
+      <UniqueIdentifier>{82ba81b1-96a9-4f84-a25a-43bc76616fde}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="SceneRenderer.cpp">
@@ -261,17 +267,17 @@
     <ClCompile Include="EffectManager.cpp">
       <Filter>RenderPass\EffectPass</Filter>
     </ClCompile>
-    <ClCompile Include="EffectModules.cpp">
-      <Filter>RenderPass\EffectPass</Filter>
+    <ClCompile Include="EaseInOut.cpp">
+      <Filter>RenderPass\EffectPass\Modules</Filter>
     </ClCompile>
-    <ClCompile Include="SparkleEffect.cpp">
-      <Filter>RenderPass\EffectPass</Filter>
+    <ClCompile Include="EffectModules.cpp">
+      <Filter>RenderPass\EffectPass\Modules</Filter>
     </ClCompile>
     <ClCompile Include="RenderModules.cpp">
-      <Filter>RenderPass\EffectPass</Filter>
+      <Filter>RenderPass\EffectPass\Modules</Filter>
     </ClCompile>
-    <ClCompile Include="EaseInOut.cpp">
-      <Filter>RenderPass\EffectPass</Filter>
+    <ClCompile Include="SparkleEffect.cpp">
+      <Filter>RenderPass\EffectPass\Example</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -401,15 +407,6 @@
     <ClInclude Include="EffectManager.h">
       <Filter>RenderPass\EffectPass</Filter>
     </ClInclude>
-    <ClInclude Include="EffectModules.h">
-      <Filter>RenderPass\EffectPass</Filter>
-    </ClInclude>
-    <ClInclude Include="SparkleEffect.h">
-      <Filter>RenderPass\EffectPass</Filter>
-    </ClInclude>
-    <ClInclude Include="RenderModules.h">
-      <Filter>RenderPass\EffectPass</Filter>
-    </ClInclude>
     <ClInclude Include="ResourceAllocator.h">
       <Filter>Asset\ResourceAllocator</Filter>
     </ClInclude>
@@ -417,7 +414,16 @@
       <Filter>Renderer\Interfaces</Filter>
     </ClInclude>
     <ClInclude Include="EaseInOut.h">
-      <Filter>RenderPass\EffectPass</Filter>
+      <Filter>RenderPass\EffectPass\Modules</Filter>
+    </ClInclude>
+    <ClInclude Include="EffectModules.h">
+      <Filter>RenderPass\EffectPass\Modules</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderModules.h">
+      <Filter>RenderPass\EffectPass\Modules</Filter>
+    </ClInclude>
+    <ClInclude Include="SparkleEffect.h">
+      <Filter>RenderPass\EffectPass\Example</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -1,17 +1,5 @@
 // Sparkle.hlsl - 반짝이는 이펙트를 위한 픽셀 셰이더
 
-// 상수 버퍼 정의
-cbuffer SparkleParametersBuffer : register(b3)
-{
-    float time; // 현재 시간
-    float intensity; // 반짝임 강도
-    float speed; // 반짝임 속도
-    float padding; // 16바이트 정렬을 위한 패딩
-    float4 color; // 기본 색상
-    float2 size; // 크기
-    float2 range; // 효과 범위
-}
-
 // 텍스처 및 샘플러 정의
 Texture2D sparkleTexture : register(t0);
 SamplerState linearSampler : register(s0);
@@ -29,11 +17,7 @@ float4 main(VSOutput input) : SV_TARGET
 {
     // 기본 텍스처 색상 가져오기
     float4 texColor = sparkleTexture.Sample(linearSampler, input.TexCoord);
-    
-    // 시간에 따른 반짝임 효과 계산
-    float sparkle = 0.7f + 0.3f * sin((time * speed) * 10.0f);
-    float sparkle2 = 0.8f + 0.2f * sin((time * speed * 0.7f) * 12.0f);
-    float combinedSparkle = sparkle * sparkle2;
+    float texAlpha = texColor.a;
     
     // 외곽선 두께 및 색상 설정
     float outlineThickness = 0.04f; // 외곽선 두께 조절 (값이 작을수록 얇은 선)
@@ -49,11 +33,8 @@ float4 main(VSOutput input) : SV_TARGET
     // 외곽선 효과 계산 (0에 가까울수록 가장자리)
     float outlineEffect = 1.0f - smoothstep(0.0f, outlineThickness, borderDist);
     
-    // 시간에 따른 외곽선 반짝임 효과 (선택적)
-    outlineEffect *= combinedSparkle * outlineIntensity;
-    
     // 기본 컬러 (텍스처 색상 × 입력 색상)
-    float4 baseColor = texColor * input.Color;
+    float4 baseColor = float4(input.Color.rgb, texAlpha * input.Color.a);
     
     // 알파값이 너무 낮으면 픽셀 폐기
     if (baseColor.a < 0.01f)
@@ -61,11 +42,6 @@ float4 main(VSOutput input) : SV_TARGET
     
     // 최종 색상 계산 (기본 색상과 외곽선 색상 혼합)
     float3 finalColor = lerp(baseColor.rgb, outlineColor, outlineEffect);
-    
-    // 기존 반짝임 효과 적용 (내부 영역)
-    float innerSparkleEffect = max(0.0f, (combinedSparkle - 0.7f) * intensity);
-    float innerBrightness = 1.0f + innerSparkleEffect * (1.0f - outlineEffect); // 외곽선이 아닌 부분만
-    finalColor *= innerBrightness;
     
     return float4(finalColor, baseColor.a);
 }
