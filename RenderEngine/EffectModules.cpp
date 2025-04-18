@@ -339,7 +339,7 @@ void EffectModules::Update(float delta)
 		return;
 	}
 
-	//std::cout << m_activeParticleCount << std::endl;
+	std::cout << m_activeParticleCount << std::endl;
 
 	// 정상 실행 상태
 	for (auto it = m_moduleList.begin(); it != m_moduleList.end(); ++it)

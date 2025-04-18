@@ -157,7 +157,7 @@ SparkleEffect::~SparkleEffect()
 void SparkleEffect::InitializeModules()
 {
     // 스폰 모듈 추가 (이펙트의 위치는 m_position)
-    m_spawnModule = AddModule<SpawnModule>(1.0f, EmitterType::point);
+    m_spawnModule = AddModule<SpawnModule>(10000.0f, EmitterType::sphere);
 
     // 수명 모듈 추가
     AddModule<LifeModule>();
@@ -201,7 +201,6 @@ void SparkleEffect::InitializeModules()
     m_billboardModule->Initialize();
 
     m_billboardModule->GetPSO()->m_pixelShader = &ShaderSystem->PixelShaders["Sparkle"];
-    m_billboardModule->InitializeInstance(m_maxParticles);
 }
 
 void SparkleEffect::Update(float delta)
@@ -305,15 +304,15 @@ void SparkleEffect::UpdateInstanceData()
             }
 
             worldPos = particle.position + m_position;
-            m_instanceData[instanceIndex].Position = Mathf::Vector4(
+            m_instanceData[instanceIndex].Position = Mathf::Vector3(
                 worldPos.x,
                 worldPos.y,
-                worldPos.z,
-                1.0f
+                worldPos.z
             );
-
-            m_instanceData[instanceIndex].TexCoord = particle.size;
+            m_instanceData[instanceIndex].Padding1 = 0.0f;
+            m_instanceData[instanceIndex].Scale = particle.size;
             m_instanceData[instanceIndex].TexIndex = static_cast<UINT>(particle.age / particle.lifeTime * 10) % 10;
+            m_instanceData[instanceIndex].Padding2 = 0.0f;
             m_instanceData[instanceIndex].Color = particle.color;
             instanceIndex++;
         }
