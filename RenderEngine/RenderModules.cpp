@@ -40,9 +40,11 @@ void BillboardModule::Initialize()
 	m_vertices = Quad;
 	m_indices = Indices;
 
-	m_pso = std::make_unique<PipelineStateObject>();
-	m_BillBoardType = BillBoardType::Basic;
-	m_instanceCount = 0;
+    m_pso = std::make_unique<PipelineStateObject>();
+    m_BillBoardType = BillBoardType::Basic;
+    m_instanceCount = 0;
+    m_maxCount = 0;
+    m_prevInstanceCount = 0;  // 추가: 이전 인스턴스 수 추적용
 
 	D3D11_BLEND_DESC blendDesc = {};
 	blendDesc.AlphaToCoverageEnable = FALSE;
@@ -105,41 +107,189 @@ void BillboardModule::Initialize()
 	m_pso->m_samplers.push_back(linearSampler);
 	m_pso->m_samplers.push_back(pointSampler);
 
-	CreateBillboard();
+    // Create model constant buffer
+    m_ModelBuffer = DirectX11::CreateBuffer(
+        sizeof(ModelConstantBuffer),
+        D3D11_BIND_CONSTANT_BUFFER,
+        &m_ModelConstantBuffer
+    );
+
+    // 최적화: 카메라 상수 버퍼 미리 생성
+    cameraConstantBuffer = DirectX11::CreateBuffer(
+        sizeof(CameraConstants),
+        D3D11_BIND_CONSTANT_BUFFER,
+        nullptr
+    );
+
+    // 최적화: 버퍼 풀 생성을 위한 초기 크기 설정 (예: 100개의 빌보드로 시작)
+    CreateBufferPool(100 * 4); // 각 빌보드당 4개의 버텍스
 }
 
-void BillboardModule::CreateBillboard()
+// 최적화: 버퍼 풀 생성 메서드 추가
+void BillboardModule::CreateBufferPool(UINT vertexCount)
 {
+    auto& device = DeviceState::g_pDevice;
 
-	D3D11_BUFFER_DESC vbDesc = {};
-	vbDesc.Usage = D3D11_USAGE_DEFAULT;
-	vbDesc.ByteWidth = sizeof(BillboardVertex) * 4;
-	vbDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+    // Release previous resources
+    billboardComputeBuffer.Reset();
+    billboardVertexBuffer.Reset();
+    vertexBufferUAV.Reset();
 
-	D3D11_SUBRESOURCE_DATA vbData = {};
-	vbData.pSysMem = m_vertices.data();
+    // First create compute buffer with UAV binding
+    D3D11_BUFFER_DESC computeDesc = {};
+    computeDesc.Usage = D3D11_USAGE_DEFAULT;
+    computeDesc.ByteWidth = sizeof(BillboardVertex) * vertexCount;
+    computeDesc.BindFlags = D3D11_BIND_UNORDERED_ACCESS | D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_VERTEX_BUFFER; // 최적화: 직접 버텍스 버퍼로 사용
+    computeDesc.CPUAccessFlags = 0;
+    computeDesc.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
+    computeDesc.StructureByteStride = sizeof(BillboardVertex);
+
+    HRESULT hr = device->CreateBuffer(&computeDesc, nullptr, &billboardComputeBuffer);
+    if (FAILED(hr)) {
+        char errMsg[256];
+        sprintf_s(errMsg, "Failed to create compute buffer. Error: 0x%08X", hr);
+        OutputDebugStringA(errMsg);
+        return;
+    }
+
+    // Create UAV for compute buffer
+    D3D11_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
+    uavDesc.Format = DXGI_FORMAT_UNKNOWN;
+    uavDesc.ViewDimension = D3D11_UAV_DIMENSION_BUFFER;
+    uavDesc.Buffer.FirstElement = 0;
+    uavDesc.Buffer.NumElements = vertexCount;
+
+    hr = device->CreateUnorderedAccessView(
+        billboardComputeBuffer.Get(), &uavDesc, &vertexBufferUAV);
+    if (FAILED(hr)) {
+        char errMsg[256];
+        sprintf_s(errMsg, "Failed to create UAV. Error: 0x%08X", hr);
+        OutputDebugStringA(errMsg);
+        return;
+    }
+
+    // 최적화: billboardVertexBuffer를 생성하지 않고 billboardComputeBuffer를 직접 사용
+
+    m_maxCount = vertexCount;
+}
+
+// 최적화: 인스턴스 버퍼 생성 분리
+void BillboardModule::CreateInstanceBuffer(const std::vector<BillboardInstance>& instances)
+{
+    auto& device = DeviceState::g_pDevice;
+
+    // 인스턴스 버퍼가 이미 충분한 크기인지 확인
+    if (instanceBuffer && m_prevInstanceCount >= instances.size()) {
+        // 기존 버퍼 재사용, 데이터만 업데이트
+        DeviceState::g_pDeviceContext->UpdateSubresource(
+            instanceBuffer.Get(), 0, nullptr, instances.data(), 0, 0);
+        return;
+    }
+
+    // 새 버퍼 필요
+    instanceBuffer.Reset();
+    instanceSRV.Reset();
+
+    // 버퍼 크기를 약간 더 크게 설정 (미래 확장 고려)
+    UINT bufferSize = static_cast<UINT>(instances.size() * 1.5f);
+    bufferSize = std::max(bufferSize, 16U); // 최소 사이즈 보장
+
+    D3D11_BUFFER_DESC desc = {};
+    desc.Usage = D3D11_USAGE_DEFAULT;
+    desc.ByteWidth = sizeof(BillboardInstance) * bufferSize;
+    desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+    desc.CPUAccessFlags = 0;
+    desc.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
+    desc.StructureByteStride = sizeof(BillboardInstance);
 
 	DirectX11::ThrowIfFailed(
 		DeviceState::g_pDevice->CreateBuffer(&vbDesc, &vbData, &billboardVertexBuffer)
 	);
 
-	D3D11_BUFFER_DESC ibDesc = {};
-	ibDesc.Usage = D3D11_USAGE_DEFAULT;
-	ibDesc.ByteWidth = sizeof(uint32) * m_indices.size();
-	ibDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
-
-	D3D11_SUBRESOURCE_DATA ibData = {};
-	ibData.pSysMem = m_indices.data();
+    HRESULT hr = device->CreateBuffer(&desc, &initData, &instanceBuffer);
+    if (FAILED(hr)) {
+        char errMsg[256];
+        sprintf_s(errMsg, "Failed to create instance buffer. Error: 0x%08X", hr);
+        OutputDebugStringA(errMsg);
+        return;
+    }
 
 	DirectX11::ThrowIfFailed(
 		DeviceState::g_pDevice->CreateBuffer(&ibDesc, &ibData, &billboardIndexBuffer)
 	);
 
-	m_ModelBuffer = DirectX11::CreateBuffer(
-		sizeof(ModelConstantBuffer),
-		D3D11_BIND_CONSTANT_BUFFER,
-		&m_ModelConstantBuffer
-	);
+    hr = device->CreateShaderResourceView(
+        instanceBuffer.Get(), &srvDesc, &instanceSRV);
+    if (FAILED(hr)) {
+        char errMsg[256];
+        sprintf_s(errMsg, "Failed to create instance SRV. Error: 0x%08X", hr);
+        OutputDebugStringA(errMsg);
+        return;
+    }
+
+    m_prevInstanceCount = bufferSize;
+}
+
+void BillboardModule::ProcessBillboards(const std::vector<BillboardInstance>& instances)
+{
+    // Return if no instances
+    if (instances.empty()) {
+        m_instanceCount = 0;
+        return;
+    }
+
+    m_instanceCount = static_cast<UINT>(instances.size());
+    auto& deviceContext = DeviceState::g_pDeviceContext;
+
+    // 1. 최적화: 인스턴스 버퍼 생성 또는 업데이트
+    CreateInstanceBuffer(instances);
+
+    // 2. 최적화: 필요한 경우에만 버텍스 버퍼 풀 크기 조정
+    UINT totalVertices = instances.size() * 4; // 4 vertices per billboard
+    if (m_maxCount < totalVertices) {
+        CreateBufferPool(totalVertices);
+    }
+
+    // 3. 카메라 데이터 설정
+    Mathf::Vector3 cameraRight(m_ModelConstantBuffer.view._11,
+        m_ModelConstantBuffer.view._21,
+        m_ModelConstantBuffer.view._31);
+
+    Mathf::Vector3 cameraUp(m_ModelConstantBuffer.view._12,
+        m_ModelConstantBuffer.view._22,
+        m_ModelConstantBuffer.view._32);
+
+    cameraRight.Normalize();
+    cameraUp.Normalize();
+
+    CameraConstants cameraData = {
+        m_ModelConstantBuffer.view,
+        m_ModelConstantBuffer.projection,
+        cameraRight,
+        0.0f, // padding
+        cameraUp,
+        static_cast<UINT>(instances.size())
+    };
+
+    // 최적화: 버퍼 업데이트 - 항상 존재하는 버퍼 사용
+    deviceContext->UpdateSubresource(cameraConstantBuffer.Get(), 0, nullptr, &cameraData, 0, 0);
+
+    // 4. 컴퓨트 셰이더 실행
+    deviceContext->CSSetShader(m_pso->m_computeShader->GetShader(), nullptr, 0);
+    deviceContext->CSSetConstantBuffers(0, 1, cameraConstantBuffer.GetAddressOf());
+    deviceContext->CSSetShaderResources(0, 1, instanceSRV.GetAddressOf());
+    deviceContext->CSSetUnorderedAccessViews(0, 1, vertexBufferUAV.GetAddressOf(), nullptr);
+
+    // 최적화: 스레드 그룹 계산 개선
+    UINT numThreadGroups = (instances.size() + 63) / 64;
+    deviceContext->Dispatch(numThreadGroups, 1, 1);
+
+    // 5. 최적화: 컴퓨트 셰이더 리소스 정리 (메모리 배리어 사용)
+    ID3D11ShaderResourceView* nullSRV = nullptr;
+    ID3D11UnorderedAccessView* nullUAV = nullptr;
+    deviceContext->CSSetShaderResources(0, 1, &nullSRV);
+    deviceContext->CSSetUnorderedAccessViews(0, 1, &nullUAV, nullptr);
+    deviceContext->CSSetShader(nullptr, nullptr, 0);
 }
 
 void BillboardModule::InitializeInstance(UINT count)
@@ -151,73 +301,68 @@ void BillboardModule::InitializeInstance(UINT count)
 	ibDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;  // CPU에서 쓰기 가능하도록
 	ibDesc.MiscFlags = 0;
 
-	ID3D11Buffer* instanceBuffer;
-	DirectX11::ThrowIfFailed(
-		DeviceState::g_pDevice->CreateBuffer(&ibDesc, nullptr, &instanceBuffer)
-	);
+    // 최적화: 벡터 리사이즈로 메모리 할당 최소화
+    static std::vector<BillboardInstance> instances;
+    instances.resize(count);
+    memcpy(instances.data(), instanceData, count * sizeof(BillboardInstance));
 
-	m_InstanceBuffer.Attach(instanceBuffer);
-	m_maxCount = count;
-}
-
-void BillboardModule::SetupInstancing(BillBoardInstanceData* instance, UINT count)
-{
-	// 버퍼가 없거나 크기가 부족하면 재생성
-	if (m_InstanceBuffer == nullptr || count > m_maxCount)
-	{
-		UINT newMaxCount = static_cast<UINT>(count * 1.5f);
-		InitializeInstance(newMaxCount);
-	}
-
-	// 버퍼 데이터 업데이트
-	D3D11_MAPPED_SUBRESOURCE mappedResource;
-	auto& deviceContext = DeviceState::g_pDeviceContext;
-
-	HRESULT hr = deviceContext->Map(
-		m_InstanceBuffer.Get(),
-		0,
-		D3D11_MAP_WRITE_DISCARD,
-		0,
-		&mappedResource
-	);
-
-	if (SUCCEEDED(hr))
-	{
-		// 메모리 복사
-		memcpy(mappedResource.pData, instance, sizeof(BillBoardInstanceData) * count);
-
-		// 언맵
-		deviceContext->Unmap(m_InstanceBuffer.Get(), 0);
-	}
-
-	m_instanceCount = count;
+    ProcessBillboards(instances);
 }
 
 void BillboardModule::Render(Mathf::Matrix world, Mathf::Matrix view, Mathf::Matrix projection)
 {
-	auto& deviceContext = DeviceState::g_pDeviceContext;
+    if (m_instanceCount == 0 || !billboardComputeBuffer || !billboardIndexBuffer) {
+        return;
+    }
 
 	m_ModelConstantBuffer.world = world;
 	m_ModelConstantBuffer.view = view;
 	m_ModelConstantBuffer.projection = projection;
 
-	deviceContext->VSSetConstantBuffers(0, 1, m_ModelBuffer.GetAddressOf());
-	DirectX11::UpdateBuffer(m_ModelBuffer.Get(), &m_ModelConstantBuffer);
+    // 최적화: 모델 상수 버퍼 업데이트
+    if (m_ModelConstantBuffer.world != world ||
+        m_ModelConstantBuffer.view != view ||
+        m_ModelConstantBuffer.projection != projection) {
 
-	// 버텍스 및 인스턴스 버퍼 설정
-	ID3D11Buffer* buffers[2] = { billboardVertexBuffer.Get(), m_InstanceBuffer.Get() };
-	UINT strides[2] = { sizeof(BillboardVertex), sizeof(BillBoardInstanceData) };
-	UINT offsets[2] = { 0, 0 };
+        m_ModelConstantBuffer.world = world;
+        m_ModelConstantBuffer.view = view;
+        m_ModelConstantBuffer.projection = projection;
 
-	deviceContext->IASetVertexBuffers(0, 2, buffers, strides, offsets);
-	deviceContext->IASetIndexBuffer(billboardIndexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
+        DirectX11::UpdateBuffer(m_ModelBuffer.Get(), &m_ModelConstantBuffer);
+    }
 
-	// 인덱스 기반 인스턴스 렌더링
-	deviceContext->DrawIndexedInstanced(m_indices.size(), m_instanceCount, 0, 0, 0);
+    deviceContext->VSSetConstantBuffers(0, 1, m_ModelBuffer.GetAddressOf());
 
-	// 정리
-	DirectX11::UnbindRenderTargets();
+    // 최적화: 직접 UAV 버퍼를 버텍스 버퍼로 사용
+    UINT stride = sizeof(BillboardVertex);
+    UINT offset = 0;
+    deviceContext->IASetVertexBuffers(0, 1, billboardComputeBuffer.GetAddressOf(), &stride, &offset);
+    deviceContext->IASetIndexBuffer(billboardIndexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
+    deviceContext->IASetPrimitiveTopology(m_pso->m_primitiveTopology);
+
+    // 최적화: 파이프라인 상태 설정
+    deviceContext->VSSetShader(m_pso->m_vertexShader->GetShader(), nullptr, 0);
+    deviceContext->RSSetState(m_pso->m_rasterizerState.Get());
+    deviceContext->OMSetBlendState(m_pso->m_blendState.Get(), nullptr, 0xffffffff);
+    deviceContext->OMSetDepthStencilState(m_pso->m_depthStencilState.Get(), 0);
+
+    // 샘플러 설정
+    if (!m_pso->m_samplers.empty()) {
+        std::vector<ID3D11SamplerState*> samplers;
+        for (auto& sampler : m_pso->m_samplers) {
+            samplers.push_back(sampler->GetSamplerState());
+        }
+        deviceContext->PSSetSamplers(0, samplers.size(), samplers.data());
+    }
+
+    // 인덱스 개수 계산 (각 빌보드는 2개의 삼각형, 6개의 인덱스)
+    UINT indexCount = m_instanceCount * 6;
+    indexCount = std::min(indexCount, static_cast<UINT>(m_indices.size()));
+
+    // 인덱스 기반 드로우 콜
+    deviceContext->DrawIndexed(indexCount, 0, 0);
 }
+
 
 void MeshModule::Initialize()
 {
