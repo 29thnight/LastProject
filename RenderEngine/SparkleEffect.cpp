@@ -201,7 +201,6 @@ void SparkleEffect::InitializeModules()
     m_billboardModule->Initialize();
 
     m_billboardModule->GetPSO()->m_pixelShader = &ShaderSystem->PixelShaders["Sparkle"];
-    m_billboardModule->InitializeInstance(m_maxParticles);
 }
 
 void SparkleEffect::Update(float delta)
@@ -305,14 +304,13 @@ void SparkleEffect::UpdateInstanceData()
             }
 
             worldPos = particle.position + m_position;
-            m_instanceData[instanceIndex].Position = Mathf::Vector4(
+            m_instanceData[instanceIndex].Position = Mathf::Vector3(
                 worldPos.x,
                 worldPos.y,
-                worldPos.z,
-                1.0f
+                worldPos.z
             );
 
-            m_instanceData[instanceIndex].TexCoord = particle.size;
+            m_instanceData[instanceIndex].Scale = particle.size;
             m_instanceData[instanceIndex].TexIndex = static_cast<UINT>(particle.age / particle.lifeTime * 10) % 10;
             m_instanceData[instanceIndex].Color = particle.color;
             instanceIndex++;
