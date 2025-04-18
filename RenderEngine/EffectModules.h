@@ -333,7 +333,7 @@ protected:
 	LinkedList<ParticleModule> m_moduleList;
 	int m_activeParticleCount = 0;
 	int m_maxParticles;
-	std::vector<BillboardInstance> m_instanceData;
+	std::vector<BillBoardInstanceData> m_instanceData;
 	Mathf::Vector3 m_position;
 	std::vector<RenderModules*> m_renderModules;
 };

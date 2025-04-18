@@ -13,31 +13,16 @@ enum class BillBoardType
 
 struct BillboardVertex
 {
-    Mathf::Vector4 Position;  // Position in clip space
-    Mathf::Vector2 TexCoord;  // Texture coordinates
-    UINT TexIndex;            // Texture array index
-    float Padding;            // Padding for alignment
-    Mathf::Vector4 Color;     // Color/tint for the billboard
+    Mathf::Vector4 position;
+    Mathf::Vector2 texcoord;
 };
 
-struct BillboardInstance
+struct BillBoardInstanceData
 {
-    Mathf::Vector3 Position;  // Position in world space
-    float Padding1;           // Padding for 16-byte alignment
-    Mathf::Vector2 Scale;     // Width and height scale
-    UINT TexIndex;            // Texture array index
-    float Padding2;           // Padding for 16-byte alignment
-    Mathf::Vector4 Color;     // Color/tint for the billboard
-};
-
-struct CameraConstants
-{
-    Mathf::Matrix view;
-    Mathf::Matrix projection;
-    Mathf::Vector3 cameraRight;
-    float padding1;
-    Mathf::Vector3 cameraUp;
-    UINT billboardCount;
+    Mathf::Vector4 Position;
+    Mathf::Vector2 TexCoord;
+    UINT TexIndex;
+    Mathf::Vector4 Color;
 };
 
 struct ModelConstantBuffer
@@ -82,18 +67,18 @@ public:
 public:
 
     void Initialize() override;
-    void ProcessBillboards(const std::vector<BillboardInstance>& instance);
+    void CreateBillboard();
+    void InitializeInstance(UINT count);
+    void SetupInstancing(BillBoardInstanceData* instance, UINT count);
     void Render(Mathf::Matrix world, Mathf::Matrix view, Mathf::Matrix projection) override;
 
     BillBoardType GetBillboardType() const { return m_BillBoardType; }
     PipelineStateObject* GetPSO() { return m_pso.get(); }
-    void SetupInstancing(BillboardInstance* instanceData, UINT count);
+
     void SetBillboardType(BillBoardType type) { m_BillBoardType = type; }
 
-    void DebugPrintComputeBufferContent();
-
     virtual void SetupInstancing(void* instanceData, UINT count) override {
-        SetupInstancing(static_cast<BillboardInstance*>(instanceData), count);
+        SetupInstancing(static_cast<BillBoardInstanceData*>(instanceData), count);
     }
 
 private:
@@ -104,11 +89,7 @@ private:
 
     Microsoft::WRL::ComPtr<ID3D11Buffer> billboardVertexBuffer;
     ComPtr<ID3D11Buffer> billboardIndexBuffer;
-    ComPtr<ID3D11Buffer> instanceBuffer;
-    ComPtr<ID3D11ShaderResourceView> instanceSRV;
-    ComPtr<ID3D11UnorderedAccessView> vertexBufferUAV;
-    ComPtr<ID3D11Buffer> billboardComputeBuffer;
-    ComPtr<ID3D11Buffer> cameraConstantBuffer;
+    Microsoft::WRL::ComPtr<ID3D11Buffer> m_InstanceBuffer;
     Microsoft::WRL::ComPtr<ID3D11Buffer> m_ModelBuffer;
 
     ModelConstantBuffer m_ModelConstantBuffer;
