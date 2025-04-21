@@ -37,8 +37,7 @@ void RenderModules::RestoreRenderState()
 
 void BillboardModule::Initialize()
 {
-    m_vertices = Quad;
-    m_indices = Indices;
+    m_indices = { 0, 1, 2, 0, 2, 3 };
 
     m_pso = std::make_unique<PipelineStateObject>();
     m_BillBoardType = BillBoardType::Basic;
@@ -64,6 +63,7 @@ void BillboardModule::Initialize()
 
     // Rasterizer state setup
     CD3D11_RASTERIZER_DESC rasterizerDesc{ CD3D11_DEFAULT() };
+    rasterizerDesc.CullMode = D3D11_CULL_NONE;
     DirectX11::ThrowIfFailed(
         DeviceState::g_pDevice->CreateRasterizerState(
             &rasterizerDesc,
@@ -111,7 +111,7 @@ void BillboardModule::Initialize()
     // Create index buffer
     D3D11_BUFFER_DESC ibDesc = {};
     ibDesc.Usage = D3D11_USAGE_DEFAULT;
-    ibDesc.ByteWidth = sizeof(uint32) * m_indices.size();
+    ibDesc.ByteWidth = sizeof(uint32) * 6;
     ibDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
 
     D3D11_SUBRESOURCE_DATA ibData = {};
@@ -129,7 +129,10 @@ void BillboardModule::Initialize()
     );
 }
 
-void BillboardModule::ProcessBillboards(const std::vector<BillboardInstance>& instances)
+void BillboardModule::ProcessBillboards(const std::vector<BillboardInstance>& instances,
+    const Mathf::Matrix& world,
+    const Mathf::Matrix& view,
+    const Mathf::Matrix& projection)
 {
     // Return if no instances
     if (instances.empty()) {
@@ -242,24 +245,25 @@ void BillboardModule::ProcessBillboards(const std::vector<BillboardInstance>& in
     }
 
     // 3. Setup camera data for compute shader
-    Mathf::Vector3 cameraRight(m_ModelConstantBuffer.view._11,
-        m_ModelConstantBuffer.view._21,
-        m_ModelConstantBuffer.view._31);
+    Mathf::Vector3 cameraRight(view._11,
+        view._12,
+        view._13);
 
-    Mathf::Vector3 cameraUp(m_ModelConstantBuffer.view._12,
-        m_ModelConstantBuffer.view._22,
-        m_ModelConstantBuffer.view._32);
+    Mathf::Vector3 cameraUp(view._21,
+        view._22,
+        view._23);
 
     cameraRight.Normalize();
     cameraUp.Normalize();
 
     CameraConstants cameraData = {
-        m_ModelConstantBuffer.view,
-        m_ModelConstantBuffer.projection,
-        cameraRight,
-        0.0f, // padding
-        cameraUp,
-        static_cast<UINT>(instances.size())
+       world,       
+       view,        
+       projection,  
+       cameraRight,
+       0.0f, // padding
+       cameraUp,
+       static_cast<UINT>(instances.size())
     };
 
     // Update or create camera constant buffer
@@ -297,6 +301,8 @@ void BillboardModule::ProcessBillboards(const std::vector<BillboardInstance>& in
     deviceContext->CSSetShaderResources(0, 1, &nullSRV);
     deviceContext->CSSetUnorderedAccessViews(0, 1, &nullUAV, nullptr);
     deviceContext->CSSetShader(nullptr, nullptr, 0);
+
+    deviceContext->CopyResource(billboardVertexBuffer.Get(), billboardComputeBuffer.Get());
 }
 
 void BillboardModule::SetupInstancing(BillboardInstance* instanceData, UINT count)
@@ -306,39 +312,35 @@ void BillboardModule::SetupInstancing(BillboardInstance* instanceData, UINT coun
         return;
     }
 
-    std::vector<BillboardInstance> instances(instanceData, instanceData + count);
-    ProcessBillboards(instances);
+    // 빌보드 인스턴스 데이터를 복사하여 저장해둡니다.
+    m_currentInstances.clear();
+    m_currentInstances.assign(instanceData, instanceData + count);
 }
 
 void BillboardModule::Render(Mathf::Matrix world, Mathf::Matrix view, Mathf::Matrix projection)
 {
-    if (m_instanceCount == 0 || !billboardComputeBuffer || !billboardIndexBuffer) {
+
+    ProcessBillboards(m_currentInstances, world, view, projection);
+
+    if (m_currentInstances.empty() || !billboardComputeBuffer || !billboardIndexBuffer) {
         return;
     }
 
     auto& deviceContext = DeviceState::g_pDeviceContext;
 
 
-    // Update model constant buffer
-    m_ModelConstantBuffer.world = world;
-    m_ModelConstantBuffer.view = view;
-    m_ModelConstantBuffer.projection = projection;
-
-    deviceContext->VSSetConstantBuffers(0, 1, m_ModelBuffer.GetAddressOf());
-    DirectX11::UpdateBuffer(m_ModelBuffer.Get(), &m_ModelConstantBuffer);
-
     // Set vertex and index buffers
     UINT stride = sizeof(BillboardVertex);
     UINT offset = 0;
-    deviceContext->IASetVertexBuffers(0, 1, billboardComputeBuffer.GetAddressOf(), &stride, &offset);
+    deviceContext->IASetVertexBuffers(0, 1, billboardVertexBuffer.GetAddressOf(), &stride, &offset);
     deviceContext->IASetIndexBuffer(billboardIndexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
 
-    // Draw - each billboard consists of 2 triangles (6 indices)
-    deviceContext->DrawIndexed(m_indices.size(), 0, 0);
+    deviceContext->DrawIndexed(6, 0, 0);
 
     // Cleanup
     DirectX11::UnbindRenderTargets();
 }
+
 void MeshModule::Initialize()
 {
 	//m_gameObject->GetComponent<meshrenderer

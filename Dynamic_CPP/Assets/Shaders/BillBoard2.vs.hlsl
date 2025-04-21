@@ -1,4 +1,3 @@
-// SimplifiedBillboardVS.hlsl
 struct VSInput
 {
     float4 Position : POSITION;
@@ -14,13 +13,6 @@ struct VSOutput
     float2 TexCoord : TEXCOORD0;
     uint TexIndex : TEXCOORD1;
     float4 Color : COLOR0;
-};
-
-cbuffer ModelConstants : register(b0)
-{
-    matrix World;
-    matrix View;
-    matrix Projection;
 };
 
 VSOutput main(VSInput input)

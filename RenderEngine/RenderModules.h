@@ -32,6 +32,7 @@ struct BillboardInstance
 
 struct CameraConstants
 {
+    Mathf::Matrix world;
     Mathf::Matrix view;
     Mathf::Matrix projection;
     Mathf::Vector3 cameraRight;
@@ -82,7 +83,10 @@ public:
 public:
 
     void Initialize() override;
-    void ProcessBillboards(const std::vector<BillboardInstance>& instance);
+    void ProcessBillboards(const std::vector<BillboardInstance>& instances,
+        const Mathf::Matrix& world,
+        const Mathf::Matrix& view,
+        const Mathf::Matrix& projection);
     void Render(Mathf::Matrix world, Mathf::Matrix view, Mathf::Matrix projection) override;
 
     BillBoardType GetBillboardType() const { return m_BillBoardType; }
@@ -112,13 +116,13 @@ private:
     Microsoft::WRL::ComPtr<ID3D11Buffer> m_ModelBuffer;
 
     ModelConstantBuffer m_ModelConstantBuffer;
-
+    std::vector<BillboardInstance> m_currentInstances;
     std::vector<BillboardVertex> Quad
     {
-        { { -1.0f, 1.0f, 0.0f, 1.0f}, { 0.0f, 0.0f } },  // �»��
-        { { 1.0f,  1.0f, 0.0f, 1.0f}, { 1.0f, 0.0f} },   // ����
-        { { 1.0f, -1.0f, 0.0f, 1.0f}, { 1.0f, 1.0f} },   // ���ϴ�
-        { {-1.0f, -1.0f, 0.0f, 1.0f}, {0.0f, 1.0f} },    // ���ϴ�
+        { { -1.0f, 1.0f, 0.0f, 1.0f}, { 0.0f, 0.0f } },  
+        { { 1.0f,  1.0f, 0.0f, 1.0f}, { 1.0f, 0.0f} },   
+        { { 1.0f, -1.0f, 0.0f, 1.0f}, { 1.0f, 1.0f} },   
+        { {-1.0f, -1.0f, 0.0f, 1.0f}, {0.0f, 1.0f} },    
 
     };
     std::vector<uint32> Indices = { 0, 1, 2, 0, 2, 3 };
