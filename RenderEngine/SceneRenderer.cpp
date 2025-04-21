@@ -427,7 +427,7 @@ SceneRenderer::SceneRenderer(const std::shared_ptr<DirectX11::DeviceResources>& 
 	m_renderScene = new RenderScene();
 
 	m_pEffectPass = std::make_unique<EffectManager>();
-	m_pEffectPass->MakeEffects(Effect::Sparkle, "asd", float3(0, 0, 0));
+	m_pEffectPass->MakeEffects(Effect::Sparkle, "asd", float3(0, 0, 0), 1000000);
 
     m_newSceneCreatedEventHandle = SceneManagers->newSceneCreatedEvent.AddRaw(this, &SceneRenderer::NewCreateSceneInitialize);
 

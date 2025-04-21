@@ -221,7 +221,7 @@ void BillboardModule::Render(Mathf::Matrix world, Mathf::Matrix view, Mathf::Mat
 
 void MeshModule::Initialize()
 {
-	m_gameObject->GetComponent<meshrenderer
+	//m_gameObject->GetComponent<meshrenderer
 }
 
 void MeshModule::Render(Mathf::Matrix world, Mathf::Matrix view, Mathf::Matrix projection)

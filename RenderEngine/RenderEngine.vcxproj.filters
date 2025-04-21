@@ -279,6 +279,9 @@
     <ClCompile Include="SparkleEffect.cpp">
       <Filter>RenderPass\EffectPass\Example</Filter>
     </ClCompile>
+    <ClCompile Include="SpawnModuleCS.cpp">
+      <Filter>RenderPass\EffectPass\Modules</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="IRenderPass.h">
@@ -425,6 +428,9 @@
     <ClInclude Include="SparkleEffect.h">
       <Filter>RenderPass\EffectPass\Example</Filter>
     </ClInclude>
+    <ClInclude Include="SpawnModuleCS.h">
+      <Filter>RenderPass\EffectPass\Modules</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="..\Dynamic_CPP\Assets\Shaders\AutoExposureEval.cs.hlsl">
@@ -548,6 +554,9 @@
       <Filter>Shaders\Effect</Filter>
     </FxCompile>
     <FxCompile Include="..\Dynamic_CPP\Assets\Shaders\Sparkle.ps.hlsl">
+      <Filter>Shaders\Effect</Filter>
+    </FxCompile>
+    <FxCompile Include="..\Dynamic_CPP\Assets\Shaders\SpawnModule.cs.hlsl">
       <Filter>Shaders\Effect</Filter>
     </FxCompile>
   </ItemGroup>

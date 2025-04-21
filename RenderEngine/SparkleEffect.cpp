@@ -157,8 +157,7 @@ SparkleEffect::~SparkleEffect()
 void SparkleEffect::InitializeModules()
 {
     // 스폰 모듈 추가 (이펙트의 위치는 m_position)
-    m_spawnModule = AddModule<SpawnModule>(1.0f, EmitterType::point);
-
+    m_spawnModule = AddModule<SpawnModule>(10000.0f, EmitterType::box);
     // 수명 모듈 추가
     AddModule<LifeModule>();
 
