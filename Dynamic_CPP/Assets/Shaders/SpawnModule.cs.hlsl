@@ -1,239 +1,223 @@
-﻿// SpawnModule.hlsl
+﻿// ParticleSpawn.hlsl - SpawnModule에 대응하는 컴퓨트 셰이더
 
-struct SpawnModuleParamsBuffer
-{
-    float time;
-    float spawnRate;
-    float deltaTime;
-    float timeSinceLastSpawn;
-    int emitterType;
-    int maxParticles;
-};
-
-struct ParticleTemplateBuffer
+// 파티클 데이터 구조체 - C++ 구조체와 정확히 일치해야 함
+struct ParticleData
 {
     float3 position;
     float3 velocity;
     float3 acceleration;
     float2 size;
-    float4 color;
-    float lifeTime;
-    float rotation;
-    float rotateSpeed;
-};
-
-struct ParticleData
-{
-    bool isActive;
     float age;
     float lifeTime;
     float rotation;
     float rotatespeed;
-    float2 size;
     float4 color;
-    float3 position;
-    float3 velocity;
-    float3 acceleration;
+    uint isActive;
 };
 
-ConstantBuffer<SpawnModuleParamsBuffer> g_Params : register(b0);
-ConstantBuffer<ParticleTemplateBuffer> g_Template : register(b1);
-
-StructuredBuffer<ParticleData> g_ParticleBuffer : register(t0);
-RWStructuredBuffer<ParticleData> rw_ParticleBuffer : register(u0);
-RWStructuredBuffer<uint> rw_CounterBuffer : register(u1);
-StructuredBuffer<uint> g_SeedBuffer : register(t2);
-
-uint xorshift32(inout uint state)
+// 스폰 모듈 파라미터 상수 버퍼 (register b0에 바인딩)
+cbuffer SpawnParams : register(b0)
 {
-    state ^= (state << 13);
-    state ^= (state >> 17);
-    state ^= (state << 5);
-    return state;
+    float gSpawnRate; // 초당 스폰할 파티클 수
+    float gDeltaTime; // 델타 타임
+    float gAccumulatedTime; // 누적 시간
+    int gEmitterType; // 이미터 타입 (0:point, 1:sphere, 2:box, 3:cone, 4:circle)
+    float gEmitterSizeX; // 이미터 X 크기
+    float gEmitterSizeY; // 이미터 Y 크기
+    float gEmitterSizeZ; // 이미터 Z 크기
+    float gEmitterRadius; // 이미터 반지름
+    uint gMaxParticles; // 최대 파티클 수
+    float3 gPad; // 패딩
 }
 
-// 0.0 ~ 1.0 사이의 float 랜덤 값 생성 (결정적)
-float rand_deterministic(uint threadID, int offset)
+// 파티클 템플릿 상수 버퍼 (register b1에 바인딩)
+cbuffer ParticleTemplateParams : register(b1)
 {
-    uint seed = g_SeedBuffer[threadID];
-    uint currentState = seed + offset; // 각 랜덤 호출에 대해 약간 다른 시드 사용
-    return (xorshift32(currentState) & 0xFFFFFF) / float(0xFFFFFF);
+    float gLifeTime; // 파티클 수명
+    float gRotateSpeed; // 회전 속도
+    float gSizeX; // 초기 크기 X
+    float gSizeY; // 초기 크기 Y
+    float gColorR; // 초기 색상 R
+    float gColorG; // 초기 색상 G
+    float gColorB; // 초기 색상 B
+    float gColorA; // 초기 색상 A
+    float gVelocityX; // 초기 속도 X
+    float gVelocityY; // 초기 속도 Y
+    float gVelocityZ; // 초기 속도 Z
+    float gPad1; // 패딩
+    float gAccelerationX; // 초기 가속도 X
+    float gAccelerationY; // 초기 가속도 Y
+    float gAccelerationZ; // 초기 가속도 Z
+    float gPad2; // 패딩
+    float gMinVerticalVelocity; // 최소 수직 속도
+    float gMaxVerticalVelocity; // 최대 수직 속도
+    float gHorizontalVelocityRange; // 수평 속도 범위
+    float gPad3; // 패딩
 }
 
-float3 RandomDirection_Deterministic(uint threadID)
+// 파티클 버퍼 (register u0에 바인딩)
+RWStructuredBuffer<ParticleData> gParticles : register(u0);
+// 랜덤 카운터 버퍼 (register u1에 바인딩)
+RWStructuredBuffer<uint> gRandomCounter : register(u1);
+
+// 난수 생성 함수
+uint wang_hash(uint seed)
 {
-    float u = rand_deterministic(threadID, 0);
-    float v = rand_deterministic(threadID, 1);
-    float theta = 2.0f * 3.14159265359f * u;
-    float phi = acos(2.0f * v - 1.0f);
-    float x = sin(phi) * cos(theta);
-    float y = cos(phi);
-    float z = sin(phi) * sin(theta);
-    return float3(x, y, z);
+    seed = (seed ^ 61) ^ (seed >> 16);
+    seed *= 9;
+    seed = seed ^ (seed >> 4);
+    seed *= 0x27d4eb2d;
+    seed = seed ^ (seed >> 15);
+    return seed;
 }
 
-float3 RandomPositionInSphere_Deterministic(float radius, uint threadID)
+float rand(inout uint state)
 {
-    float u = rand_deterministic(threadID, 2);
-    float v = rand_deterministic(threadID, 3);
-    float theta = 2.0f * 3.14159265359f * u;
-    float phi = acos(2.0f * v - 1.0f);
-    float r = radius * pow(rand_deterministic(threadID, 4), 1.0f / 3.0f);
-    float x = r * sin(phi) * cos(theta);
-    float y = r * cos(phi);
-    float z = r * sin(phi) * sin(theta);
-    return float3(x, y, z);
+    state = wang_hash(state);
+    return float(state) / 4294967296.0; // 2^32
 }
 
-float3 RandomPositionInBox_Deterministic(float boxSize, uint threadID)
+// 파티클 초기화 함수
+void InitializeParticle(inout ParticleData particle, uint seed)
 {
-    float x = (rand_deterministic(threadID, 10) - 0.5f) * 2.0f * boxSize;
-    float y = (rand_deterministic(threadID, 11) - 0.5f) * 2.0f * boxSize;
-    float z = (rand_deterministic(threadID, 12) - 0.5f) * 2.0f * boxSize;
-    return float3(x, y, z);
-}
-
-float3 RandomPositionInCircle_Deterministic(float radius, uint threadID)
-{
-    float theta = rand_deterministic(threadID, 13) * 6.28f; // 0 ~ 2π
-    float r = radius * (0.5f + rand_deterministic(threadID, 14) * 0.5f); // 반지름의 50% ~ 100%
-    float x = r * cos(theta);
-    float z = r * sin(theta);
-    return float3(x, 0.0f, z); // y축이 0인 원형 (XZ 평면)
-}
-
-float3 RandomPositionInCone_Deterministic(float height, uint threadID)
-{
-    float theta = rand_deterministic(threadID, 15) * 6.28f; // 0 ~ 2π
-    float h = rand_deterministic(threadID, 16) * height; // 높이
-    float radiusAtHeight = 0.5f * (1.0f - h / height); // 높이에 따른 반지름 계산
-    float x = radiusAtHeight * cos(theta);
-    float z = radiusAtHeight * sin(theta);
-    return float3(x, h, z); // y축이 원뿔의 높이 방향
-}
-
-float3 RandomPositionInHemisphere_Deterministic(float radius, float3 normal, uint threadID)
-{
-    float u = rand_deterministic(threadID, 5);
-    float v = rand_deterministic(threadID, 6);
-    float theta = 2.0f * 3.14159265359f * u;
-    float z = rand_deterministic(threadID, 7);
-    float r = radius * sqrt(1.0f - z * z);
-    float x = r * cos(theta);
-    float y = r * sin(theta);
-    float3 localDir = normalize(float3(x, y, z));
-
-    float3 tangent, binormal;
-    if (abs(normal.x) > abs(normal.y))
+    // 기본 속성 설정
+    particle.age = 0.0f;
+    particle.lifeTime = gLifeTime;
+    particle.rotation = 0.0f;
+    particle.rotatespeed = gRotateSpeed;
+    particle.size = float2(gSizeX, gSizeY);
+    particle.color = float4(gColorR, gColorG, gColorB, gColorA);
+    particle.velocity = float3(gVelocityX, gVelocityY, gVelocityZ);
+    particle.acceleration = float3(gAccelerationX, gAccelerationY, gAccelerationZ);
+    particle.isActive = 1; // 활성화
+    
+    // 이미터 타입에 따른 위치 설정
+    switch (gEmitterType)
     {
-        tangent = normalize(float3(-normal.z, 0.0f, normal.x));
-    }
-    else
-    {
-        tangent = normalize(float3(0.0f, -normal.z, normal.y));
-    }
-    binormal = cross(normal, tangent);
-
-    return g_Template.position + tangent * localDir.x + binormal * localDir.y + normal * localDir.z * radius;
-}
-
-float3 RandomVelocityInCone_Deterministic(float angleRadians, float3 direction, uint threadID)
-{
-    float u = rand_deterministic(threadID, 8);
-    float v = rand_deterministic(threadID, 9);
-    float r = sqrt(u) * tan(angleRadians / 2.0f);
-    float phi = 2.0f * 3.14159265359f * v;
-    float x = r * cos(phi);
-    float y = r * sin(phi);
-    float z = 1.0f;
-    float3 localDir = normalize(float3(x, y, z));
-
-    float3 tangent, binormal;
-    if (abs(direction.x) > abs(direction.y))
-    {
-        tangent = normalize(float3(-direction.z, 0.0f, direction.x));
-    }
-    else
-    {
-        tangent = normalize(float3(0.0f, -direction.z, direction.y));
-    }
-    binormal = cross(direction, tangent);
-
-    return normalize(tangent * localDir.x + binormal * localDir.y + direction * localDir.z);
-}
-
-[numthreads(64, 1, 1)]
-void main(uint3 DTid : SV_DispatchThreadID)
-{
-    if (DTid.x >= g_Params.maxParticles)
-    {
-        return;
-    }
-
-    ParticleData particle = rw_ParticleBuffer[DTid.x];
-
-    if (particle.isActive)
-    {
-        return;
-    }
-    else
-    {
-        float spawnInterval = 1.0f / g_Params.spawnRate;
-        if (g_Params.timeSinceLastSpawn >= spawnInterval)
+        case 0: // point
+            particle.position = float3(0.0f, 0.0f, 0.0f);
+            break;
+            
+        case 1: // sphere
         {
-            uint currentCount;
-            uint maxCount = g_Params.maxParticles;
-            InterlockedAdd(rw_CounterBuffer[0], 1, currentCount);
+                float theta = rand(seed) * 6.28318f; // 0 ~ 2π (방위각)
+                float phi = rand(seed) * 3.14159f; // 0 ~ π (고도각)
+                float radius = gEmitterRadius; // 반지름
+            
+                particle.position = float3(
+                radius * sin(phi) * cos(theta),
+                radius * sin(phi) * sin(theta),
+                radius * cos(phi)
+            );
+                break;
+            }
+        
+        case 2: // box
+        {
+                particle.position = float3(
+                (rand(seed) - 0.5f) * 2.0f * gEmitterSizeX,
+                (rand(seed) - 0.5f) * 2.0f * gEmitterSizeY,
+                (rand(seed) - 0.5f) * 2.0f * gEmitterSizeZ
+            );
+                break;
+            }
+        
+        case 3: // cone
+        {
+                float theta = rand(seed) * 6.28318f;
+                float height = rand(seed) * gEmitterSizeY;
+                float radiusAtHeight = gEmitterRadius * (1.0f - height / gEmitterSizeY);
+            
+                particle.position = float3(
+                radiusAtHeight * cos(theta),
+                height,
+                radiusAtHeight * sin(theta)
+            );
+                break;
+            }
+        
+        case 4: // circle
+        {
+                float theta = rand(seed) * 6.28318f;
+                float radius = (0.5f + rand(seed) * 0.5f) * gEmitterRadius;
+            
+                particle.position = float3(
+                radius * cos(theta),
+                0.0f,
+                radius * sin(theta)
+            );
+                break;
+            }
+    }
+    
+    // 초기 속도에 랜덤 변동 추가 (선택 사항)
+    if (gHorizontalVelocityRange > 0.0f || gMaxVerticalVelocity > gMinVerticalVelocity)
+    {
+        float verticalVelocity = lerp(gMinVerticalVelocity, gMaxVerticalVelocity, rand(seed));
+        float angle = rand(seed) * 6.28318f;
+        float magnitude = rand(seed) * gHorizontalVelocityRange;
+        
+        particle.velocity += float3(
+            magnitude * cos(angle),
+            verticalVelocity,
+            magnitude * sin(angle)
+        );
+    }
+}
 
-            if (currentCount < maxCount)
+// 스레드 그룹 크기 정의
+#define THREAD_GROUP_SIZE 256
+
+// 메인 컴퓨트 셰이더 함수
+[numthreads(THREAD_GROUP_SIZE, 1, 1)]
+void CS_SpawnParticles(uint3 DTid : SV_DispatchThreadID)
+{
+    // 첫 번째 스레드만 스폰 로직 처리 (스레드 0)
+    if (DTid.x == 0)
+    {
+        // 누적 시간 업데이트
+        float accumulatedTime = gAccumulatedTime + gDeltaTime;
+        
+        // 스폰 간격 계산
+        float spawnInterval = 1.0f / gSpawnRate;
+        
+        // 이번 프레임에서 생성해야 할 파티클 수 계산
+        while (accumulatedTime >= spawnInterval)
+        {
+            // 비활성 파티클 찾기
+            uint particleIndex = 0xFFFFFFFF; // 초기값을 무효한 인덱스로 설정
+            
+            for (uint i = 0; i < gMaxParticles
+                ; i++)
             {
-                particle.isActive = true;
-                particle.age = 0.0f;
-                particle.lifeTime = g_Template.lifeTime;
-                particle.rotation = g_Template.rotation;
-                particle.rotatespeed = g_Template.rotateSpeed;
-                particle.size = g_Template.size;
-                particle.color = g_Template.color;
-                particle.acceleration = g_Template.acceleration;
-
-                // 이미터 타입에 따른 처리
-                // 0: Point, 1: Sphere, 2: Box, 3: Cone, 4: Circle
-                if (g_Params.emitterType == 0) // Point
+                if (gParticles[i].isActive == 0)
                 {
-                    particle.position = g_Template.position;
-                    particle.velocity = g_Template.velocity;
+                    particleIndex = i;
+                    break;
                 }
-                else if (g_Params.emitterType == 1) // Sphere
-                {
-                    particle.position = RandomPositionInSphere_Deterministic(1.0f, DTid.x) + g_Template.position;
-                    particle.velocity = normalize(particle.position - g_Template.position) * length(g_Template.velocity);
-                }
-                else if (g_Params.emitterType == 2) // Box
-                {
-                    float height = 1.0f; // 원뿔 높이
-                    particle.position = RandomPositionInCone_Deterministic(height, DTid.x) + g_Template.position;
-                    particle.velocity = float3(0, 1, 0) * length(g_Template.velocity); // 위쪽 방향으로 속도 
-                }
-                else if (g_Params.emitterType == 3) // Cone
-                {
-                    float boxSize = 1.0f; // 상자 크기
-                    particle.position = RandomPositionInBox_Deterministic(boxSize, DTid.x) + g_Template.position;
-                    particle.velocity = g_Template.velocity;
-                }
-                else if (g_Params.emitterType == 4) // Circle
-                {
-                    float radius = 1.0f; // 원 반지름
-                    particle.position = RandomPositionInCircle_Deterministic(radius, DTid.x) + g_Template.position;
-                    particle.velocity = g_Template.velocity;
-                }
-                else // 기본 Point Emitter
-                {
-                    particle.position = g_Template.position;
-                    particle.velocity = g_Template.velocity;
-                }
-
-                rw_ParticleBuffer[DTid.x] = particle;
+            }
+            
+            // 비활성 파티클을 찾았으면 초기화
+            if (particleIndex != 0xFFFFFFFF)
+            {
+                // 난수 시드 생성
+                uint seed = wang_hash(particleIndex + gRandomCounter[0]);
+                gRandomCounter[0] = seed; // 다음 프레임을 위해 카운터 업데이트
+                
+                // 파티클 초기화
+                InitializeParticle(gParticles[particleIndex], seed);
+                
+                // 누적 시간 감소
+                accumulatedTime -= spawnInterval;
+            }
+            else
+            {
+                // 비활성 파티클을 찾지 못했으면 루프 탈출
+                break;
             }
         }
+        
+        // 남은 누적 시간 저장
+        gAccumulatedTime = accumulatedTime;
     }
 }

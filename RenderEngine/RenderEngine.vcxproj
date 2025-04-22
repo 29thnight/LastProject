@@ -161,7 +161,9 @@
     <ClCompile Include="LightmapShadowPass.cpp" />
     <ClCompile Include="PositionMapPass.cpp" />
     <ClCompile Include="SparkleEffect.cpp" />
-    <ClCompile Include="SpawnModuleCS.cpp" />
+    <ClCompile Include="SpawnModuleCS.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="TestEffect.cpp" />
     <ClCompile Include="Text.cpp" />
     <ClCompile Include="UIsprite.cpp" />
@@ -212,7 +214,9 @@
     <ClInclude Include="PositionMapPass.h" />
     <ClInclude Include="RenderState.h" />
     <ClInclude Include="SparkleEffect.h" />
-    <ClInclude Include="SpawnModuleCS.h" />
+    <ClInclude Include="SpawnModuleCS.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClInclude>
     <ClInclude Include="TestEffect.h" />
     <ClInclude Include="Text.h" />
     <ClInclude Include="UIsprite.h" />

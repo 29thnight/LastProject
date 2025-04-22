@@ -36,7 +36,7 @@ void TestEffect::Update(float delta)
 
 void TestEffect::Render(RenderScene& scene, Camera& camera)
 {
-    if (!m_isRunning || m_activeParticleCount == 0)
+    if (!m_isRunning) //|| m_activeParticleCount == 0)
         return;
 
     auto& deviceContext = DeviceState::g_pDeviceContext;

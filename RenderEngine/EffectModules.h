@@ -18,20 +18,15 @@ struct alignas(16) EffectParameters		// 공통 effectparams
 struct alignas(16) ParticleData
 {
 	Mathf::Vector3 position;
-	float padding1;  // 16바이트 정렬
 	Mathf::Vector3 velocity;
-	float padding2;  // 16바이트 정렬
 	Mathf::Vector3 acceleration;
-	float padding3;  // 16바이트 정렬
 	Mathf::Vector2 size;
 	float age;
 	float lifeTime;
 	float rotation;
 	float rotatespeed;
-	float padding4;  // 16바이트 정렬
 	Mathf::Vector4 color;
 	bool isActive;
-	float padding5[3];  // 16바이트 정렬을 위한 패딩
 };
 
 enum class EmitterType
@@ -138,6 +133,124 @@ private:
 	float m_maxVerticalVelocity;
 	float m_horizontalVelocityRange;
 };
+
+class SpawnModuleCS : public ParticleModule
+{
+public:
+	SpawnModuleCS(float spawnRate, EmitterType emitterType, int maxParticles)
+		: m_spawnRate(spawnRate), m_emitterType(emitterType),
+		m_Time(0.0f), m_random(std::random_device{}()),
+		m_computeShader(nullptr), m_spawnParamsBuffer(nullptr),
+		m_templateBuffer(nullptr), m_randomCounterBuffer(nullptr),
+		m_randomCounterUAV(nullptr), m_particlesBuffer(nullptr),
+		m_particlesUAV(nullptr), m_isInitialized(false),
+		m_particlesCapacity(maxParticles)
+	{
+		m_uniform = std::uniform_real_distribution<float>(0.0f, 1.0f);
+	}
+
+	~SpawnModuleCS()
+	{
+		Release();
+	}
+
+	// ParticleModule 인터페이스 구현
+	void Initialize() override;
+	void Update(float delta, std::vector<ParticleData>& particles) override;
+
+	// SpawnModule 인터페이스 구현
+	void SetEmitterShape(EmitterType type) { m_emitterType = type; m_paramsDirty = true; }
+	void SetSpawnRate(float rate) { m_spawnRate = rate; m_paramsDirty = true; }
+
+	// 컴퓨트 셰이더 초기화 메서드
+	bool InitializeCompute();
+
+public:
+	ParticleData m_particleTemplate;
+
+private:
+	// 기존 메서드 (CPU 폴백용)
+	void SpawnParticle(std::vector<ParticleData>& particles);
+	void InitializeParticle(ParticleData& particle);
+
+	// 컴퓨트 셰이더 관련 메서드
+	bool CreateBuffers(std::vector<ParticleData>& particles);
+	void UpdateConstantBuffers(float delta);
+	void UpdateParticleBuffer(std::vector<ParticleData>& particles);
+	void ReadBackParticleBuffer(std::vector<ParticleData>& particles);
+	void Release();
+
+	// 스폰 파라미터 구조체 (상수 버퍼)
+	struct alignas(16) SpawnParams
+	{
+		float spawnRate;
+		float deltaTime;
+		float accumulatedTime;
+		int emitterType;
+		float emitterSizeX;
+		float emitterSizeY;
+		float emitterSizeZ;
+		float emitterRadius;
+		UINT maxParticles;
+	};
+
+	// 파티클 템플릿 구조체 (상수 버퍼)
+	struct ParticleTemplateParams
+	{
+		float lifeTime;
+		float rotateSpeed;
+		float sizeX;
+		float sizeY;
+		float colorR;
+		float colorG;
+		float colorB;
+		float colorA;
+		float velocityX;
+		float velocityY;
+		float velocityZ;
+		float pad1;
+		float accelerationX;
+		float accelerationY;
+		float accelerationZ;
+		float pad2;
+		float minVerticalVelocity;
+		float maxVerticalVelocity;
+		float horizontalVelocityRange;
+		float pad3;
+	};
+
+private:
+	// 기존 SpawnModule 변수
+	float m_spawnRate;
+	float m_Time;
+	EmitterType m_emitterType;
+	std::mt19937 m_random;
+	std::uniform_real_distribution<float> m_uniform;
+	float m_lifeTime;
+	float m_rotateSpeed;
+	float2 m_initialSize;
+	float4 m_initialColor;
+	float3 m_initialAcceleration;
+	float m_minVerticalVelocity;
+	float m_maxVerticalVelocity;
+	float m_horizontalVelocityRange;
+	size_t m_particlesCapacity;
+
+	// 컴퓨트 셰이더 관련 변수
+	ID3D11ComputeShader* m_computeShader;
+	ID3D11Buffer* m_spawnParamsBuffer;
+	ID3D11Buffer* m_templateBuffer;
+	ID3D11Buffer* m_randomCounterBuffer;
+	ID3D11UnorderedAccessView* m_randomCounterUAV;
+	ID3D11Buffer* m_particlesBuffer;
+	ID3D11UnorderedAccessView* m_particlesUAV;
+	ID3D11Buffer* m_particlesStagingBuffer;
+
+	bool m_isInitialized;
+	bool m_paramsDirty;
+	bool m_templateDirty;
+};
+
 
 // gravity, gravity strength
 class MovementModule : public ParticleModule
