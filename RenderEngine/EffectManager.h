@@ -4,7 +4,7 @@
 
 enum class Effect
 {
-	Explode,
+	Test,
 	Sparkle,
 };
 

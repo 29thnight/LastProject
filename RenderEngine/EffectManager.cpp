@@ -3,6 +3,7 @@
 #include "SparkleEffect.h"
 #include "ImGuiRegister.h"
 #include "imgui-node-editor/imgui_node_editor.h"
+#include "TestEffect.h"
 
 namespace ed = ax::NodeEditor;
 
@@ -29,12 +30,13 @@ void EffectManager::MakeEffects(Effect type, std::string_view name, Mathf::Vecto
 {
 	switch (type)
 	{
-		//case Effect::Explode:
-		//	effects[name.data()] = std::make_unique<FirePass>();
-		//	break;
+	case Effect::Test:
+		effects[name.data()] = std::make_unique<TestEffect>(pos, maxParticle);
+		break;
 	case Effect::Sparkle:
 		effects[name.data()] = std::make_unique<SparkleEffect>(pos, maxParticle);
 		break;
+
 	}
 }
 

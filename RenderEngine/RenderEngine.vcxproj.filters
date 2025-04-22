@@ -282,6 +282,9 @@
     <ClCompile Include="SpawnModuleCS.cpp">
       <Filter>RenderPass\EffectPass\Modules</Filter>
     </ClCompile>
+    <ClCompile Include="TestEffect.cpp">
+      <Filter>RenderPass\EffectPass\Example</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="IRenderPass.h">
@@ -430,6 +433,9 @@
     </ClInclude>
     <ClInclude Include="SpawnModuleCS.h">
       <Filter>RenderPass\EffectPass\Modules</Filter>
+    </ClInclude>
+    <ClInclude Include="TestEffect.h">
+      <Filter>RenderPass\EffectPass\Example</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

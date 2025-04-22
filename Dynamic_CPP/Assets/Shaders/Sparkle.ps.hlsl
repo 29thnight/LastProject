@@ -43,5 +43,6 @@ float4 main(VSOutput input) : SV_TARGET
     // 최종 색상 계산 (기본 색상과 외곽선 색상 혼합)
     float3 finalColor = lerp(baseColor.rgb, outlineColor, outlineEffect);
     
-    return float4(finalColor, baseColor.a);
+    //return float4(finalColor, baseColor.a);
+    return float4(1, 0, 0, 1);
 }

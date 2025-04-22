@@ -162,6 +162,7 @@
     <ClCompile Include="PositionMapPass.cpp" />
     <ClCompile Include="SparkleEffect.cpp" />
     <ClCompile Include="SpawnModuleCS.cpp" />
+    <ClCompile Include="TestEffect.cpp" />
     <ClCompile Include="Text.cpp" />
     <ClCompile Include="UIsprite.cpp" />
     <ClCompile Include="UIPass.cpp" />
@@ -212,6 +213,7 @@
     <ClInclude Include="RenderState.h" />
     <ClInclude Include="SparkleEffect.h" />
     <ClInclude Include="SpawnModuleCS.h" />
+    <ClInclude Include="TestEffect.h" />
     <ClInclude Include="Text.h" />
     <ClInclude Include="UIsprite.h" />
     <ClInclude Include="UIPass.h" />

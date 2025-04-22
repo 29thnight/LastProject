@@ -15,18 +15,23 @@ struct alignas(16) EffectParameters		// 공통 effectparams
 	float pad;
 };
 
-struct ParticleData		// 공통 data
+struct alignas(16) ParticleData
 {
 	Mathf::Vector3 position;
+	float padding1;  // 16바이트 정렬
 	Mathf::Vector3 velocity;
+	float padding2;  // 16바이트 정렬
 	Mathf::Vector3 acceleration;
+	float padding3;  // 16바이트 정렬
 	Mathf::Vector2 size;
-	Mathf::Vector4 color;
-	float lifeTime;
 	float age;
+	float lifeTime;
 	float rotation;
 	float rotatespeed;
+	float padding4;  // 16바이트 정렬
+	Mathf::Vector4 color;
 	bool isActive;
+	float padding5[3];  // 16바이트 정렬을 위한 패딩
 };
 
 enum class EmitterType

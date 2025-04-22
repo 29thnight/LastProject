@@ -1,7 +1,8 @@
 #include "SpawnModuleCS.h"
 
 SpawnModuleCS::SpawnModuleCS(float spawnRate, EmitterType emitterType, int maxParticles)
-    : m_spawnRate(spawnRate)
+    : ParticleModule() // 부모 클래스 초기화
+    , m_spawnRate(spawnRate)
     , m_emitterType(emitterType)
     , m_maxParticles(maxParticles)
     , m_timeSinceLastSpawn(0.0f)
@@ -10,12 +11,12 @@ SpawnModuleCS::SpawnModuleCS(float spawnRate, EmitterType emitterType, int maxPa
 
 SpawnModuleCS::~SpawnModuleCS()
 {
-    
+    // ComPtr 사용으로 자동 해제됨
 }
 
 void SpawnModuleCS::Initialize()
 {
-    // 파티클 템플릿 초기화
+    // 파티클 템플릿 초기화 (기존 SpawnModule과 동일)
     m_particleTemplate.age = 0.0f;
     m_particleTemplate.lifeTime = 1.0f;
     m_particleTemplate.rotation = 0.0f;
@@ -24,9 +25,12 @@ void SpawnModuleCS::Initialize()
     m_particleTemplate.color = float4(1.0f, 1.0f, 1.0f, 1.0f);
     m_particleTemplate.velocity = float3(0.0f, 0.0f, 0.0f);
     m_particleTemplate.acceleration = float3(0.0f, -9.8f, 0.0f);
+    m_particleTemplate.isActive = false;
 
+    // 컴퓨트 셰이더 로드
     m_pComputeShader = ShaderSystem->ComputeShaders["SpawnModule"].GetShader();
 
+    // 버퍼 생성
     CreateBuffers(m_maxParticles);
 }
 
@@ -117,6 +121,33 @@ void SpawnModuleCS::CreateBuffers(int maxParticles)
     counterUAVDesc.Buffer.NumElements = 1;
     device->CreateUnorderedAccessView(m_pCounterBuffer.Get(), &counterUAVDesc, &m_pCounterUAV);
 
+    // 8. 시드 값 버퍼 생성
+    D3D11_BUFFER_DESC seedBufferDesc = {};
+    seedBufferDesc.Usage = D3D11_USAGE_IMMUTABLE; // 초기값 설정 후 변경 없음
+    seedBufferDesc.ByteWidth = sizeof(UINT) * maxParticles;
+    seedBufferDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+    seedBufferDesc.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
+    seedBufferDesc.StructureByteStride = sizeof(UINT);
+
+    std::vector<UINT> initialSeeds(maxParticles);
+    for (int i = 0; i < maxParticles; ++i)
+    {
+        // 간단한 초기 시드 생성 (인덱스 기반)
+        initialSeeds[i] = i;
+    }
+
+    D3D11_SUBRESOURCE_DATA seedInitialData = {};
+    seedInitialData.pSysMem = initialSeeds.data();
+    device->CreateBuffer(&seedBufferDesc, &seedInitialData, &m_pSeedBuffer);
+
+    // 9. 시드 값 SRV 생성
+    D3D11_SHADER_RESOURCE_VIEW_DESC seedSRVDesc = {};
+    seedSRVDesc.Format = DXGI_FORMAT_R32_UINT;
+    seedSRVDesc.ViewDimension = D3D11_SRV_DIMENSION_BUFFER;
+    seedSRVDesc.Buffer.FirstElement = 0;
+    seedSRVDesc.Buffer.NumElements = maxParticles;
+    device->CreateShaderResourceView(m_pSeedBuffer.Get(), &seedSRVDesc, &m_pSeedSRV);
+
     // 초기화: 모든 파티클을 비활성화
     std::vector<ParticleData> initialParticles(maxParticles);
     for (auto& particle : initialParticles)
@@ -126,19 +157,38 @@ void SpawnModuleCS::CreateBuffers(int maxParticles)
 
     auto& deviceContext = DeviceState::g_pDeviceContext;
     D3D11_MAPPED_SUBRESOURCE mappedResource;
-    deviceContext->Map(m_pParticleBufferCPU.Get(), 0, D3D11_MAP_WRITE, 0, &mappedResource);
-    memcpy(mappedResource.pData, initialParticles.data(), sizeof(ParticleData) * maxParticles);
-    deviceContext->Unmap(m_pParticleBufferCPU.Get(), 0);
 
-    deviceContext->CopyResource(m_pParticleBuffer.Get(), m_pParticleBufferCPU.Get());
+    // 맵핑 코드 수정
+    HRESULT hr = deviceContext->Map(m_pParticleBufferCPU.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+    if (SUCCEEDED(hr) && mappedResource.pData != nullptr)
+    {
+        memcpy(mappedResource.pData, initialParticles.data(), sizeof(ParticleData) * maxParticles);
+        deviceContext->Unmap(m_pParticleBufferCPU.Get(), 0);
 
-    // 카운터 초기화
+        // 리소스 복사
+        deviceContext->CopyResource(m_pParticleBuffer.Get(), m_pParticleBufferCPU.Get());
+    }
+    else
+    {
+        // 오류 처리 (디버깅 메시지 출력 등)
+        OutputDebugStringA("Failed to map particle buffer CPU\n");
+    }
+
+    // 카운터 초기화 부분도 동일하게 수정
     UINT initialCounter = 0;
-    deviceContext->Map(m_pCounterBufferCPU.Get(), 0, D3D11_MAP_WRITE, 0, &mappedResource);
-    memcpy(mappedResource.pData, &initialCounter, sizeof(UINT));
-    deviceContext->Unmap(m_pCounterBufferCPU.Get(), 0);
+    hr = deviceContext->Map(m_pCounterBufferCPU.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+    if (SUCCEEDED(hr) && mappedResource.pData != nullptr)
+    {
+        memcpy(mappedResource.pData, &initialCounter, sizeof(UINT));
+        deviceContext->Unmap(m_pCounterBufferCPU.Get(), 0);
 
-    deviceContext->CopyResource(m_pCounterBuffer.Get(), m_pCounterBufferCPU.Get());
+        deviceContext->CopyResource(m_pCounterBuffer.Get(), m_pCounterBufferCPU.Get());
+    }
+    else
+    {
+        // 오류 처리
+        OutputDebugStringA("Failed to map counter buffer CPU\n");
+    }
 }
 
 void SpawnModuleCS::Update(float delta, std::vector<ParticleData>& particles)
@@ -155,11 +205,19 @@ void SpawnModuleCS::Update(float delta, std::vector<ParticleData>& particles)
     // 파티클 데이터 복사
     deviceContext->CopyResource(m_pParticleBufferCPU.Get(), m_pParticleBuffer.Get());
 
-    // 파티클 데이터 매핑
+    // 파티클 데이터 매핑 - 에러 처리 추가
     D3D11_MAPPED_SUBRESOURCE mappedResource;
-    deviceContext->Map(m_pParticleBufferCPU.Get(), 0, D3D11_MAP_READ, 0, &mappedResource);
-    memcpy(particles.data(), mappedResource.pData, sizeof(ParticleData) * m_maxParticles);
-    deviceContext->Unmap(m_pParticleBufferCPU.Get(), 0);
+    HRESULT hr = deviceContext->Map(m_pParticleBufferCPU.Get(), 0, D3D11_MAP_READ, 0, &mappedResource);
+    if (SUCCEEDED(hr) && mappedResource.pData != nullptr)
+    {
+        memcpy(particles.data(), mappedResource.pData, sizeof(ParticleData) * m_maxParticles);
+        deviceContext->Unmap(m_pParticleBufferCPU.Get(), 0);
+    }
+    else
+    {
+        // 오류 처리
+        OutputDebugStringA("Failed to map particle buffer in Update\n");
+    }
 
     // 스폰했으면 타이머 리셋
     float spawnInterval = 1.0f / m_spawnRate;
@@ -172,6 +230,8 @@ void SpawnModuleCS::Update(float delta, std::vector<ParticleData>& particles)
 void SpawnModuleCS::UpdateBuffers(float delta, std::vector<ParticleData>& particles)
 {
     auto& deviceContext = DeviceState::g_pDeviceContext;
+    D3D11_MAPPED_SUBRESOURCE mappedResource;
+    HRESULT hr;
 
     // 1. 파라미터 상수 버퍼 업데이트
     SpawnModuleParamsBuffer params;
@@ -182,10 +242,12 @@ void SpawnModuleCS::UpdateBuffers(float delta, std::vector<ParticleData>& partic
     params.emitterType = static_cast<int>(m_emitterType);
     params.maxParticles = m_maxParticles;
 
-    D3D11_MAPPED_SUBRESOURCE mappedResource;
-    deviceContext->Map(m_pParamsBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
-    memcpy(mappedResource.pData, &params, sizeof(SpawnModuleParamsBuffer));
-    deviceContext->Unmap(m_pParamsBuffer.Get(), 0);
+    hr = deviceContext->Map(m_pParamsBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+    if (SUCCEEDED(hr) && mappedResource.pData != nullptr)
+    {
+        memcpy(mappedResource.pData, &params, sizeof(SpawnModuleParamsBuffer));
+        deviceContext->Unmap(m_pParamsBuffer.Get(), 0);
+    }
 
     // 2. 파티클 템플릿 상수 버퍼 업데이트
     ParticleTemplateBuffer templateData;
@@ -198,16 +260,22 @@ void SpawnModuleCS::UpdateBuffers(float delta, std::vector<ParticleData>& partic
     templateData.rotation = m_particleTemplate.rotation;
     templateData.rotateSpeed = m_particleTemplate.rotatespeed;
 
-    deviceContext->Map(m_pTemplateBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
-    memcpy(mappedResource.pData, &templateData, sizeof(ParticleTemplateBuffer));
-    deviceContext->Unmap(m_pTemplateBuffer.Get(), 0);
+    hr = deviceContext->Map(m_pTemplateBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+    if (SUCCEEDED(hr) && mappedResource.pData != nullptr)
+    {
+        memcpy(mappedResource.pData, &templateData, sizeof(ParticleTemplateBuffer));
+        deviceContext->Unmap(m_pTemplateBuffer.Get(), 0);
+    }
 
     // 3. 파티클 데이터 업데이트 (변경된 파티클을 GPU로)
-    deviceContext->Map(m_pParticleBufferCPU.Get(), 0, D3D11_MAP_WRITE, 0, &mappedResource);
-    memcpy(mappedResource.pData, particles.data(), sizeof(ParticleData) * m_maxParticles);
-    deviceContext->Unmap(m_pParticleBufferCPU.Get(), 0);
+    hr = deviceContext->Map(m_pParticleBufferCPU.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+    if (SUCCEEDED(hr) && mappedResource.pData != nullptr)
+    {
+        memcpy(mappedResource.pData, particles.data(), sizeof(ParticleData) * m_maxParticles);
+        deviceContext->Unmap(m_pParticleBufferCPU.Get(), 0);
 
-    deviceContext->CopyResource(m_pParticleBuffer.Get(), m_pParticleBufferCPU.Get());
+        deviceContext->CopyResource(m_pParticleBuffer.Get(), m_pParticleBufferCPU.Get());
+    }
 }
 
 void SpawnModuleCS::DispatchCompute()
@@ -220,6 +288,9 @@ void SpawnModuleCS::DispatchCompute()
     // 상수 버퍼 설정
     deviceContext->CSSetConstantBuffers(0, 1, &m_pParamsBuffer);
     deviceContext->CSSetConstantBuffers(1, 1, &m_pTemplateBuffer);
+
+    // 시드 버퍼 SRV 설정
+    deviceContext->CSSetShaderResources(2, 1, &m_pSeedSRV);
 
     // UAV 설정
     ID3D11UnorderedAccessView* uavs[] = { m_pParticleUAV.Get(), m_pCounterUAV.Get() };
@@ -237,6 +308,9 @@ void SpawnModuleCS::DispatchCompute()
 
     ID3D11Buffer* nullBuffers[] = { nullptr, nullptr };
     deviceContext->CSSetConstantBuffers(0, 2, nullBuffers);
+
+    ID3D11ShaderResourceView* nullSRVs[] = { nullptr };
+    deviceContext->CSSetShaderResources(2, 1, nullSRVs);
 
     deviceContext->CSSetShader(nullptr, nullptr, 0);
 }
