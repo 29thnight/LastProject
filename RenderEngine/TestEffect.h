@@ -2,7 +2,6 @@
 #include "EffectModules.h"
 #include "ShaderSystem.h"
 #include "Effects.h"
-#include "SpawnModuleCS.h"
 
 class TestEffect : public EffectModules
 {

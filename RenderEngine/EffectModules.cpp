@@ -339,7 +339,7 @@ void EffectModules::Update(float delta)
 		return;
 	}
 
-	std::cout << m_activeParticleCount << std::endl;
+	//std::cout << m_activeParticleCount << std::endl;
 
 	// 정상 실행 상태
 	for (auto it = m_moduleList.begin(); it != m_moduleList.end(); ++it)
@@ -438,20 +438,6 @@ void SpawnModuleCS::Update(float delta, std::vector<ParticleData>& particles)
 
 	m_particlesCapacity = particles.size();
 
-	// 컴퓨트 셰이더가 초기화되지 않았다면 CPU 폴백 사용
-	//if (!m_isInitialized)
-	//{
-	//	// 기존 CPU 코드 사용
-	//	m_Time += delta;
-	//	float spawnInterval = 1.0f / m_spawnRate;
-	//	while (m_Time >= spawnInterval)
-	//	{
-	//		SpawnParticle(particles);
-	//		m_Time -= spawnInterval;
-	//	}
-	//	return;
-	//}
-
 	D3D11_BUFFER_DESC bufferDesc = {};
 	if (m_particlesBuffer)
 	{
@@ -468,7 +454,7 @@ void SpawnModuleCS::Update(float delta, std::vector<ParticleData>& particles)
 	UpdateConstantBuffers(delta);
 
 	// 파티클 데이터를 GPU로 업로드
-	UpdateParticleBuffer(particles);
+	//UpdateParticleBuffer(particles);
 
 	// 컴퓨트 셰이더 설정
 	DeviceState::g_pDeviceContext->CSSetShader(m_computeShader, nullptr, 0);
@@ -478,24 +464,50 @@ void SpawnModuleCS::Update(float delta, std::vector<ParticleData>& particles)
 	DeviceState::g_pDeviceContext->CSSetConstantBuffers(0, 2, constantBuffers);
 
 	// UAV 설정
-	ID3D11UnorderedAccessView* uavs[] = { m_particlesUAV, m_randomCounterUAV };
-	DeviceState::g_pDeviceContext->CSSetUnorderedAccessViews(0, 2, uavs, nullptr);
+	ID3D11UnorderedAccessView* uavs[] = { m_particlesUAV, m_randomCounterUAV, m_timeUAV };
+	DeviceState::g_pDeviceContext->CSSetUnorderedAccessViews(0, 3, uavs, nullptr);
 
 	// 컴퓨트 셰이더 실행 (파티클 배열 크기에 따라 스레드 그룹 조정)
-	UINT numThreadGroups = (static_cast<UINT>(particles.size()) + 255) / 256;
+	UINT numThreadGroups = (std::max<UINT>)(1, (static_cast<UINT>(particles.size()) + 255) / 256);
 	DeviceState::g_pDeviceContext->Dispatch(numThreadGroups, 1, 1);
 
 	// 리소스 해제
-	ID3D11UnorderedAccessView* nullUAVs[] = { nullptr, nullptr };
-	DeviceState::g_pDeviceContext->CSSetUnorderedAccessViews(0, 2, nullUAVs, nullptr);
+	ID3D11UnorderedAccessView* nullUAVs[] = { nullptr, nullptr, nullptr };
+	DeviceState::g_pDeviceContext->CSSetUnorderedAccessViews(0, 3, nullUAVs, nullptr);
 
 	ID3D11Buffer* nullBuffers[] = { nullptr, nullptr };
 	DeviceState::g_pDeviceContext->CSSetConstantBuffers(0, 2, nullBuffers);
 
 	DeviceState::g_pDeviceContext->CSSetShader(nullptr, nullptr, 0);
 
-	// 결과를 CPU로 다시 읽어오기
-	ReadBackParticleBuffer(particles);
+	// CPU 읽기는 필요에 따라 디버그 모드에서만 사용
+#ifdef _DEBUG
+	//ReadBackParticleBuffer(particles);
+#endif
+}
+
+void SpawnModuleCS::SetMaxParticles(UINT maxParticles)
+{
+	if (maxParticles != m_particlesCapacity)
+	{
+		// 이전 버퍼 정리
+		if (m_particlesBuffer) m_particlesBuffer->Release();
+		if (m_particlesUAV) m_particlesUAV->Release();
+		if (m_particlesStagingBuffer) m_particlesStagingBuffer->Release();
+		if (m_particlesSRV) m_particlesSRV.Reset();
+
+		m_particlesCapacity = maxParticles;
+		m_paramsDirty = true;
+
+		// 새 파티클 벡터 생성 및 초기화
+		std::vector<ParticleData> newParticles(maxParticles);
+		for (auto& particle : newParticles) {
+			particle.isActive = 0; // 비활성 상태로 초기화
+		}
+
+		// 새 버퍼 생성
+		CreateBuffers(newParticles);
+	}
 }
 
 bool SpawnModuleCS::InitializeCompute()
@@ -526,7 +538,8 @@ bool SpawnModuleCS::InitializeCompute()
 	counterDesc.ByteWidth = sizeof(UINT);
 	counterDesc.Usage = D3D11_USAGE_DEFAULT;
 	counterDesc.BindFlags = D3D11_BIND_UNORDERED_ACCESS;
-	counterDesc.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_ALLOW_RAW_VIEWS;
+	counterDesc.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
+	counterDesc.StructureByteStride = sizeof(UINT);
 
 	std::random_device rd;
 	UINT initialSeed = rd();
@@ -539,18 +552,96 @@ bool SpawnModuleCS::InitializeCompute()
 
 	// 랜덤 카운터 UAV 생성
 	D3D11_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
-	uavDesc.Format = DXGI_FORMAT_R32_UINT;
+	uavDesc.Format = DXGI_FORMAT_UNKNOWN;
 	uavDesc.ViewDimension = D3D11_UAV_DIMENSION_BUFFER;
 	uavDesc.Buffer.FirstElement = 0;
 	uavDesc.Buffer.NumElements = 1;
-	uavDesc.Buffer.Flags = D3D11_BUFFER_UAV_FLAG_RAW;
+	uavDesc.Buffer.Flags = 0;
 
 	hr = DeviceState::g_pDevice->CreateUnorderedAccessView(m_randomCounterBuffer, &uavDesc, &m_randomCounterUAV);
 	if (FAILED(hr))
 		return false;
 
+	// 시간 버퍼 생성 (누적 시간 저장용)
+	D3D11_BUFFER_DESC timeDesc = {};
+	timeDesc.ByteWidth = sizeof(float);
+	timeDesc.Usage = D3D11_USAGE_DEFAULT;
+	timeDesc.BindFlags = D3D11_BIND_UNORDERED_ACCESS;
+	timeDesc.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
+	timeDesc.StructureByteStride = sizeof(float);
+
+	// 초기 값으로 현재 m_Time 설정
+	float initialTime = m_Time;
+	D3D11_SUBRESOURCE_DATA timeData = {};
+	timeData.pSysMem = &initialTime;
+
+	hr = DeviceState::g_pDevice->CreateBuffer(&timeDesc, &timeData, &m_timeBuffer);
+	if (FAILED(hr))
+		return false;
+
+	// 시간 버퍼의 UAV 생성
+	D3D11_UNORDERED_ACCESS_VIEW_DESC timeUAVDesc = {};
+	timeUAVDesc.Format = DXGI_FORMAT_UNKNOWN;
+	timeUAVDesc.ViewDimension = D3D11_UAV_DIMENSION_BUFFER;
+	timeUAVDesc.Buffer.FirstElement = 0;
+	timeUAVDesc.Buffer.NumElements = 1;
+	timeUAVDesc.Buffer.Flags = 0;
+
+	hr = DeviceState::g_pDevice->CreateUnorderedAccessView(m_timeBuffer, &timeUAVDesc, &m_timeUAV);
+	if (FAILED(hr))
+		return false;
+
+
 	m_isInitialized = true;
 	return true;
+}
+
+UINT SpawnModuleCS::GetActiveParticleCount() const
+{
+	if (!m_particlesBuffer || !m_particlesStagingBuffer || m_particlesCapacity == 0)
+		return 0; // 유효한 버퍼가 없으면 0 반환
+
+	// 벡터를 m_particlesCapacity 크기로 제한
+	UINT safeCapacity = m_particlesCapacity;
+	std::vector<ParticleData> debugParticles(safeCapacity);
+	UINT activeCount = 0;
+
+	// GPU에서 파티클 데이터 읽어오기
+	DeviceState::g_pDeviceContext->CopyResource(m_particlesStagingBuffer, m_particlesBuffer);
+
+	D3D11_MAPPED_SUBRESOURCE mappedResource;
+	HRESULT hr = DeviceState::g_pDeviceContext->Map(m_particlesStagingBuffer, 0, D3D11_MAP_READ, 0, &mappedResource);
+
+	if (SUCCEEDED(hr))
+	{
+		// 버퍼 크기 확인
+		D3D11_BUFFER_DESC stagingDesc;
+		m_particlesStagingBuffer->GetDesc(&stagingDesc);
+		UINT bufferSize = stagingDesc.ByteWidth;
+		UINT elementsInBuffer = bufferSize / sizeof(ParticleData);
+
+		// 복사할 크기 계산 (최소값 사용)
+		UINT elementsToRead = std::min(safeCapacity, elementsInBuffer);
+		UINT bytesToRead = elementsToRead * sizeof(ParticleData);
+
+		// 안전하게 복사
+		if (bytesToRead > 0) {
+			memcpy(debugParticles.data(), mappedResource.pData, bytesToRead);
+		}
+
+		DeviceState::g_pDeviceContext->Unmap(m_particlesStagingBuffer, 0);
+
+		// 활성 파티클 수 계산
+		for (size_t i = 0; i < elementsToRead; ++i)
+		{
+			if (debugParticles[i].isActive != 0)
+			{
+				activeCount++;
+			}
+		}
+	}
+
+	return activeCount;
 }
 
 void SpawnModuleCS::SpawnParticle(std::vector<ParticleData>& particles)
@@ -631,12 +722,17 @@ bool SpawnModuleCS::CreateBuffers(std::vector<ParticleData>& particles)
 	if (m_particlesBuffer) m_particlesBuffer->Release();
 	if (m_particlesUAV) m_particlesUAV->Release();
 	if (m_particlesStagingBuffer) m_particlesStagingBuffer->Release();
+	if (m_particlesSRV) m_particlesSRV.Reset();
+
+	for (auto& particle : particles) {
+		particle.isActive = 0; // 비활성 상태로 설정
+	}
 
 	// 파티클 버퍼 생성
 	D3D11_BUFFER_DESC particleBufferDesc = {};
 	particleBufferDesc.ByteWidth = sizeof(ParticleData) * static_cast<UINT>(particles.size());
 	particleBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-	particleBufferDesc.BindFlags = D3D11_BIND_UNORDERED_ACCESS;
+	particleBufferDesc.BindFlags = D3D11_BIND_UNORDERED_ACCESS | D3D11_BIND_SHADER_RESOURCE;
 	particleBufferDesc.CPUAccessFlags = 0;
 	particleBufferDesc.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
 	particleBufferDesc.StructureByteStride = sizeof(ParticleData);
@@ -660,11 +756,21 @@ bool SpawnModuleCS::CreateBuffers(std::vector<ParticleData>& particles)
 	if (FAILED(hr))
 		return false;
 
-	// 스테이징 버퍼 생성 (GPU -> CPU 읽기용)
+	// 파티클 버퍼의 SRV 생성 (렌더링용)
+	D3D11_SHADER_RESOURCE_VIEW_DESC particleSRVDesc = {};
+	particleSRVDesc.Format = DXGI_FORMAT_UNKNOWN;
+	particleSRVDesc.ViewDimension = D3D11_SRV_DIMENSION_BUFFER;
+	particleSRVDesc.Buffer.FirstElement = 0;
+	particleSRVDesc.Buffer.NumElements = static_cast<UINT>(particles.size());
+
+	hr = DeviceState::g_pDevice->CreateShaderResourceView(m_particlesBuffer, &particleSRVDesc, m_particlesSRV.GetAddressOf());
+	if (FAILED(hr))
+		return false;
+
+	// 스테이징 버퍼 생성 (GPU -> CPU 읽기용) - 디버깅 용도로만 유지
 	D3D11_BUFFER_DESC stagingDesc = {};
 	stagingDesc.ByteWidth = sizeof(ParticleData) * static_cast<UINT>(particles.size());
 	stagingDesc.Usage = D3D11_USAGE_STAGING;
-	stagingDesc.BindFlags = 0;
 	stagingDesc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
 	stagingDesc.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
 	stagingDesc.StructureByteStride = sizeof(ParticleData);
@@ -679,7 +785,7 @@ bool SpawnModuleCS::CreateBuffers(std::vector<ParticleData>& particles)
 void SpawnModuleCS::UpdateConstantBuffers(float delta)
 {
 	// 스폰 파라미터 업데이트
-	if (m_paramsDirty || true) // 항상 업데이트
+	if (m_paramsDirty)
 	{
 		D3D11_MAPPED_SUBRESOURCE mappedResource;
 		HRESULT hr = DeviceState::g_pDeviceContext->Map(m_spawnParamsBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
@@ -693,9 +799,7 @@ void SpawnModuleCS::UpdateConstantBuffers(float delta)
 			params->emitterType = static_cast<int>(m_emitterType);
 
 			// 이미터 크기 파라미터 설정 (기본값)
-			params->emitterSizeX = 1.0f;
-			params->emitterSizeY = 1.0f;
-			params->emitterSizeZ = 1.0f;
+			params->emitterSize = float3(1.0f, 1.0f, 1.0f);
 			params->emitterRadius = 1.0f;
 			params->maxParticles = static_cast<UINT>(m_particlesCapacity);
 
@@ -717,18 +821,10 @@ void SpawnModuleCS::UpdateConstantBuffers(float delta)
 			// 파티클 템플릿에서 값 복사
 			templateParams->lifeTime = m_particleTemplate.lifeTime;
 			templateParams->rotateSpeed = m_particleTemplate.rotatespeed;
-			templateParams->sizeX = m_particleTemplate.size.x;
-			templateParams->sizeY = m_particleTemplate.size.y;
-			templateParams->colorR = m_particleTemplate.color.x;
-			templateParams->colorG = m_particleTemplate.color.y;
-			templateParams->colorB = m_particleTemplate.color.z;
-			templateParams->colorA = m_particleTemplate.color.w;
-			templateParams->velocityX = m_particleTemplate.velocity.x;
-			templateParams->velocityY = m_particleTemplate.velocity.y;
-			templateParams->velocityZ = m_particleTemplate.velocity.z;
-			templateParams->accelerationX = m_particleTemplate.acceleration.x;
-			templateParams->accelerationY = m_particleTemplate.acceleration.y;
-			templateParams->accelerationZ = m_particleTemplate.acceleration.z;
+			templateParams->size = m_particleTemplate.size;
+			templateParams->color = m_particleTemplate.color;
+			templateParams->velocity = m_particleTemplate.velocity;
+			templateParams->acceleration = m_particleTemplate.acceleration;
 
 			// 추가 속성
 			templateParams->minVerticalVelocity = m_minVerticalVelocity;
@@ -780,6 +876,26 @@ void SpawnModuleCS::ReadBackParticleBuffer(std::vector<ParticleData>& particles)
 			}
 		}
 	}
+
+	// 시간 버퍼에서 누적 시간 읽기
+	ID3D11Buffer* tempBuffer;
+	D3D11_BUFFER_DESC tempDesc = {};
+	tempDesc.ByteWidth = sizeof(float);
+	tempDesc.Usage = D3D11_USAGE_STAGING;
+	tempDesc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
+	tempDesc.StructureByteStride = sizeof(float);
+
+	DeviceState::g_pDevice->CreateBuffer(&tempDesc, nullptr, &tempBuffer);
+	DeviceState::g_pDeviceContext->CopyResource(tempBuffer, m_timeBuffer);
+
+	D3D11_MAPPED_SUBRESOURCE mappedTime;
+	if (SUCCEEDED(DeviceState::g_pDeviceContext->Map(tempBuffer, 0, D3D11_MAP_READ, 0, &mappedTime)))
+	{
+		// 시간 값 업데이트
+		m_Time = *static_cast<float*>(mappedTime.pData);
+		DeviceState::g_pDeviceContext->Unmap(tempBuffer, 0);
+	}
+	tempBuffer->Release();
 }
 
 void SpawnModuleCS::Release()
@@ -793,6 +909,7 @@ void SpawnModuleCS::Release()
 	if (m_particlesBuffer) m_particlesBuffer->Release();
 	if (m_particlesUAV) m_particlesUAV->Release();
 	if (m_particlesStagingBuffer) m_particlesStagingBuffer->Release();
+	if (m_particlesSRV) m_particlesSRV.Reset();
 
 	m_computeShader = nullptr;
 	m_spawnParamsBuffer = nullptr;
@@ -802,6 +919,11 @@ void SpawnModuleCS::Release()
 	m_particlesBuffer = nullptr;
 	m_particlesUAV = nullptr;
 	m_particlesStagingBuffer = nullptr;
+
+	if (m_timeBuffer) m_timeBuffer->Release();
+	if (m_timeUAV) m_timeUAV->Release();
+	m_timeBuffer = nullptr;
+	m_timeUAV = nullptr;
 
 	m_isInitialized = false;
 }

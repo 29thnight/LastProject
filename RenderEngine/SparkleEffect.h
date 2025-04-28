@@ -20,10 +20,11 @@ public:
 
     void UpdateInstanceData();
 private:
-    BillboardModule* m_billboardModule;
+    BillboardModuleGPU* m_billboardModule;
 
     float m_delta;
     Texture* m_sparkleTexture;
     ComPtr<ID3D11Buffer> m_constantBuffer;
-    SpawnModule* m_spawnModule;
+    float m_rate;
+    UINT m_max;
 };

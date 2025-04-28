@@ -18,15 +18,26 @@ struct alignas(16) EffectParameters		// 공통 effectparams
 struct alignas(16) ParticleData
 {
 	Mathf::Vector3 position;
+	float pad1;
+
 	Mathf::Vector3 velocity;
+	float pad2;
+
 	Mathf::Vector3 acceleration;
+	float pad3;
+
 	Mathf::Vector2 size;
 	float age;
 	float lifeTime;
+
 	float rotation;
 	float rotatespeed;
+	float2 pad4;
+
 	Mathf::Vector4 color;
-	bool isActive;
+
+	UINT isActive;
+	float3 pad5;
 };
 
 enum class EmitterType
@@ -107,7 +118,7 @@ public:
 
 	void SetEmitterShape(EmitterType type) { m_emitterType = type; }
 	void SetSpawnRate(float rate) { m_spawnRate = rate; }
-
+	void SetMaxParticles(UINT maxParticles);
 public:
 	ParticleData m_particleTemplate;
 
@@ -142,8 +153,7 @@ public:
 		m_Time(0.0f), m_random(std::random_device{}()),
 		m_computeShader(nullptr), m_spawnParamsBuffer(nullptr),
 		m_templateBuffer(nullptr), m_randomCounterBuffer(nullptr),
-		m_randomCounterUAV(nullptr), m_particlesBuffer(nullptr),
-		m_particlesUAV(nullptr), m_isInitialized(false),
+		m_randomCounterUAV(nullptr), m_isInitialized(false),
 		m_particlesCapacity(maxParticles)
 	{
 		m_uniform = std::uniform_real_distribution<float>(0.0f, 1.0f);
@@ -161,13 +171,18 @@ public:
 	// SpawnModule 인터페이스 구현
 	void SetEmitterShape(EmitterType type) { m_emitterType = type; m_paramsDirty = true; }
 	void SetSpawnRate(float rate) { m_spawnRate = rate; m_paramsDirty = true; }
+	void SetMaxParticles(UINT maxParticles);
 
 	// 컴퓨트 셰이더 초기화 메서드
 	bool InitializeCompute();
 
+	ID3D11ShaderResourceView* GetParticlesSRV() const { return m_particlesSRVA.Get(); }
+	UINT GetParticleCount() const { return m_particlesCapacity; }
+	UINT GetActiveParticleCount() const;
 public:
 	ParticleData m_particleTemplate;
-
+	ComPtr<ID3D11ShaderResourceView> m_particlesSRVA;
+	ComPtr<ID3D11ShaderResourceView> m_particlesSRVB;
 private:
 	// 기존 메서드 (CPU 폴백용)
 	void SpawnParticle(std::vector<ParticleData>& particles);
@@ -187,32 +202,29 @@ private:
 		float deltaTime;
 		float accumulatedTime;
 		int emitterType;
-		float emitterSizeX;
-		float emitterSizeY;
-		float emitterSizeZ;
+
+		float3 emitterSize;
 		float emitterRadius;
+
 		UINT maxParticles;
+		float3 pad;
 	};
 
 	// 파티클 템플릿 구조체 (상수 버퍼)
-	struct ParticleTemplateParams
+	struct alignas(16) ParticleTemplateParams
 	{
 		float lifeTime;
 		float rotateSpeed;
-		float sizeX;
-		float sizeY;
-		float colorR;
-		float colorG;
-		float colorB;
-		float colorA;
-		float velocityX;
-		float velocityY;
-		float velocityZ;
+		float2 size;
+
+		float4 color;
+
+		float3 velocity;
 		float pad1;
-		float accelerationX;
-		float accelerationY;
-		float accelerationZ;
+
+		float3 acceleration;
 		float pad2;
+
 		float minVerticalVelocity;
 		float maxVerticalVelocity;
 		float horizontalVelocityRange;
@@ -242,15 +254,18 @@ private:
 	ID3D11Buffer* m_templateBuffer;
 	ID3D11Buffer* m_randomCounterBuffer;
 	ID3D11UnorderedAccessView* m_randomCounterUAV;
-	ID3D11Buffer* m_particlesBuffer;
-	ID3D11UnorderedAccessView* m_particlesUAV;
+	ID3D11Buffer* m_particlesBufferA = nullptr;
+	ID3D11Buffer* m_particlesBufferB = nullptr;
+	ID3D11UnorderedAccessView* m_particlesUAVA = nullptr;
+	ID3D11UnorderedAccessView* m_particlesUAVB = nullptr;
 	ID3D11Buffer* m_particlesStagingBuffer;
+	ID3D11Buffer* m_timeBuffer;
+	ID3D11UnorderedAccessView* m_timeUAV;
 
 	bool m_isInitialized;
 	bool m_paramsDirty;
 	bool m_templateDirty;
 };
-
 
 // gravity, gravity strength
 class MovementModule : public ParticleModule
