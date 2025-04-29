@@ -468,7 +468,7 @@ void SpawnModuleCS::Update(float delta, std::vector<ParticleData>& particles)
 	DeviceState::g_pDeviceContext->CSSetUnorderedAccessViews(0, 3, uavs, nullptr);
 
 	// 컴퓨트 셰이더 실행 (파티클 배열 크기에 따라 스레드 그룹 조정)
-	UINT numThreadGroups = (std::max<UINT>)(1, (static_cast<UINT>(particles.size()) + 255) / 256);
+	UINT numThreadGroups = (std::max<UINT>)(1, (static_cast<UINT>(particles.size()) + 1023) / 1024);
 	DeviceState::g_pDeviceContext->Dispatch(numThreadGroups, 1, 1);
 
 	// 리소스 해제
@@ -598,6 +598,9 @@ bool SpawnModuleCS::InitializeCompute()
 
 UINT SpawnModuleCS::GetActiveParticleCount() const
 {
+
+	return false;
+
 	if (!m_particlesBuffer || !m_particlesStagingBuffer || m_particlesCapacity == 0)
 		return 0; // 유효한 버퍼가 없으면 0 반환
 
@@ -740,7 +743,11 @@ bool SpawnModuleCS::CreateBuffers(std::vector<ParticleData>& particles)
 	D3D11_SUBRESOURCE_DATA particleInitData = {};
 	particleInitData.pSysMem = particles.data();
 
-	HRESULT hr = DeviceState::g_pDevice->CreateBuffer(&particleBufferDesc, &particleInitData, &m_particlesBuffer);
+	HRESULT hr = DeviceState::g_pDevice->CreateBuffer(&particleBufferDesc, &particleInitData, &m_particlesBufferA);
+	if (FAILED(hr))
+		return false;
+
+	hr = DeviceState::g_pDevice->CreateBuffer(&particleBufferDesc, &particleInitData, &m_particlesBufferB);
 	if (FAILED(hr))
 		return false;
 
@@ -752,7 +759,11 @@ bool SpawnModuleCS::CreateBuffers(std::vector<ParticleData>& particles)
 	particleUAVDesc.Buffer.NumElements = static_cast<UINT>(particles.size());
 	particleUAVDesc.Buffer.Flags = 0;
 
-	hr = DeviceState::g_pDevice->CreateUnorderedAccessView(m_particlesBuffer, &particleUAVDesc, &m_particlesUAV);
+	hr = DeviceState::g_pDevice->CreateUnorderedAccessView(m_particlesBufferA, &particleUAVDesc, &m_particlesUAVA);
+	if (FAILED(hr))
+		return false;
+
+	hr = DeviceState::g_pDevice->CreateUnorderedAccessView(m_particlesBufferB, &particleUAVDesc, &m_particlesUAVB);
 	if (FAILED(hr))
 		return false;
 
@@ -763,7 +774,11 @@ bool SpawnModuleCS::CreateBuffers(std::vector<ParticleData>& particles)
 	particleSRVDesc.Buffer.FirstElement = 0;
 	particleSRVDesc.Buffer.NumElements = static_cast<UINT>(particles.size());
 
-	hr = DeviceState::g_pDevice->CreateShaderResourceView(m_particlesBuffer, &particleSRVDesc, m_particlesSRV.GetAddressOf());
+	hr = DeviceState::g_pDevice->CreateShaderResourceView(m_particlesBufferA, &particleSRVDesc, m_particlesSRVA.GetAddressOf());
+	if (FAILED(hr))
+		return false;
+
+	hr = DeviceState::g_pDevice->CreateShaderResourceView(m_particlesBufferB, &particleSRVDesc, m_particlesSRVB.GetAddressOf());
 	if (FAILED(hr))
 		return false;
 
@@ -793,7 +808,7 @@ void SpawnModuleCS::UpdateConstantBuffers(float delta)
 		if (SUCCEEDED(hr))
 		{
 			SpawnParams* params = reinterpret_cast<SpawnParams*>(mappedResource.pData);
-			params->spawnRate = m_spawnRate;
+			params->spawnRate = m_spawnRate; 
 			params->deltaTime = delta;
 			params->accumulatedTime = m_Time;
 			params->emitterType = static_cast<int>(m_emitterType);
@@ -809,7 +824,7 @@ void SpawnModuleCS::UpdateConstantBuffers(float delta)
 	}
 
 	// 파티클 템플릿 업데이트
-	if (m_templateDirty || true) // 항상 업데이트
+	if (m_templateDirty)
 	{
 		D3D11_MAPPED_SUBRESOURCE mappedResource;
 		HRESULT hr = DeviceState::g_pDeviceContext->Map(m_templateBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
