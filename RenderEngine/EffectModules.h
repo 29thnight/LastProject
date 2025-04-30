@@ -176,13 +176,21 @@ public:
 	// 컴퓨트 셰이더 초기화 메서드
 	bool InitializeCompute();
 
-	ID3D11ShaderResourceView* GetParticlesSRV() const { return m_particlesSRVA.Get(); }
+	ID3D11ShaderResourceView* GetParticlesSRV() const { return m_particlesSRV_A.Get(); }
 	UINT GetParticleCount() const { return m_particlesCapacity; }
 	UINT GetActiveParticleCount() const;
+
+	ID3D11Buffer* GetSourceBuffer() { return m_usingBufferA ? m_particlesBufferA : m_particlesBufferB; }
+	ID3D11Buffer* GetDestBuffer() { return m_usingBufferA ? m_particlesBufferB : m_particlesBufferA; }
+	ID3D11UnorderedAccessView* GetSourceUAV() { return m_usingBufferA ? m_particlesUAV_A : m_particlesUAV_B; }
+	ID3D11UnorderedAccessView* GetDestUAV() { return m_usingBufferA ? m_particlesUAV_B : m_particlesUAV_A; }
+	ID3D11ShaderResourceView* GetSourceSRV() { return m_usingBufferA ? m_particlesSRV_A.Get() : m_particlesSRV_B.Get(); }
+	ID3D11ShaderResourceView* GetDestSRV() { return m_usingBufferA ? m_particlesSRV_B.Get() : m_particlesSRV_A.Get(); }
+
 public:
 	ParticleData m_particleTemplate;
-	ComPtr<ID3D11ShaderResourceView> m_particlesSRVA;
-	ComPtr<ID3D11ShaderResourceView> m_particlesSRVB;
+	ComPtr<ID3D11ShaderResourceView> m_particlesSRV_A;
+	ComPtr<ID3D11ShaderResourceView> m_particlesSRV_B;
 private:
 	// 기존 메서드 (CPU 폴백용)
 	void SpawnParticle(std::vector<ParticleData>& particles);
@@ -249,6 +257,8 @@ private:
 	size_t m_particlesCapacity;
 
 	// 컴퓨트 셰이더 관련 변수
+	ID3D11Buffer* m_spawnCounterBuffer = nullptr;
+	ID3D11UnorderedAccessView* m_spawnCounterUAV = nullptr;
 	ID3D11ComputeShader* m_computeShader;
 	ID3D11Buffer* m_spawnParamsBuffer;
 	ID3D11Buffer* m_templateBuffer;
@@ -256,8 +266,8 @@ private:
 	ID3D11UnorderedAccessView* m_randomCounterUAV;
 	ID3D11Buffer* m_particlesBufferA = nullptr;
 	ID3D11Buffer* m_particlesBufferB = nullptr;
-	ID3D11UnorderedAccessView* m_particlesUAVA = nullptr;
-	ID3D11UnorderedAccessView* m_particlesUAVB = nullptr;
+	ID3D11UnorderedAccessView* m_particlesUAV_A = nullptr;
+	ID3D11UnorderedAccessView* m_particlesUAV_B = nullptr;
 	ID3D11Buffer* m_particlesStagingBuffer;
 	ID3D11Buffer* m_timeBuffer;
 	ID3D11UnorderedAccessView* m_timeUAV;
@@ -265,6 +275,7 @@ private:
 	bool m_isInitialized;
 	bool m_paramsDirty;
 	bool m_templateDirty;
+	bool m_usingBufferA;
 };
 
 // gravity, gravity strength

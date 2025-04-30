@@ -1,4 +1,3 @@
-
 struct ParticleData
 {
     float3 position;
@@ -21,25 +20,25 @@ struct ParticleData
 
 cbuffer SpawnParams : register(b0)
 {
-    float gSpawnRate;   
-    float gDeltaTime;   
-    float gAccumulatedTime; 
-    int gEmitterType; 
-    float3 gEmitterSize; 
-    float gEmitterRadius; 
-    uint gMaxParticles; 
-    float3 gPad; 
+    float gSpawnRate;
+    float gDeltaTime;
+    float gAccumulatedTime;
+    int gEmitterType;
+    float3 gEmitterSize;
+    float gEmitterRadius;
+    uint gMaxParticles;
+    float3 gPad;
 }
 
 
 cbuffer ParticleTemplateParams : register(b1)
 {
-    float gLifeTime; 
-    float gRotateSpeed; 
-    float2 gSize; 
-    float4 gColor; 
-    float3 gVelocity; 
-    float gPad1; 
+    float gLifeTime;
+    float gRotateSpeed;
+    float2 gSize;
+    float4 gColor;
+    float3 gVelocity;
+    float gPad1;
     float3 gAcceleration; // 초기 가속도 
     float gPad2; // 패딩
     float gMinVerticalVelocity; // 최소 수직 속도
@@ -53,6 +52,9 @@ RWStructuredBuffer<ParticleData> gParticles : register(u0);
 // 랜덤 카운터 버퍼 (register u1에 바인딩)
 RWStructuredBuffer<uint> gRandomCounter : register(u1);
 RWStructuredBuffer<float> gTimeBuffer : register(u2);
+// 새로 추가: 스폰 카운터와 필요한 파티클 수를 위한 버퍼
+RWStructuredBuffer<uint> gSpawnCounter : register(u3);
+
 // 난수 생성 함수
 uint wang_hash(uint seed)
 {
@@ -143,7 +145,7 @@ void InitializeParticle(inout ParticleData particle, uint seed)
             }
     }
     
-    // 초기 속도에 랜덤 변동 추가 (선택 사항)
+    // 초기 속도에 랜덤 변동 추가
     if (gHorizontalVelocityRange > 0.0f || gMaxVerticalVelocity > gMinVerticalVelocity)
     {
         float verticalVelocity = lerp(gMinVerticalVelocity, gMaxVerticalVelocity, rand(seed));
@@ -159,15 +161,15 @@ void InitializeParticle(inout ParticleData particle, uint seed)
 }
 
 // 스레드 그룹 크기 정의
-#define THREAD_GROUP_SIZE 1024
+#define THREAD_GROUP_SIZE 256
 
 // 메인 컴퓨트 셰이더 함수
 [numthreads(THREAD_GROUP_SIZE, 1, 1)]
-void main(uint3 DTid : SV_DispatchThreadID)
+void main(uint3 DTid : SV_DispatchThreadID, uint3 GTid : SV_GroupThreadID, uint3 Gid : SV_GroupID)
 {
     uint particleIndex = DTid.x;
     
-    // 파티클 인덱스가 유효한 범위인지 확인
+    // 단계 1: 기존 파티클 업데이트 - 모든 스레드가 담당
     if (particleIndex < gMaxParticles)
     {
         // 현재 파티클이 활성 상태인지 확인
@@ -192,71 +194,61 @@ void main(uint3 DTid : SV_DispatchThreadID)
         }
     }
     
-    // 첫 번째 스레드만 새 파티클 생성 처리
+   // 첫 번째 스레드만 이번 프레임에 생성할 파티클 수를 계산
     if (DTid.x == 0)
     {
-        // 누적 시간 업데이트
+    // 스폰 카운터 초기화
+        gSpawnCounter[1] = 0; // 현재까지 생성된 파티클 수 초기화
+    
+    // 누적 시간 업데이트
         float accumulatedTime = gAccumulatedTime + gDeltaTime;
-        
-        // 스폰 간격 계산
-        float spawnInterval = 1.0f / gSpawnRate;
-        
-        // 디버깅을 위해 임의의 파티클 하나 생성 (테스트용)
-        if (gSpawnRate > 0.0f) // 스폰 레이트가 0보다 크면
-        {
-            for (uint i = 0; i < gMaxParticles; i++)
-            {
-                if (gParticles[i].isActive == 0)
-                {
-                    // 난수 시드 생성
-                    uint seed = wang_hash(i + gRandomCounter[0]);
-                    gRandomCounter[0] = seed; // 다음 프레임을 위해 카운터 업데이트
-                    
-                    // 파티클 초기화
-                    InitializeParticle(gParticles[i], seed);
-                    
-                    // 하나의 파티클만 생성하고 빠져나감 (테스트용)
-                    break;
-                }
-            }
-        }
-        
-        // 이번 프레임에서 생성해야 할 파티클 수 계산
+        float spawnInterval = 1.0f / max(0.0001f, gSpawnRate);
+    
+    // 이번 프레임에서 생성해야 할 파티클 수 계산
+        uint particlesToSpawn = 0;
         while (accumulatedTime >= spawnInterval && gSpawnRate > 0.0f)
         {
-            // 비활성 파티클 찾기
-            uint particleIndex = 0xFFFFFFFF; // 초기값을 무효한 인덱스로 설정
+            particlesToSpawn++;
+            accumulatedTime -= spawnInterval;
+        }
+    
+    // 생성할 파티클 수 저장
+        gSpawnCounter[0] = particlesToSpawn; // 총 생성할 파티클 수
+    
+    // 남은 누적 시간 저장
+        gTimeBuffer[0] = accumulatedTime;
+    }
+    // 그룹 동기화 - 모든 스레드가 이 지점에 도달할 때까지 대기
+    GroupMemoryBarrierWithGroupSync();
+    
+    // 단계 2: 새 파티클 생성 - 병렬로 처리
+    if (gSpawnCounter[0] > 0 && gSpawnRate > 0.0f)
+    {
+        // 각 스레드가 하나의 파티클을 담당
+        for (uint i = 0; i < gMaxParticles; i += THREAD_GROUP_SIZE)
+        {
+            uint idx = i + GTid.x;
             
-            for (uint i = 0; i < gMaxParticles; i++)
+            if (idx < gMaxParticles && gParticles[idx].isActive == 0)
             {
-                if (gParticles[i].isActive == 0)
+                // 원자적 연산으로 카운터 증가
+                uint spawnIndex;
+                InterlockedAdd(gSpawnCounter[1], 1, spawnIndex);
+                
+                // 아직 생성해야 할 파티클이 남아있는지 확인
+                if (spawnIndex < gSpawnCounter[0])
                 {
-                    particleIndex = i;
+                    // 난수 시드 생성 (시간, 인덱스, 그룹 ID 등을 조합)
+                    uint seed = wang_hash(idx + spawnIndex + Gid.x * 1000 + GTid.x);
+                    InterlockedAdd(gRandomCounter[0], 1); // 다음 프레임을 위한 시드 증가
+                    
+                    // 파티클 초기화
+                    InitializeParticle(gParticles[idx], seed);
+                    
+                    // 할당된 파티클을 찾았으므로 루프 종료
                     break;
                 }
             }
-            
-            // 비활성 파티클을 찾았으면 초기화
-            if (particleIndex != 0xFFFFFFFF)
-            {
-                // 난수 시드 생성
-                uint seed = wang_hash(particleIndex + gRandomCounter[0]);
-                gRandomCounter[0] = seed; // 다음 프레임을 위해 카운터 업데이트
-                
-                // 파티클 초기화
-                InitializeParticle(gParticles[particleIndex], seed);
-                
-                // 누적 시간 감소
-                accumulatedTime -= spawnInterval;
-            }
-            else
-            {
-                // 비활성 파티클을 찾지 못했으면 루프 탈출
-                break;
-            }
         }
-        
-        // 남은 누적 시간 저장
-        gTimeBuffer[0] = accumulatedTime;
     }
 }
