@@ -54,6 +54,7 @@ RWStructuredBuffer<uint> gRandomCounter : register(u1);
 RWStructuredBuffer<float> gTimeBuffer : register(u2);
 // 새로 추가: 스폰 카운터와 필요한 파티클 수를 위한 버퍼
 RWStructuredBuffer<uint> gSpawnCounter : register(u3);
+RWStructuredBuffer<uint> gActiveParticleCounter : register(u4);
 
 // 난수 생성 함수
 uint wang_hash(uint seed)
@@ -190,21 +191,24 @@ void main(uint3 DTid : SV_DispatchThreadID, uint3 GTid : SV_GroupThreadID, uint3
                 gParticles[particleIndex].velocity += gParticles[particleIndex].acceleration * gDeltaTime;
                 gParticles[particleIndex].position += gParticles[particleIndex].velocity * gDeltaTime;
                 gParticles[particleIndex].rotation += gParticles[particleIndex].rotatespeed * gDeltaTime;
+                
+                // 활성 파티클 카운터 증가
+                InterlockedAdd(gActiveParticleCounter[0], 1);
             }
         }
     }
     
-   // 첫 번째 스레드만 이번 프레임에 생성할 파티클 수를 계산
+    // 첫 번째 스레드만 이번 프레임에 생성할 파티클 수를 계산
     if (DTid.x == 0)
     {
-    // 스폰 카운터 초기화
+        // 스폰 카운터 초기화
         gSpawnCounter[1] = 0; // 현재까지 생성된 파티클 수 초기화
     
-    // 누적 시간 업데이트
+        // 누적 시간 업데이트
         float accumulatedTime = gAccumulatedTime + gDeltaTime;
         float spawnInterval = 1.0f / max(0.0001f, gSpawnRate);
     
-    // 이번 프레임에서 생성해야 할 파티클 수 계산
+        // 이번 프레임에서 생성해야 할 파티클 수 계산
         uint particlesToSpawn = 0;
         while (accumulatedTime >= spawnInterval && gSpawnRate > 0.0f)
         {
@@ -212,12 +216,16 @@ void main(uint3 DTid : SV_DispatchThreadID, uint3 GTid : SV_GroupThreadID, uint3
             accumulatedTime -= spawnInterval;
         }
     
-    // 생성할 파티클 수 저장
+        // 생성할 파티클 수 저장
         gSpawnCounter[0] = particlesToSpawn; // 총 생성할 파티클 수
     
-    // 남은 누적 시간 저장
+        // 남은 누적 시간 저장
         gTimeBuffer[0] = accumulatedTime;
+        
+        // 활성 파티클 카운터 초기화
+        gActiveParticleCounter[0] = 0;
     }
+    
     // 그룹 동기화 - 모든 스레드가 이 지점에 도달할 때까지 대기
     GroupMemoryBarrierWithGroupSync();
     

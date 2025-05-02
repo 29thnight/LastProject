@@ -145,6 +145,15 @@
     <Filter Include="RenderPass\EffectPass\Example">
       <UniqueIdentifier>{82ba81b1-96a9-4f84-a25a-43bc76616fde}</UniqueIdentifier>
     </Filter>
+    <Filter Include="RenderPass\EffectPass\Modules\1.spawn">
+      <UniqueIdentifier>{abc9ea2b-d86f-4982-80e0-4b55f08c5d3e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="RenderPass\EffectPass\Modules\2.movement">
+      <UniqueIdentifier>{53a97904-81ba-4fcb-a80c-09c42f3826b5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="RenderPass\EffectPass\Modules\0.Base">
+      <UniqueIdentifier>{46ea26bc-7c25-4988-a10f-b82e11fe7b7f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="SceneRenderer.cpp">
@@ -267,9 +276,6 @@
     <ClCompile Include="EffectManager.cpp">
       <Filter>RenderPass\EffectPass</Filter>
     </ClCompile>
-    <ClCompile Include="EaseInOut.cpp">
-      <Filter>RenderPass\EffectPass\Modules</Filter>
-    </ClCompile>
     <ClCompile Include="EffectModules.cpp">
       <Filter>RenderPass\EffectPass\Modules</Filter>
     </ClCompile>
@@ -279,11 +285,23 @@
     <ClCompile Include="SparkleEffect.cpp">
       <Filter>RenderPass\EffectPass\Example</Filter>
     </ClCompile>
-    <ClCompile Include="SpawnModuleCS.cpp">
-      <Filter>RenderPass\EffectPass\Modules</Filter>
-    </ClCompile>
     <ClCompile Include="TestEffect.cpp">
       <Filter>RenderPass\EffectPass\Example</Filter>
+    </ClCompile>
+    <ClCompile Include="SpawnModuleCS.cpp">
+      <Filter>RenderPass\EffectPass\Modules\1.spawn</Filter>
+    </ClCompile>
+    <ClCompile Include="ParticleModule.cpp">
+      <Filter>RenderPass\EffectPass\Modules\0.Base</Filter>
+    </ClCompile>
+    <ClCompile Include="SpawnModule.cpp">
+      <Filter>RenderPass\EffectPass\Modules\1.spawn</Filter>
+    </ClCompile>
+    <ClCompile Include="EaseInOut.cpp">
+      <Filter>RenderPass\EffectPass\Modules\0.Base</Filter>
+    </ClCompile>
+    <ClCompile Include="MovementModuleCS.cpp">
+      <Filter>RenderPass\EffectPass\Modules\2.movement</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -419,9 +437,6 @@
     <ClInclude Include="Interfaces\ISceneRenderer.h">
       <Filter>Renderer\Interfaces</Filter>
     </ClInclude>
-    <ClInclude Include="EaseInOut.h">
-      <Filter>RenderPass\EffectPass\Modules</Filter>
-    </ClInclude>
     <ClInclude Include="EffectModules.h">
       <Filter>RenderPass\EffectPass\Modules</Filter>
     </ClInclude>
@@ -431,11 +446,26 @@
     <ClInclude Include="SparkleEffect.h">
       <Filter>RenderPass\EffectPass\Example</Filter>
     </ClInclude>
-    <ClInclude Include="SpawnModuleCS.h">
-      <Filter>RenderPass\EffectPass\Modules</Filter>
-    </ClInclude>
     <ClInclude Include="TestEffect.h">
       <Filter>RenderPass\EffectPass\Example</Filter>
+    </ClInclude>
+    <ClInclude Include="SpawnModuleCS.h">
+      <Filter>RenderPass\EffectPass\Modules\1.spawn</Filter>
+    </ClInclude>
+    <ClInclude Include="ParticleModule.h">
+      <Filter>RenderPass\EffectPass\Modules\0.Base</Filter>
+    </ClInclude>
+    <ClInclude Include="SpawnModule.h">
+      <Filter>RenderPass\EffectPass\Modules\1.spawn</Filter>
+    </ClInclude>
+    <ClInclude Include="BaseEffectStruct.h">
+      <Filter>RenderPass\EffectPass\Modules\0.Base</Filter>
+    </ClInclude>
+    <ClInclude Include="EaseInOut.h">
+      <Filter>RenderPass\EffectPass\Modules\0.Base</Filter>
+    </ClInclude>
+    <ClInclude Include="MovementModuleCS.h">
+      <Filter>RenderPass\EffectPass\Modules\2.movement</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
