@@ -71,9 +71,15 @@ VSOutput main(VSInput input, uint instanceID : SV_InstanceID)
     float3 cameraRight = normalize(float3(View._11, View._21, View._31));
     float3 cameraUp = normalize(float3(View._12, View._22, View._32));
     
+    // 회전 적용
+    float sinR = sin(particle.rotation);
+    float cosR = cos(particle.rotation);
+    float3 rotatedRight = cameraRight * cosR + cameraUp * sinR;
+    float3 rotatedUp = -cameraRight * sinR + cameraUp * cosR;
+    
     // 기본 정점 위치에 파티클 스케일 적용
-    float3 vertexPos = input.VertexPosition.x * cameraRight * particle.size.x +
-                       input.VertexPosition.y * cameraUp * particle.size.y;
+    float3 vertexPos = input.VertexPosition.x * rotatedRight * particle.size.x +
+                   input.VertexPosition.y * rotatedUp * particle.size.y;
     
     // 정점 위치를 인스턴스 위치에 더함
     worldPos += vertexPos;

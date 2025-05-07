@@ -201,29 +201,32 @@ void main(uint3 DTid : SV_DispatchThreadID, uint3 GTid : SV_GroupThreadID, uint3
     // 첫 번째 스레드만 이번 프레임에 생성할 파티클 수를 계산
     if (DTid.x == 0)
     {
-        // 스폰 카운터 초기화
-        gSpawnCounter[1] = 0; // 현재까지 생성된 파티클 수 초기화
-    
-        // 누적 시간 업데이트
-        float accumulatedTime = gAccumulatedTime + gDeltaTime;
-        float spawnInterval = 1.0f / max(0.0001f, gSpawnRate);
-    
-        // 이번 프레임에서 생성해야 할 파티클 수 계산
-        uint particlesToSpawn = 0;
-        while (accumulatedTime >= spawnInterval && gSpawnRate > 0.0f)
-        {
-            particlesToSpawn++;
-            accumulatedTime -= spawnInterval;
-        }
-    
-        // 생성할 파티클 수 저장
-        gSpawnCounter[0] = particlesToSpawn; // 총 생성할 파티클 수
-    
-        // 남은 누적 시간 저장
-        gTimeBuffer[0] = accumulatedTime;
-        
         // 활성 파티클 카운터 초기화
         gActiveParticleCounter[0] = 0;
+    
+        // 누적 시간에 현재 델타 타임 추가
+        float newAccumulatedTime = gAccumulatedTime + gDeltaTime;
+    
+        // 기본 방법: 정확한 파티클 수 계산
+        float particlesPerSecond = gSpawnRate;
+        float particlesThisFrame = particlesPerSecond * gDeltaTime;
+    
+        // 누적 소수점 처리
+        float fractionalPart = frac(gTimeBuffer[0]);
+        float totalParticles = particlesThisFrame + fractionalPart;
+    
+        // 생성할 파티클 수 (정수부)
+        uint particlesToSpawn = uint(totalParticles);
+    
+        // 남은 소수점 부분은 다음 프레임으로
+        float remainingFraction = frac(totalParticles);
+    
+        // 디버깅용 카운터 업데이트
+        gSpawnCounter[0] = particlesToSpawn;
+        gSpawnCounter[1] = 0; // 이번 프레임에 생성된 카운트는 0으로 초기화
+    
+        // 남은 소수점 저장
+        gTimeBuffer[0] = remainingFraction;
     }
     
     // 그룹 동기화 - 모든 스레드가 이 지점에 도달할 때까지 대기

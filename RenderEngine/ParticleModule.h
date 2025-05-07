@@ -49,9 +49,16 @@ public:
 		return EaseInOut(m_easingType, m_animationType, m_easingDuration);
 	}
 
+	ID3D11ShaderResourceView* GetParticlesSRV() { return m_particlesSRV; }
+	ID3D11UnorderedAccessView* GetParticlesUAV() { return m_particlesUAV; }
+
 protected:
 	bool m_useEasing;
 	EasingEffect m_easingType;
 	StepAnimation m_animationType;
 	float m_easingDuration;
+
+	// 버퍼 참조
+	ID3D11UnorderedAccessView* m_particlesUAV = nullptr;
+	ID3D11ShaderResourceView* m_particlesSRV = nullptr;
 };
