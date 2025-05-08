@@ -99,6 +99,18 @@ void SpawnModuleCS::Update(float delta, std::vector<ParticleData>& particles)
 	// 버퍼 역할 뒤집기 - 다음 프레임을 위해
 	m_usingBufferA = !m_usingBufferA;
 
+	// 다음 모듈이 접근할 값
+	if (m_usingBufferA)
+	{
+		m_particlesUAV = m_particlesUAV_B;  // B 버퍼가 결과물
+		m_particlesSRV = m_particlesSRV_B.Get();
+	}
+	else
+	{
+		m_particlesUAV = m_particlesUAV_A;  // A 버퍼가 결과물
+		m_particlesSRV = m_particlesSRV_A.Get();
+	}
+
 	// CPU 읽기는 필요에 따라 디버그 모드에서만 사용
 #ifdef _DEBUG
 	//ReadBackParticleBuffer(particles);

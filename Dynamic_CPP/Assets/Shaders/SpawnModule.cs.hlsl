@@ -17,7 +17,6 @@ struct ParticleData
     float3 pad5;
 };
 
-
 cbuffer SpawnParams : register(b0)
 {
     float gSpawnRate;
@@ -29,7 +28,6 @@ cbuffer SpawnParams : register(b0)
     uint gMaxParticles;
     float3 gPad;
 }
-
 
 cbuffer ParticleTemplateParams : register(b1)
 {
@@ -188,9 +186,9 @@ void main(uint3 DTid : SV_DispatchThreadID, uint3 GTid : SV_GroupThreadID, uint3
             else
             {
                 // 파티클 위치 업데이트
-                gParticles[particleIndex].velocity += gParticles[particleIndex].acceleration * gDeltaTime;
-                gParticles[particleIndex].position += gParticles[particleIndex].velocity * gDeltaTime;
-                gParticles[particleIndex].rotation += gParticles[particleIndex].rotatespeed * gDeltaTime;
+                //gParticles[particleIndex].velocity += gParticles[particleIndex].acceleration * gDeltaTime;
+                //gParticles[particleIndex].position += gParticles[particleIndex].velocity * gDeltaTime;
+                //gParticles[particleIndex].rotation += gParticles[particleIndex].rotatespeed * gDeltaTime;
                 
                 // 활성 파티클 카운터 증가
                 InterlockedAdd(gActiveParticleCounter[0], 1);

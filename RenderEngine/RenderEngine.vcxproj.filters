@@ -154,6 +154,9 @@
     <Filter Include="RenderPass\EffectPass\Modules\0.Base">
       <UniqueIdentifier>{46ea26bc-7c25-4988-a10f-b82e11fe7b7f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="RenderPass\EffectPass\Modules\999.EffectSystem">
+      <UniqueIdentifier>{e4833f78-c607-433f-b3c7-2dcf440bab35}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="SceneRenderer.cpp">
@@ -279,9 +282,6 @@
     <ClCompile Include="EffectModules.cpp">
       <Filter>RenderPass\EffectPass\Modules</Filter>
     </ClCompile>
-    <ClCompile Include="RenderModules.cpp">
-      <Filter>RenderPass\EffectPass\Modules</Filter>
-    </ClCompile>
     <ClCompile Include="SparkleEffect.cpp">
       <Filter>RenderPass\EffectPass\Example</Filter>
     </ClCompile>
@@ -302,6 +302,12 @@
     </ClCompile>
     <ClCompile Include="MovementModuleCS.cpp">
       <Filter>RenderPass\EffectPass\Modules\2.movement</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderModules.cpp">
+      <Filter>RenderPass\EffectPass\Modules\0.Base</Filter>
+    </ClCompile>
+    <ClCompile Include="EffectSystem.cpp">
+      <Filter>RenderPass\EffectPass\Modules\999.EffectSystem</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -440,9 +446,6 @@
     <ClInclude Include="EffectModules.h">
       <Filter>RenderPass\EffectPass\Modules</Filter>
     </ClInclude>
-    <ClInclude Include="RenderModules.h">
-      <Filter>RenderPass\EffectPass\Modules</Filter>
-    </ClInclude>
     <ClInclude Include="SparkleEffect.h">
       <Filter>RenderPass\EffectPass\Example</Filter>
     </ClInclude>
@@ -466,6 +469,12 @@
     </ClInclude>
     <ClInclude Include="MovementModuleCS.h">
       <Filter>RenderPass\EffectPass\Modules\2.movement</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderModules.h">
+      <Filter>RenderPass\EffectPass\Modules\0.Base</Filter>
+    </ClInclude>
+    <ClInclude Include="EffectSystem.h">
+      <Filter>RenderPass\EffectPass\Modules\999.EffectSystem</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -593,6 +602,9 @@
       <Filter>Shaders\Effect</Filter>
     </FxCompile>
     <FxCompile Include="..\Dynamic_CPP\Assets\Shaders\SpawnModule.cs.hlsl">
+      <Filter>Shaders\Effect</Filter>
+    </FxCompile>
+    <FxCompile Include="..\Dynamic_CPP\Assets\Shaders\MovementModule.cs.hlsl">
       <Filter>Shaders\Effect</Filter>
     </FxCompile>
   </ItemGroup>

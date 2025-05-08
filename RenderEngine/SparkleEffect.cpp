@@ -4,7 +4,7 @@
 #include "RenderModules.h"
 #include "DataSystem.h"
 
-SparkleEffect::SparkleEffect(const Mathf::Vector3& position, int maxParticles) : EffectModules(maxParticles), m_delta(0.0f)
+SparkleEffect::SparkleEffect(const Mathf::Vector3& position, int maxParticles) : EffectSystem(maxParticles), m_delta(0.0f)
 {
     m_position = position;
 
@@ -125,23 +125,23 @@ SparkleEffect::SparkleEffect(const Mathf::Vector3& position, int maxParticles) :
 
                     if (ImGui::BeginTabItem("Tab 3"))
                     {
-                        // 위치 조정 UI
-                        ImGui::Text("Position");
-                        ImGui::SliderFloat("X", &m_position.x, -50.0f, 50.0f);
-                        ImGui::SliderFloat("Y", &m_position.y, -50.0f, 50.0f);
-                        ImGui::SliderFloat("Z", &m_position.z, -50.0f, 50.0f);
-
-                        if (ImGui::Button("Spawn Burst"))
-                        {
-                            SpawnSparklesBurst(20);
-                        }
-
-                        static bool isG = false;
-                        if (ImGui::Checkbox("Gravity", &isG))
-                        {
-                            auto module = GetModule<MovementModule>();
-                            module->SetUseGravity(isG);
-                        }
+                       // // 위치 조정 UI
+                       // ImGui::Text("Position");
+                       // ImGui::SliderFloat("X", &m_position.x, -50.0f, 50.0f);
+                       // ImGui::SliderFloat("Y", &m_position.y, -50.0f, 50.0f);
+                       // ImGui::SliderFloat("Z", &m_position.z, -50.0f, 50.0f);
+                       //
+                       // if (ImGui::Button("Spawn Burst"))
+                       // {
+                       //     SpawnSparklesBurst(20);
+                       // }
+                       //
+                       // static bool isG = false;
+                       // if (ImGui::Checkbox("Gravity", &isG))
+                       // {
+                       //     auto module = GetModule<MovementModule>();
+                       //     module->SetUseGravity(isG);
+                       // }
 
                         ImGui::EndTabItem();
                     }
@@ -180,31 +180,33 @@ void SparkleEffect::InitializeModules()
     // 스폰 모듈 추가 (이펙트의 위치는 m_position)
     //AddModule<SpawnModule>(10.0f, EmitterType::box);
     AddModule<SpawnModuleCS>(10.0f, EmitterType::box, 1000000);
+
+    AddModule<MovementModuleCS>();
     // 수명 모듈 추가
-    AddModule<LifeModule>();
+    //AddModule<LifeModule>();
 
     // 움직임 모듈 추가 (중력 없음, 자유롭게 움직이는 반짝임)
-    auto movementModule = AddModule<MovementModule>();
-    movementModule->SetUseGravity(false);
+    //auto movementModule = AddModule<MovementModule>();
+    //movementModule->SetUseGravity(false);
 
     // 색상 모듈 추가 (반짝이는 효과를 위한 투명도 변화)
-    auto colorModule = AddModule<ColorModule>();
+    //auto colorModule = AddModule<ColorModule>();
 
     // 색 순회
-    std::vector<std::pair<float, Mathf::Vector4>> rainbowGradient = {
-    {0.0f, Mathf::Vector4(1.0f, 0.0f, 0.0f, 1.0f)},  // 빨강
-    {0.5f, Mathf::Vector4(0.0f, 1.0f, 0.0f, 1.0f)},  // 초록
-    {0.9f, Mathf::Vector4(0.0f, 0.0f, 1.0f, 1.0f)}, // 파랑
-    };
-    
-    colorModule->SetTransitionMode(ColorTransitionMode::Discrete);
-    colorModule->SetColorGradient(rainbowGradient);
+    //std::vector<std::pair<float, Mathf::Vector4>> rainbowGradient = {
+    //{0.0f, Mathf::Vector4(1.0f, 0.0f, 0.0f, 1.0f)},  // 빨강
+    //{0.5f, Mathf::Vector4(0.0f, 1.0f, 0.0f, 1.0f)},  // 초록
+    //{0.9f, Mathf::Vector4(0.0f, 0.0f, 1.0f, 1.0f)}, // 파랑
+    //};
+    //
+    //colorModule->SetTransitionMode(ColorTransitionMode::Discrete);
+    //colorModule->SetColorGradient(rainbowGradient);
     //colorModule->SetEasingType(EasingEffect::InOutSine);
     //colorModule->EnableEasing(true);
 
-    auto collisionModule = AddModule<CollisionModule>();
-    collisionModule->SetBounceFactor(1.0f);
-    collisionModule->SetFloorHeight(-10.0f);
+    //auto collisionModule = AddModule<CollisionModule>();
+    //collisionModule->SetBounceFactor(1.0f);
+    //collisionModule->SetFloorHeight(-10.0f);
 
     // 크기 모듈 추가 (깜빡이는 효과)
     //auto sizeModule = AddModule<SizeModule>();
@@ -238,7 +240,7 @@ void SparkleEffect::Update(float delta)
     UpdateInstanceData();
 
     // 기본 업데이트 호출 (모듈 업데이트 포함)
-    EffectModules::Update(delta);
+    EffectSystem::Update(delta);
 }
 
 void SparkleEffect::Render(RenderScene& scene, Camera& camera)
@@ -246,12 +248,12 @@ void SparkleEffect::Render(RenderScene& scene, Camera& camera)
     if (!m_isRunning) // || m_activeParticleCount == 0)
         return;
 
-    m_billboardModule->m_particleSRV = GetModule<SpawnModuleCS>()->GetParticlesSRV();
+    m_billboardModule->m_particleSRV = GetModule<MovementModuleCS>()->GetParticlesSRV();
     m_billboardModule->m_instanceCount = GetModule<SpawnModuleCS>()->GetParticleCount();
 
     auto& deviceContext = DeviceState::g_pDeviceContext;
 
-    m_renderModules[0]->SaveRenderState();
+    m_renderModules[0]->SaveRenderState();  
 
     ID3D11RenderTargetView* rtv = camera.m_renderTarget->GetRTV();
     deviceContext->OMSetRenderTargets(1, &rtv, camera.m_depthStencil->m_pDSV);
@@ -263,7 +265,7 @@ void SparkleEffect::Render(RenderScene& scene, Camera& camera)
     //    m_billboardModule->SetupInstancing(m_instanceData.data(), m_activeParticleCount);
     //}
 
-    EffectModules::Render(scene, camera);
+    EffectSystem::Render(scene, camera);
 
     m_renderModules[0]->CleanupRenderState();
 
