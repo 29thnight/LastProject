@@ -52,8 +52,6 @@ public:
 	ID3D11ShaderResourceView* GetParticlesSRV() { return m_particlesSRV; }
 	ID3D11UnorderedAccessView* GetParticlesUAV() { return m_particlesUAV; }
 
-	void SetParticlesSRV(ID3D11ShaderResourceView* srv) { m_particlesSRV = srv; }
-	void SetParticlesUAV(ID3D11UnorderedAccessView* uav) { m_particlesUAV = uav; }
 protected:
 	bool m_useEasing;
 	EasingEffect m_easingType;

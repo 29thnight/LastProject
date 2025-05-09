@@ -1,9 +1,9 @@
 #pragma once
-#include "EffectSystem.h"
+#include "EffectModules.h"
 #include "ShaderSystem.h"
 #include "Effects.h"
 
-class SparkleEffect : public EffectSystem
+class SparkleEffect : public EffectModules
 {
 public:
     SparkleEffect(const Mathf::Vector3& position, int maxParticles = 100);

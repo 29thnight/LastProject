@@ -1,6 +1,6 @@
 #pragma once
 #include "IRenderPass.h"
-#include "EffectSystem.h"
+#include "EffectModules.h"
 
 enum class Effect
 {
@@ -25,7 +25,7 @@ public:
 
 	void MakeEffects(Effect type, std::string_view name, Mathf::Vector3 pos, int maxParticle = 100);
 
-	EffectSystem* GetEffect(std::string_view name);
+	EffectModules* GetEffect(std::string_view name);
 
 	bool RemoveEffect(std::string_view name);
 
@@ -39,7 +39,7 @@ private:
 	ComPtr<ID3D11Buffer> m_InstanceBuffer;
 	ComPtr<ID3D11Buffer> m_ModelBuffer;			// world view projÀü¿ë
 	
-	std::unordered_map<std::string, std::unique_ptr<EffectSystem>> effects;
+	std::unordered_map<std::string, std::unique_ptr<EffectModules>> effects;
 
 };
 

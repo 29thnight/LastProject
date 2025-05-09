@@ -52,7 +52,7 @@ public:
 	ID3D11UnorderedAccessView* GetDestUAV() { return m_usingBufferA ? m_particlesUAV_B : m_particlesUAV_A; }
 	ID3D11ShaderResourceView* GetSourceSRV() { return m_usingBufferA ? m_particlesSRV_A.Get() : m_particlesSRV_B.Get(); }
 	ID3D11ShaderResourceView* GetDestSRV() { return m_usingBufferA ? m_particlesSRV_B.Get() : m_particlesSRV_A.Get(); }
-	//ID3D11ShaderResourceView* GetParticlesSRV() const { return m_particlesSRV_A.Get(); }
+	ID3D11ShaderResourceView* GetParticlesSRV() const { return m_particlesSRV_A.Get(); }
 	UINT GetParticleCount() const { return m_particlesCapacity; }
 public:
 	ParticleData m_particleTemplate;

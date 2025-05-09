@@ -31,7 +31,7 @@ void EffectManager::MakeEffects(Effect type, std::string_view name, Mathf::Vecto
 	switch (type)
 	{
 	case Effect::Test:
-		//effects[name.data()] = std::make_unique<TestEffect>(pos, maxParticle);
+		effects[name.data()] = std::make_unique<TestEffect>(pos, maxParticle);
 		break;
 	case Effect::Sparkle:
 		effects[name.data()] = std::make_unique<SparkleEffect>(pos, maxParticle);
@@ -40,7 +40,7 @@ void EffectManager::MakeEffects(Effect type, std::string_view name, Mathf::Vecto
 	}
 }
 
-EffectSystem* EffectManager::GetEffect(std::string_view name)
+EffectModules* EffectManager::GetEffect(std::string_view name)
 {
 	auto it = effects.find(name.data());
 	if (it != effects.end()) {
