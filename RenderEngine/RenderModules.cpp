@@ -344,7 +344,7 @@ void BillboardModuleGPU::Render(Mathf::Matrix world, Mathf::Matrix view, Mathf::
 	DirectX11::UpdateBuffer(m_ModelBuffer.Get(), &m_ModelConstantBuffer);
 
 	// 파티클 SRV 셰이더에 바인딩
-	deviceContext->VSSetShaderResources(0, 1, &m_srv);
+	deviceContext->VSSetShaderResources(0, 1, &m_particleSRV);
 
 	// 버텍스 및 인덱스 버퍼 설정
 	UINT stride = sizeof(BillboardVertex);
