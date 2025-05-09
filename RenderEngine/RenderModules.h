@@ -44,10 +44,10 @@ public:
     void CleanupRenderState();
     void SaveRenderState();
     void RestoreRenderState();
-
+    void SetSRV(ID3D11ShaderResourceView* srv) { m_srv = srv; }
 protected:
     std::unique_ptr<PipelineStateObject> m_pso;
-
+    ID3D11ShaderResourceView* m_srv = nullptr;
 private:
     ID3D11DepthStencilState* m_prevDepthState = nullptr;
     UINT m_prevStencilRef = 0;
@@ -55,6 +55,7 @@ private:
     float m_prevBlendFactor[4] = { 0 };
     UINT m_prevSampleMask = 0;
     ID3D11RasterizerState* m_prevRasterizerState = nullptr;
+
 
 };
 
