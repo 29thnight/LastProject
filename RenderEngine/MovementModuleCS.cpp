@@ -10,6 +10,7 @@ void MovementModuleCS::Initialize()
 
 void MovementModuleCS::Update(float delta, std::vector<ParticleData>& particles)
 {
+    DirectX11::BeginEvent(L"MovementModuleCS");
     // 파티클 배열 크기 저장
     m_particlesCapacity = particles.size();
 
@@ -48,6 +49,8 @@ void MovementModuleCS::Update(float delta, std::vector<ParticleData>& particles)
     DeviceState::g_pDeviceContext->CSSetConstantBuffers(0, 1, nullBuffers);
 
     DeviceState::g_pDeviceContext->CSSetShader(nullptr, nullptr, 0);
+
+    DirectX11::EndEvent();
 }
 
 void MovementModuleCS::OnSystemResized(UINT max)

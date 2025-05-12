@@ -29,6 +29,7 @@ void SpawnModuleCS::Initialize()
 
 void SpawnModuleCS::Update(float delta, std::vector<ParticleData>& particles)
 {
+	DirectX11::BeginEvent(L"SpawnModuleCS");
 	m_particlesCapacity = particles.size();
 
 	// 상수 버퍼 업데이트
@@ -55,8 +56,10 @@ void SpawnModuleCS::Update(float delta, std::vector<ParticleData>& particles)
 
 	DeviceState::g_pDeviceContext->CSSetUnorderedAccessViews(0, 5, uavs, initCounts);
 
+
+
 	// 컴퓨트 셰이더 실행
-	UINT numThreadGroups = (std::max<UINT>)(1, (static_cast<UINT>(particles.size()) + 255) / 256);
+	UINT numThreadGroups = (std::max<UINT>)(1, (static_cast<UINT>(particles.size()) + 1023) / 1024);
 	DeviceState::g_pDeviceContext->Dispatch(numThreadGroups, 1, 1);
 
 	// 리소스 해제
@@ -70,6 +73,8 @@ void SpawnModuleCS::Update(float delta, std::vector<ParticleData>& particles)
 	DeviceState::g_pDeviceContext->CSSetConstantBuffers(0, 2, nullBuffers);
 
 	DeviceState::g_pDeviceContext->CSSetShader(nullptr, nullptr, 0);
+
+	DirectX11::EndEvent();
 }
 
 void SpawnModuleCS::OnSystemResized(UINT max)

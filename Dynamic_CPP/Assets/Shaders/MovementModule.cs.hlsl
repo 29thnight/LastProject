@@ -68,7 +68,7 @@ float ApplyEasing(float t, int easingType)
     }
     
     // 기본값
-    return t;
+    return t; 
 }
 
 [numthreads(256, 1, 1)]
@@ -94,15 +94,16 @@ void main(uint3 DTid : SV_DispatchThreadID)
         }
         
         // 중력 적용 (설정된 경우)
-        if (useGravity)
+        if (useGravity != 0)
         {
             // 가속도에 중력 강도 적용
             particle.velocity += particle.acceleration * gravityStrength * deltaTime * easingFactor;
         }
-        
         // 위치 및 회전 업데이트
         particle.position += particle.velocity * deltaTime * easingFactor;
         particle.rotation += particle.rotatespeed * deltaTime * easingFactor;
+        
+        particle.color = float4(1, 0, 0, 1);
     }
     
     // 계산된 파티클 데이터를 출력 버퍼에 쓰기

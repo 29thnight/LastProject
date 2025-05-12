@@ -162,7 +162,7 @@ void InitializeParticle(inout ParticleData particle, uint seed)
 }
 
 // 스레드 그룹 크기 정의
-#define THREAD_GROUP_SIZE 256
+#define THREAD_GROUP_SIZE 1024
 
 // 메인 컴퓨트 셰이더 함수
 [numthreads(THREAD_GROUP_SIZE, 1, 1)]
