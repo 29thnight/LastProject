@@ -13,7 +13,7 @@ public:
 	ParticleModule() : LinkProperty<ParticleModule>(this) {}
 	virtual ~ParticleModule() = default;
 	virtual void Initialize() {}
-	virtual void Update(float delta, std::vector<ParticleData>& particles) = 0;
+	virtual void Update(float delta, std::vector<ParticleData>& particles) {}
 
 	void SetEasingType(EasingEffect type)
 	{
@@ -49,16 +49,44 @@ public:
 		return EaseInOut(m_easingType, m_animationType, m_easingDuration);
 	}
 
-	ID3D11ShaderResourceView* GetParticlesSRV() { return m_particlesSRV; }
-	ID3D11UnorderedAccessView* GetParticlesUAV() { return m_particlesUAV; }
+	// 더블 버퍼를 위해 설정
+	void SetBuffers(ID3D11UnorderedAccessView* inputUAV, ID3D11ShaderResourceView* inputSRV, ID3D11UnorderedAccessView* outputUAV, ID3D11ShaderResourceView* outputSRV)
+	{
+		m_inputUAV = inputUAV;
+		m_inputSRV = inputSRV;
+		m_outputUAV = outputUAV;
+		m_outputSRV = outputSRV;
+	}
+
+	// 이전 모듈에서 읽을 SRV 얻기
+	ID3D11ShaderResourceView* GetInputSRV() const { return m_inputSRV; }
+	ID3D11ShaderResourceView* GetOutputSRV() const { return m_outputSRV; }
+
+	// 현재 모듈에서 쓸 UAV 얻기
+	ID3D11UnorderedAccessView* GetInputUAV() const { return m_inputUAV; }
+	ID3D11UnorderedAccessView* GetOutputUAV() const { return m_outputUAV; }
+
+	virtual void OnSystemResized(UINT max) {}
+
+	// *****파이프라인을 스테이지 별로 해서 하기*****
+	ModuleStage GetStage() const { return m_stage; }
+	void SetStage(ModuleStage stage) { m_stage = stage; }
+
+	virtual bool NeedsBufferSwap() const { return true; }
 
 protected:
+	// 이징 변수
 	bool m_useEasing;
 	EasingEffect m_easingType;
 	StepAnimation m_animationType;
 	float m_easingDuration;
 
-	// 버퍼 참조
-	ID3D11UnorderedAccessView* m_particlesUAV = nullptr;
-	ID3D11ShaderResourceView* m_particlesSRV = nullptr;
+	// 멤버 변수
+	ID3D11UnorderedAccessView* m_inputUAV;
+	ID3D11ShaderResourceView* m_inputSRV;
+	ID3D11UnorderedAccessView* m_outputUAV;
+	ID3D11ShaderResourceView* m_outputSRV;
+
+	// 파이프라인 변수
+	ModuleStage m_stage = ModuleStage::SIMULATION;
 };

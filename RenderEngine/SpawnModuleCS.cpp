@@ -31,19 +31,6 @@ void SpawnModuleCS::Update(float delta, std::vector<ParticleData>& particles)
 {
 	m_particlesCapacity = particles.size();
 
-	// 버퍼 크기 확인 및 필요 시 재생성
-	D3D11_BUFFER_DESC bufferDesc = {};
-	if (m_particlesBufferA)
-	{
-		m_particlesBufferA->GetDesc(&bufferDesc);
-	}
-
-	if (!m_particlesBufferA || particles.size() != bufferDesc.ByteWidth / sizeof(ParticleData))
-	{
-		// 파티클 버퍼 재생성
-		CreateBuffers(particles);
-	}
-
 	// 상수 버퍼 업데이트
 	UpdateConstantBuffers(delta);
 
@@ -54,21 +41,17 @@ void SpawnModuleCS::Update(float delta, std::vector<ParticleData>& particles)
 	ID3D11Buffer* constantBuffers[] = { m_spawnParamsBuffer, m_templateBuffer };
 	DeviceState::g_pDeviceContext->CSSetConstantBuffers(0, 2, constantBuffers);
 
-	// 소스 버퍼(입력)와 대상 버퍼(출력) 설정
-	ID3D11UnorderedAccessView* sourceUAV = GetSourceUAV();
-	ID3D11UnorderedAccessView* destUAV = GetDestUAV();
-
 	// 활성 카운트 리셋
 	UINT initialCount = 0;
 	DeviceState::g_pDeviceContext->UpdateSubresource(m_activeCountBuffer, 0, nullptr, &initialCount, 0, 0);
 
 	// 셰이더에서 출력으로 사용할 버퍼와 기타 UAV 설정
-	ID3D11UnorderedAccessView* uavs[] = { destUAV, m_randomCounterUAV, m_timeUAV, m_spawnCounterUAV, m_activeCountUAV };
+	ID3D11UnorderedAccessView* uavs[] = { m_outputUAV, m_randomCounterUAV, m_timeUAV, m_spawnCounterUAV, m_activeCountUAV };
 	UINT initCounts[] = { 0, 0, 0, 0, 0 };
 
 	// 셰이더에서 입력으로 사용할 버퍼 설정 (필요한 경우)
-	// ID3D11ShaderResourceView* srvs[] = { GetSourceSRV() };
-	// DeviceState::g_pDeviceContext->CSSetShaderResources(0, 1, srvs);
+	ID3D11ShaderResourceView* srvs[] = { m_inputSRV };
+	DeviceState::g_pDeviceContext->CSSetShaderResources(0, 1, srvs);
 
 	DeviceState::g_pDeviceContext->CSSetUnorderedAccessViews(0, 5, uavs, initCounts);
 
@@ -76,140 +59,25 @@ void SpawnModuleCS::Update(float delta, std::vector<ParticleData>& particles)
 	UINT numThreadGroups = (std::max<UINT>)(1, (static_cast<UINT>(particles.size()) + 255) / 256);
 	DeviceState::g_pDeviceContext->Dispatch(numThreadGroups, 1, 1);
 
-	//static UINT lastActiveCount = 0;
-	//UINT currentActiveCount = 0;
-	//
-	//if (TryGetCPUCount(&currentActiveCount)) {
-	//	if (currentActiveCount != lastActiveCount) {
-	//		std::cout << (std::format("Active particles changed: {} -> {}\n",
-	//			lastActiveCount, currentActiveCount).c_str());
-	//		lastActiveCount = currentActiveCount;
-	//	}
-	//}
-
 	// 리소스 해제
 	ID3D11UnorderedAccessView* nullUAVs[] = { nullptr, nullptr, nullptr, nullptr, nullptr };
 	DeviceState::g_pDeviceContext->CSSetUnorderedAccessViews(0, 5, nullUAVs, nullptr);
+
+	ID3D11ShaderResourceView* nullSRVs[] = { nullptr };
+	DeviceState::g_pDeviceContext->CSSetShaderResources(0, 1, nullSRVs);
 
 	ID3D11Buffer* nullBuffers[] = { nullptr, nullptr };
 	DeviceState::g_pDeviceContext->CSSetConstantBuffers(0, 2, nullBuffers);
 
 	DeviceState::g_pDeviceContext->CSSetShader(nullptr, nullptr, 0);
-
-	// 버퍼 역할 뒤집기 - 다음 프레임을 위해
-	m_usingBufferA = !m_usingBufferA;
-
-	// CPU 읽기는 필요에 따라 디버그 모드에서만 사용
-#ifdef _DEBUG
-	//ReadBackParticleBuffer(particles);
-#endif
 }
 
-bool SpawnModuleCS::CreateBuffers(std::vector<ParticleData>& particles)
+void SpawnModuleCS::OnSystemResized(UINT max)
 {
-	// 기존 버퍼 해제
-	if (m_particlesBufferA) m_particlesBufferA->Release();
-	if (m_particlesBufferB) m_particlesBufferB->Release();
-	if (m_particlesUAV_A) m_particlesUAV_A->Release();
-	if (m_particlesUAV_B) m_particlesUAV_B->Release();
-	if (m_particlesSRV_A) m_particlesSRV_A.Reset();
-	if (m_particlesSRV_B) m_particlesSRV_B.Reset();
-
-	// 모든 파티클을 비활성 상태로 초기화
-	for (auto& particle : particles) {
-		particle.isActive = 0;
-	}
-
-	// 파티클 버퍼 생성 설정
-	D3D11_BUFFER_DESC particleBufferDesc = {};
-	particleBufferDesc.ByteWidth = sizeof(ParticleData) * static_cast<UINT>(particles.size());
-	particleBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-	particleBufferDesc.BindFlags = D3D11_BIND_UNORDERED_ACCESS | D3D11_BIND_SHADER_RESOURCE;
-	particleBufferDesc.CPUAccessFlags = 0;
-	particleBufferDesc.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
-	particleBufferDesc.StructureByteStride = sizeof(ParticleData);
-
-	D3D11_SUBRESOURCE_DATA particleInitData = {};
-	particleInitData.pSysMem = particles.data();
-
-	// A 버퍼 생성 (초기 데이터로)
-	HRESULT hr = DeviceState::g_pDevice->CreateBuffer(&particleBufferDesc, &particleInitData, &m_particlesBufferA);
-	if (FAILED(hr))
-		return false;
-
-	// B 버퍼 생성 (동일한 초기 데이터로)
-	hr = DeviceState::g_pDevice->CreateBuffer(&particleBufferDesc, &particleInitData, &m_particlesBufferB);
-	if (FAILED(hr))
-		return false;
-
-	// A 버퍼 UAV 생성
-	D3D11_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
-	uavDesc.Format = DXGI_FORMAT_UNKNOWN;
-	uavDesc.ViewDimension = D3D11_UAV_DIMENSION_BUFFER;
-	uavDesc.Buffer.FirstElement = 0;
-	uavDesc.Buffer.NumElements = static_cast<UINT>(particles.size());
-	uavDesc.Buffer.Flags = 0;
-
-	hr = DeviceState::g_pDevice->CreateUnorderedAccessView(m_particlesBufferA, &uavDesc, &m_particlesUAV_A);
-	if (FAILED(hr))
-		return false;
-
-	// B 버퍼 UAV 생성
-	hr = DeviceState::g_pDevice->CreateUnorderedAccessView(m_particlesBufferB, &uavDesc, &m_particlesUAV_B);
-	if (FAILED(hr))
-		return false;
-
-	// A 버퍼 SRV 생성
-	D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-	srvDesc.Format = DXGI_FORMAT_UNKNOWN;
-	srvDesc.ViewDimension = D3D11_SRV_DIMENSION_BUFFER;
-	srvDesc.Buffer.FirstElement = 0;
-	srvDesc.Buffer.NumElements = static_cast<UINT>(particles.size());
-
-	hr = DeviceState::g_pDevice->CreateShaderResourceView(m_particlesBufferA, &srvDesc, m_particlesSRV_A.GetAddressOf());
-	if (FAILED(hr))
-		return false;
-
-	// B 버퍼 SRV 생성
-	hr = DeviceState::g_pDevice->CreateShaderResourceView(m_particlesBufferB, &srvDesc, m_particlesSRV_B.GetAddressOf());
-	if (FAILED(hr))
-		return false;
-
-	// 디버깅 용도를 위한 스테이징 버퍼
-	//D3D11_BUFFER_DESC stagingDesc = {};
-	//stagingDesc.ByteWidth = sizeof(ParticleData) * static_cast<UINT>(particles.size());
-	//stagingDesc.Usage = D3D11_USAGE_STAGING;
-	//stagingDesc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
-	//stagingDesc.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
-	//stagingDesc.StructureByteStride = sizeof(ParticleData);
-	//
-	//hr = DeviceState::g_pDevice->CreateBuffer(&stagingDesc, nullptr, &m_particlesStagingBuffer);
-	//if (FAILED(hr))
-	// n	return false;
-
-	// 초기 상태는 A 버퍼 사용
-	m_usingBufferA = true;
-
-	return true;
-}
-
-void SpawnModuleCS::SetMaxParticles(UINT maxParticles)
-{
-	if (maxParticles != m_particlesCapacity)
+	if (max != m_particlesCapacity)
 	{
-		// 이전 버퍼 정리는 CreateBuffers에서 처리되므로 여기서는 불필요
-		// 단순히 새 파티클 벡터 생성 및 초기화
-		m_particlesCapacity = maxParticles;
+		m_particlesCapacity = max;
 		m_paramsDirty = true;
-
-		// 새 파티클 벡터 생성 및 초기화
-		std::vector<ParticleData> newParticles(maxParticles);
-		for (auto& particle : newParticles) {
-			particle.isActive = 0; // 비활성 상태로 초기화
-		}
-
-		// 새 버퍼 생성 - CreateBuffers 내에서 기존 버퍼 해제 및 재생성
-		CreateBuffers(newParticles);
 	}
 }
 
@@ -508,15 +376,13 @@ void SpawnModuleCS::Release()
 	if (m_randomCounterUAV) m_randomCounterUAV->Release();
 	if (m_activeCountBuffer) m_activeCountBuffer->Release();
 	if (m_activeCountUAV) m_activeCountUAV->Release();
+	if (m_activeCountStagingBuffer) m_activeCountStagingBuffer->Release();
 
-	// 더블 버퍼링 리소스 해제
-	if (m_particlesBufferA) m_particlesBufferA->Release();
-	if (m_particlesBufferB) m_particlesBufferB->Release();
-	if (m_particlesUAV_A) m_particlesUAV_A->Release();
-	if (m_particlesUAV_B) m_particlesUAV_B->Release();
-	if (m_particlesSRV_A) m_particlesSRV_A.Reset();
-	if (m_particlesSRV_B) m_particlesSRV_B.Reset();
-
+	// 기타 리소스 해제
+	if (m_timeBuffer) m_timeBuffer->Release();
+	if (m_timeUAV) m_timeUAV->Release();
+	if (m_spawnCounterBuffer) m_spawnCounterBuffer->Release();
+	if (m_spawnCounterUAV) m_spawnCounterUAV->Release();
 
 	// 모든 포인터 초기화
 	m_computeShader = nullptr;
@@ -524,22 +390,19 @@ void SpawnModuleCS::Release()
 	m_templateBuffer = nullptr;
 	m_randomCounterBuffer = nullptr;
 	m_randomCounterUAV = nullptr;
-	m_particlesBufferA = nullptr;
-	m_particlesBufferB = nullptr;
-	m_particlesUAV_A = nullptr;
-	m_particlesUAV_B = nullptr;
-
-	// 기타 리소스 해제
-	if (m_timeBuffer) m_timeBuffer->Release();
-	if (m_timeUAV) m_timeUAV->Release();
-	if (m_spawnCounterBuffer) m_spawnCounterBuffer->Release();
-	if (m_spawnCounterUAV) m_spawnCounterUAV->Release();
 	m_timeBuffer = nullptr;
 	m_timeUAV = nullptr;
 	m_spawnCounterBuffer = nullptr;
 	m_spawnCounterUAV = nullptr;
 	m_activeCountBuffer = nullptr;
 	m_activeCountUAV = nullptr;
+	m_activeCountStagingBuffer = nullptr;
+
+	// 외부 버퍼 참조 초기화
+	m_inputUAV = nullptr;
+	m_inputSRV = nullptr;
+	m_outputUAV = nullptr;
+	m_outputSRV = nullptr;
 
 	m_isInitialized = false;
 }

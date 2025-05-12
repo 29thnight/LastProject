@@ -40,7 +40,7 @@ void EffectManager::MakeEffects(Effect type, std::string_view name, Mathf::Vecto
 	}
 }
 
-EffectModules* EffectManager::GetEffect(std::string_view name)
+ParticleSystem* EffectManager::GetEffect(std::string_view name)
 {
 	auto it = effects.find(name.data());
 	if (it != effects.end()) {

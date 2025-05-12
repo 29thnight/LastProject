@@ -154,6 +154,9 @@
     <Filter Include="RenderPass\EffectPass\Modules\0.Base">
       <UniqueIdentifier>{46ea26bc-7c25-4988-a10f-b82e11fe7b7f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="RenderPass\EffectPass\Modules\333. System">
+      <UniqueIdentifier>{f37feb8a-36f9-410d-893c-0b39ed9001a4}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="SceneRenderer.cpp">
@@ -302,6 +305,9 @@
     </ClCompile>
     <ClCompile Include="MovementModuleCS.cpp">
       <Filter>RenderPass\EffectPass\Modules\2.movement</Filter>
+    </ClCompile>
+    <ClCompile Include="ParticleSystem.cpp">
+      <Filter>RenderPass\EffectPass\Modules\333. System</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -466,6 +472,9 @@
     </ClInclude>
     <ClInclude Include="MovementModuleCS.h">
       <Filter>RenderPass\EffectPass\Modules\2.movement</Filter>
+    </ClInclude>
+    <ClInclude Include="ParticleSystem.h">
+      <Filter>RenderPass\EffectPass\Modules\333. System</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

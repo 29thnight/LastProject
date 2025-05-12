@@ -24,11 +24,11 @@ public:
 	// ParticleModule method
 	void Initialize() override;
 	void Update(float delta, std::vector<ParticleData>& particles) override;
+	void OnSystemResized(UINT max) override;
 
 	// SpawnModule type method
 	void SetEmitterShape(EmitterType type) { m_emitterType = type; m_paramsDirty = true; }
 	void SetSpawnRate(float rate) { m_spawnRate = rate; m_paramsDirty = true; }
-	void SetMaxParticles(UINT maxParticles);
 	void SetLifeTime(float value) { m_particleTemplate.lifeTime = value; m_templateDirty = true; }
 	void SetRotateSpeed(float value) { m_particleTemplate.rotatespeed = value; m_templateDirty = true; }
 	void SetSize(float2 value) { m_particleTemplate.size = value; m_templateDirty = true; }
@@ -46,22 +46,12 @@ public:
 
 	// Get method
 	UINT GetActiveParticleCount();
-	ID3D11Buffer* GetSourceBuffer() { return m_usingBufferA ? m_particlesBufferA : m_particlesBufferB; }
-	ID3D11Buffer* GetDestBuffer() { return m_usingBufferA ? m_particlesBufferB : m_particlesBufferA; }
-	ID3D11UnorderedAccessView* GetSourceUAV() { return m_usingBufferA ? m_particlesUAV_A : m_particlesUAV_B; }
-	ID3D11UnorderedAccessView* GetDestUAV() { return m_usingBufferA ? m_particlesUAV_B : m_particlesUAV_A; }
-	ID3D11ShaderResourceView* GetSourceSRV() { return m_usingBufferA ? m_particlesSRV_A.Get() : m_particlesSRV_B.Get(); }
-	ID3D11ShaderResourceView* GetDestSRV() { return m_usingBufferA ? m_particlesSRV_B.Get() : m_particlesSRV_A.Get(); }
-	ID3D11ShaderResourceView* GetParticlesSRV() const { return m_particlesSRV_A.Get(); }
 	UINT GetParticleCount() const { return m_particlesCapacity; }
 public:
 	ParticleData m_particleTemplate;
-	ComPtr<ID3D11ShaderResourceView> m_particlesSRV_A;
-	ComPtr<ID3D11ShaderResourceView> m_particlesSRV_B;
 private:
 
 	// compute shader method
-	bool CreateBuffers(std::vector<ParticleData>& particles);
 	void UpdateConstantBuffers(float delta);
 	void Release();
 
@@ -124,10 +114,6 @@ private:
 	ID3D11Buffer* m_templateBuffer;
 	ID3D11Buffer* m_randomCounterBuffer;
 	ID3D11UnorderedAccessView* m_randomCounterUAV;
-	ID3D11Buffer* m_particlesBufferA = nullptr;
-	ID3D11Buffer* m_particlesBufferB = nullptr;
-	ID3D11UnorderedAccessView* m_particlesUAV_A = nullptr;
-	ID3D11UnorderedAccessView* m_particlesUAV_B = nullptr;
 	ID3D11Buffer* m_timeBuffer;
 	ID3D11UnorderedAccessView* m_timeUAV;
 
@@ -135,7 +121,6 @@ private:
 	bool m_isInitialized;
 	bool m_paramsDirty;
 	bool m_templateDirty;
-	bool m_usingBufferA;
 	
 	// 파티클 수 추적 함수
 	ID3D11Buffer* m_activeCountBuffer;				// 활성 파티클 수를 저장할 버퍼

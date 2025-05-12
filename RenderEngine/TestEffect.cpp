@@ -31,7 +31,7 @@ void TestEffect::Update(float delta)
     //UpdateInstanceBuffer();
 
     // 기본 업데이트 호출 (모듈 업데이트 포함)
-    EffectModules::Update(delta);
+    ParticleSystem::Update(delta);
 }
 
 void TestEffect::Render(RenderScene& scene, Camera& camera)
@@ -87,7 +87,7 @@ void TestEffect::Render(RenderScene& scene, Camera& camera)
     }
 
     // 기존 EffectModules의 Render 메서드 호출
-    EffectModules::Render(scene, camera);
+    ParticleSystem::Render(scene, camera);
 
     // 렌더 스테이트 정리 및 복원
     if (m_renderModules.size() > 0) {

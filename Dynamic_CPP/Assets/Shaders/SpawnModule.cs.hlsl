@@ -187,10 +187,10 @@ void main(uint3 DTid : SV_DispatchThreadID, uint3 GTid : SV_GroupThreadID, uint3
             }
             else
             {
-                // 파티클 위치 업데이트
-                gParticles[particleIndex].velocity += gParticles[particleIndex].acceleration * gDeltaTime;
-                gParticles[particleIndex].position += gParticles[particleIndex].velocity * gDeltaTime;
-                gParticles[particleIndex].rotation += gParticles[particleIndex].rotatespeed * gDeltaTime;
+                // 파티클 위치 업데이트 -> movementmodule로 이동
+                //gParticles[particleIndex].velocity += gParticles[particleIndex].acceleration * gDeltaTime;
+                //gParticles[particleIndex].position += gParticles[particleIndex].velocity * gDeltaTime;
+                //gParticles[particleIndex].rotation += gParticles[particleIndex].rotatespeed * gDeltaTime;
                 
                 // 활성 파티클 카운터 증가
                 InterlockedAdd(gActiveParticleCounter[0], 1);

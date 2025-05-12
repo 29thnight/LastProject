@@ -49,3 +49,10 @@ enum class ColorTransitionMode
 	Discrete,
 	Custom,
 };
+
+enum class ModuleStage {
+	SPAWN,          // 파티클 생성
+	SIMULATION,     // 물리 시뮬레이션
+	MODIFICATION,   // 파티클 속성 변경
+	RENDERING       // 렌더링 준비
+};

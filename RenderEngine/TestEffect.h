@@ -1,9 +1,9 @@
 #pragma once
-#include "EffectModules.h"
+#include "ParticleSystem.h"
 #include "ShaderSystem.h"
 #include "Effects.h"
 
-class TestEffect : public EffectModules
+class TestEffect : public ParticleSystem
 {
 public:
 	TestEffect(const Mathf::Vector3& position, int maxParticles = 100);
