@@ -137,8 +137,8 @@ SparkleEffect::SparkleEffect(const Mathf::Vector3& position, int maxParticles) :
                         static bool isG = false;
                         if (ImGui::Checkbox("Gravity", &isG))
                         {
-                            //auto module = GetModule<MovementModule>();
-                            //module->SetUseGravity(isG);
+                            auto module = GetModule<MovementModuleCS>();
+                            module->SetUseGravity(isG);
                         }
 
                         ImGui::EndTabItem();
@@ -182,7 +182,7 @@ void SparkleEffect::InitializeModules()
     //AddModule<LifeModule>();
 
     // 움직임 모듈 추가 (중력 없음, 자유롭게 움직이는 반짝임)
-    //auto movementModule = AddModule<MovementModule>();
+    auto movementModule = AddModule<MovementModuleCS>();
     //movementModule->SetUseGravity(false);
 
     // 색상 모듈 추가 (반짝이는 효과를 위한 투명도 변화)

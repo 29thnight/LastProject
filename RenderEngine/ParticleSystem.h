@@ -3,6 +3,7 @@
 #include "RenderModules.h"
 #include "IRenderPass.h"
 #include "SpawnModuleCS.h"
+#include "MovementModuleCS.h"
 
 // maxparticles
 class ParticleSystem
