@@ -117,6 +117,7 @@ SparkleEffect::SparkleEffect(const Mathf::Vector3& position, int maxParticles) :
                                 auto module = GetModule<SpawnModuleCS>();
                                 module->SetSpawnRate(m_rate);
                             }
+                            //ImGui::Text("Spawn Rate", module)
                         }
                         ImGui::EndTabItem();
                     }
@@ -128,6 +129,8 @@ SparkleEffect::SparkleEffect(const Mathf::Vector3& position, int maxParticles) :
                         ImGui::SliderFloat("X", &m_position.x, -50.0f, 50.0f);
                         ImGui::SliderFloat("Y", &m_position.y, -50.0f, 50.0f);
                         ImGui::SliderFloat("Z", &m_position.z, -50.0f, 50.0f);
+
+                        SetPosition(m_position);
 
                         if (ImGui::Button("Spawn Burst"))
                         {

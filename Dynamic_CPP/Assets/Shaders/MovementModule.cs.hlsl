@@ -70,8 +70,11 @@ float ApplyEasing(float t, int easingType)
     // 기본값
     return t; 
 }
+// 스레드 그룹 크기 정의
+#define THREAD_GROUP_SIZE 1024
 
-[numthreads(256, 1, 1)]
+// 메인 컴퓨트 셰이더 함수
+[numthreads(THREAD_GROUP_SIZE, 1, 1)]
 void main(uint3 DTid : SV_DispatchThreadID)
 {
     // 스레드 ID가 파티클 배열 크기를 초과하면 종료
@@ -98,12 +101,12 @@ void main(uint3 DTid : SV_DispatchThreadID)
         {
             // 가속도에 중력 강도 적용
             particle.velocity += particle.acceleration * gravityStrength * deltaTime * easingFactor;
+            particle.color = float4(1, 0, 0, 1);
         }
         // 위치 및 회전 업데이트
         particle.position += particle.velocity * deltaTime * easingFactor;
         particle.rotation += particle.rotatespeed * deltaTime * easingFactor;
         
-        particle.color = float4(1, 0, 0, 1);
     }
     
     // 계산된 파티클 데이터를 출력 버퍼에 쓰기

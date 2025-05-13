@@ -5,6 +5,8 @@
 #include "EaseInOut.h"
 #include "BaseEffectStruct.h"
 
+#define THREAD_GROUP_SIZE 1024
+
 // easing 위치 고민 현재는 그냥 모든 module에 넣을수 있는 구조
 
 class ParticleModule : public LinkProperty<ParticleModule>

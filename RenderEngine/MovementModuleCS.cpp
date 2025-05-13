@@ -35,7 +35,7 @@ void MovementModuleCS::Update(float delta, std::vector<ParticleData>& particles)
 
     // 컴퓨트 셰이더 실행
     // 각 스레드 그룹은 최대 256개 스레드를 포함 (일반적인 DirectX 구현)
-    UINT numThreadGroups = (std::max<UINT>)(1, (static_cast<UINT>(particles.size()) + 255) / 256);
+    UINT numThreadGroups = (std::max<UINT>)(1, (static_cast<UINT>(particles.size()) + THREAD_GROUP_SIZE - 1) / THREAD_GROUP_SIZE);
     DeviceState::g_pDeviceContext->Dispatch(numThreadGroups, 1, 1);
 
     // 리소스 해제

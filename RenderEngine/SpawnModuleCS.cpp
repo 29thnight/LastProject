@@ -9,8 +9,8 @@ void SpawnModuleCS::Initialize()
 	m_particleTemplate.age = 0.0f;
 	m_particleTemplate.lifeTime = 1.0f;
 	m_particleTemplate.rotation = 0.0f;
-	m_particleTemplate.rotatespeed = 1.0f;
-	m_particleTemplate.size = float2(1.0f, 1.0f);
+	m_particleTemplate.rotatespeed = 0.0f;
+	m_particleTemplate.size = float2(0.3f, 0.3f);
 	m_particleTemplate.color = float4(1.0f, 1.0f, 1.0f, 1.0f);
 	m_particleTemplate.velocity = float3(0.0f, 0.0f, 0.0f);
 	m_particleTemplate.acceleration = float3(0.0f, -9.8f, 0.0f);
@@ -56,10 +56,8 @@ void SpawnModuleCS::Update(float delta, std::vector<ParticleData>& particles)
 
 	DeviceState::g_pDeviceContext->CSSetUnorderedAccessViews(0, 5, uavs, initCounts);
 
-
-
 	// 컴퓨트 셰이더 실행
-	UINT numThreadGroups = (std::max<UINT>)(1, (static_cast<UINT>(particles.size()) + 1023) / 1024);
+	UINT numThreadGroups = (std::max<UINT>)(1, (static_cast<UINT>(particles.size()) + THREAD_GROUP_SIZE - 1) / THREAD_GROUP_SIZE);
 	DeviceState::g_pDeviceContext->Dispatch(numThreadGroups, 1, 1);
 
 	// 리소스 해제
@@ -234,6 +232,19 @@ bool SpawnModuleCS::InitializeCompute()
 	hr = DeviceState::g_pDevice->CreateBuffer(&stagingDesc, nullptr, &m_activeCountStagingBuffer);
 	if (FAILED(hr))
 		return false;
+
+	// 시간 버퍼 초기화
+	float zeroTime = 0.0f;
+	DeviceState::g_pDeviceContext->UpdateSubresource(m_timeBuffer, 0, nullptr, &zeroTime, 0, 0);
+
+	// 스폰 카운터 초기화
+	UINT zeroCounter[2] = { 0, 0 };
+	DeviceState::g_pDeviceContext->UpdateSubresource(m_spawnCounterBuffer, 0, nullptr, zeroCounter, 0, 0);
+
+	// 활성 카운터 초기화
+	UINT zeroActive = 0;
+	DeviceState::g_pDeviceContext->UpdateSubresource(m_activeCountBuffer, 0, nullptr, &zeroActive, 0, 0);
+
 
 	m_isInitialized = true;
 

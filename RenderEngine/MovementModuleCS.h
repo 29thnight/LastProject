@@ -4,7 +4,7 @@
 class MovementModuleCS : public ParticleModule
 {
 public:
-    MovementModuleCS(bool useGravity = true, float gravityStrength = 1.0f)
+    MovementModuleCS(bool useGravity = false, float gravityStrength = 1.0f)
         : m_gravity(useGravity), m_gravityStrength(gravityStrength),
         m_computeShader(nullptr), m_movementParamsBuffer(nullptr),
         m_isInitialized(false), m_paramsDirty(true), m_easingEnabled(false),

@@ -1,3 +1,6 @@
+// SpawnModule.hlsl
+// 파티클의 생성에 관한 컴퓨트 셰이더
+
 struct ParticleData
 {
     float3 position;
@@ -147,18 +150,23 @@ void InitializeParticle(inout ParticleData particle, uint seed)
     }
     
     // 초기 속도에 랜덤 변동 추가
+    float3 baseVelocity = gVelocity;
+    float3 randomVelocity = float3(0, 0, 0);
+
     if (gHorizontalVelocityRange > 0.0f || gMaxVerticalVelocity > gMinVerticalVelocity)
     {
         float verticalVelocity = lerp(gMinVerticalVelocity, gMaxVerticalVelocity, rand(seed));
         float angle = rand(seed) * 6.28318f;
         float magnitude = rand(seed) * gHorizontalVelocityRange;
-        
-        particle.velocity += float3(
-            magnitude * cos(angle),
-            verticalVelocity,
-            magnitude * sin(angle)
-        );
+    
+        randomVelocity = float3(
+        magnitude * cos(angle),
+        verticalVelocity,
+        magnitude * sin(angle)
+    );
     }
+    
+    particle.velocity = baseVelocity + randomVelocity;
 }
 
 // 스레드 그룹 크기 정의
@@ -187,11 +195,6 @@ void main(uint3 DTid : SV_DispatchThreadID, uint3 GTid : SV_GroupThreadID, uint3
             }
             else
             {
-                // 파티클 위치 업데이트 -> movementmodule로 이동
-                //gParticles[particleIndex].velocity += gParticles[particleIndex].acceleration * gDeltaTime;
-                //gParticles[particleIndex].position += gParticles[particleIndex].velocity * gDeltaTime;
-                //gParticles[particleIndex].rotation += gParticles[particleIndex].rotatespeed * gDeltaTime;
-                
                 // 활성 파티클 카운터 증가
                 InterlockedAdd(gActiveParticleCounter[0], 1);
             }
@@ -205,7 +208,7 @@ void main(uint3 DTid : SV_DispatchThreadID, uint3 GTid : SV_GroupThreadID, uint3
         gActiveParticleCounter[0] = 0;
     
         // 누적 시간에 현재 델타 타임 추가
-        float newAccumulatedTime = gAccumulatedTime + gDeltaTime;
+        //float newAccumulatedTime = gAccumulatedTime + gDeltaTime;
     
         // 기본 방법: 정확한 파티클 수 계산
         float particlesPerSecond = gSpawnRate;
