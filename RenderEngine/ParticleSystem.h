@@ -86,9 +86,13 @@ public:
 	void ReleaseBuffers();
 
 private:
+	void InitializeDefaultModule();
+
 	void ConfigureModuleBuffers(ParticleModule& module, bool isFirstModule);
 
 	void CreateParticleBuffer(UINT numParticles);
+
+	void CreateSharedBuffers();
 
 protected:
 	// 렌더 초기화 메소드는 rendermodule에서 정의.
@@ -112,6 +116,13 @@ protected:
 	ID3D11ShaderResourceView* m_particleSRV_A = nullptr;
 	ID3D11ShaderResourceView* m_particleSRV_B = nullptr;
 
+
 	bool m_usingBufferA = true; // 현재 A 버퍼를 입력으로 사용 중인지 여부
+
+	// 공유 버퍼
+	ID3D11UnorderedAccessView* m_inactiveCountUAV = nullptr;
+	ID3D11UnorderedAccessView* m_activeCounterUAV = nullptr;
+
+
 };
 

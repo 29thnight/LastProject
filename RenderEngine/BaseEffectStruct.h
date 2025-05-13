@@ -51,6 +51,7 @@ enum class ColorTransitionMode
 };
 
 enum class ModuleStage {
+	LIFE,			// 생명 주기
 	SPAWN,          // 파티클 생성
 	SIMULATION,     // 물리 시뮬레이션
 	MODIFICATION,   // 파티클 속성 변경

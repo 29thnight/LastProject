@@ -45,7 +45,6 @@ public:
 	bool TryGetCPUCount(UINT* count);
 
 	// Get method
-	UINT GetActiveParticleCount();
 	UINT GetParticleCount() const { return m_particlesCapacity; }
 public:
 	ParticleData m_particleTemplate;

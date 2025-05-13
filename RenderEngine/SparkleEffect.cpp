@@ -107,7 +107,7 @@ SparkleEffect::SparkleEffect(const Mathf::Vector3& position, int maxParticles) :
                                 ResizeParticleSystem(m_max);
                             }
 
-                            ImGui::Text("Active Particles: %d / %d", module->GetActiveParticleCount(), module->GetParticleCount());
+                            //ImGui::Text("Active Particles: %d / %d", , module->GetParticleCount());
                             ImGui::Text("Instance Count: %d", m_billboardModule ? m_billboardModule->m_instanceCount : 0);
                         }
                         {

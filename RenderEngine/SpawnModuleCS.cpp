@@ -47,8 +47,8 @@ void SpawnModuleCS::Update(float delta, std::vector<ParticleData>& particles)
 	DeviceState::g_pDeviceContext->UpdateSubresource(m_activeCountBuffer, 0, nullptr, &initialCount, 0, 0);
 
 	// 셰이더에서 출력으로 사용할 버퍼와 기타 UAV 설정
-	ID3D11UnorderedAccessView* uavs[] = { m_outputUAV, m_randomCounterUAV, m_timeUAV, m_spawnCounterUAV, m_activeCountUAV };
-	UINT initCounts[] = { 0, 0, 0, 0, 0 };
+	ID3D11UnorderedAccessView* uavs[] = { m_outputUAV, m_randomCounterUAV, m_timeUAV, m_spawnCounterUAV};
+	UINT initCounts[] = { 0, 0, 0, 0 };
 
 	// 셰이더에서 입력으로 사용할 버퍼 설정 (필요한 경우)
 	ID3D11ShaderResourceView* srvs[] = { m_inputSRV };
@@ -272,59 +272,6 @@ bool SpawnModuleCS::TryGetCPUCount(UINT* count)
 	}
 
 	return false;
-}
-
-UINT SpawnModuleCS::GetActiveParticleCount()
-{
-	static UINT frameCount = 0;
-	frameCount++;
-
-	// PID 컨트롤러 매개변수 (한 번만 초기화되도록 static으로 선언)
-	static float kP = 0.5f;  // 비례 게인
-	static float kI = 0.1f;  // 적분 게인
-	static float kD = 0.05f; // 미분 게인
-
-	// 오차 항 (함수 호출 간에 값이 유지되도록 static으로 선언)
-	static float errorIntegral = 0.0f;
-	static float previousError = 0.0f;
-
-	// 기본 예측
-	float avgLifetime = m_particleTemplate.lifeTime;
-	float spawnRate = m_spawnRate;
-	UINT baseEstimate = static_cast<UINT>(spawnRate * avgLifetime);
-	baseEstimate = (std::min)(baseEstimate, static_cast<UINT>(m_particlesCapacity));
-
-	// 주기적으로 GPU에서 실제 카운트 가져오기 (30프레임마다)
-	if (frameCount % 30 == 0) {  // 더 자주 업데이트하여 정확도 향상
-		UINT actualCount;
-		if (TryGetCPUCount(&actualCount)) {
-			// 오차 계산
-			float error = static_cast<float>(actualCount) - static_cast<float>(baseEstimate);
-
-			// PID 제어
-			errorIntegral += error;
-			float derivative = error - previousError;
-
-			// 너무 큰 적분 오차 방지 (anti-windup)
-			errorIntegral = (std::max)(-1000.0f, (std::min)(errorIntegral, 1000.0f));
-
-			// 보정 계산
-			float correction = kP * error + kI * errorIntegral + kD * derivative;
-			m_correctionFactor = 1.0f + correction / (std::max)(1.0f, static_cast<float>(baseEstimate));
-
-			// 보정 계수가 너무 극단적이지 않도록 제한
-			m_correctionFactor = (std::max)(0.2f, (std::min)(m_correctionFactor, 5.0f));
-
-			// 이전 오차 업데이트
-			previousError = error;
-
-			// 디버깅 용도로 실제 값 저장
-			m_actualCount = actualCount;
-		}
-	}
-
-	// 보정된 예측값 반환
-	return static_cast<UINT>(baseEstimate * m_correctionFactor);
 }
 
 void SpawnModuleCS::UpdateConstantBuffers(float delta)

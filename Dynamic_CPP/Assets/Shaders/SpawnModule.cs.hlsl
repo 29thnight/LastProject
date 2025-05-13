@@ -57,8 +57,8 @@ RWStructuredBuffer<uint> gRandomCounter : register(u1);
 RWStructuredBuffer<float> gTimeBuffer : register(u2);
 // 새로 추가: 스폰 카운터와 필요한 파티클 수를 위한 버퍼
 RWStructuredBuffer<uint> gSpawnCounter : register(u3);
-RWStructuredBuffer<uint> gActiveParticleCounter : register(u4);
-
+RWStructuredBuffer<uint> gInactiveParticleIndices : register(u4);
+RWStructuredBuffer<uint> gInactiveParticleCount : register(u5);
 // 난수 생성 함수
 uint wang_hash(uint seed)
 {
@@ -174,41 +174,13 @@ void InitializeParticle(inout ParticleData particle, uint seed)
 
 // 메인 컴퓨트 셰이더 함수
 [numthreads(THREAD_GROUP_SIZE, 1, 1)]
-void main(uint3 DTid : SV_DispatchThreadID, uint3 GTid : SV_GroupThreadID, uint3 Gid : SV_GroupID)
+void main(uint3 DTid : SV_DispatchThreadID, uint3 GTid : SV_GroupThreadID)
 {
-    uint particleIndex = DTid.x;
-    
-    // 단계 1: 기존 파티클 업데이트 - 모든 스레드가 담당
-    if (particleIndex < gMaxParticles)
-    {
-        // 현재 파티클이 활성 상태인지 확인
-        if (gParticles[particleIndex].isActive == 1)
-        {
-            // 기존 활성 파티클 업데이트 (나이 증가 등)
-            gParticles[particleIndex].age += gDeltaTime;
-            
-            // 수명이 다했는지 확인
-            if (gParticles[particleIndex].age >= gParticles[particleIndex].lifeTime)
-            {
-                // 파티클 비활성화
-                gParticles[particleIndex].isActive = 0;
-            }
-            else
-            {
-                // 활성 파티클 카운터 증가
-                InterlockedAdd(gActiveParticleCounter[0], 1);
-            }
-        }
-    }
-    
     // 첫 번째 스레드만 이번 프레임에 생성할 파티클 수를 계산
     if (DTid.x == 0)
     {
-        // 활성 파티클 카운터 초기화
-        gActiveParticleCounter[0] = 0;
-    
         // 누적 시간에 현재 델타 타임 추가
-        //float newAccumulatedTime = gAccumulatedTime + gDeltaTime;
+        float newAccumulatedTime = gAccumulatedTime + gDeltaTime;
     
         // 기본 방법: 정확한 파티클 수 계산
         float particlesPerSecond = gSpawnRate;
@@ -224,45 +196,35 @@ void main(uint3 DTid : SV_DispatchThreadID, uint3 GTid : SV_GroupThreadID, uint3
         // 남은 소수점 부분은 다음 프레임으로
         float remainingFraction = frac(totalParticles);
     
-        // 디버깅용 카운터 업데이트
+        // 생성할 파티클 수 저장
         gSpawnCounter[0] = particlesToSpawn;
-        gSpawnCounter[1] = 0; // 이번 프레임에 생성된 카운트는 0으로 초기화
     
         // 남은 소수점 저장
         gTimeBuffer[0] = remainingFraction;
     }
     
-    // 그룹 동기화 - 모든 스레드가 이 지점에 도달할 때까지 대기
+    // 그룹 동기화
     GroupMemoryBarrierWithGroupSync();
     
-    // 단계 2: 새 파티클 생성 - 병렬로 처리
-    if (gSpawnCounter[0] > 0 && gSpawnRate > 0.0f)
+    // 병렬 파티클 생성
+    uint spawnCount = gSpawnCounter[0];
+    uint inactiveCount = gInactiveParticleCount[0];
+    
+    // 스레드 인덱스가 스폰 카운트보다 작고, 비활성 파티클이 충분히 있는 경우
+    if (GTid.x < spawnCount && GTid.x < inactiveCount)
     {
-        // 각 스레드가 하나의 파티클을 담당
-        for (uint i = 0; i < gMaxParticles; i += THREAD_GROUP_SIZE)
-        {
-            uint idx = i + GTid.x;
-            
-            if (idx < gMaxParticles && gParticles[idx].isActive == 0)
-            {
-                // 원자적 연산으로 카운터 증가
-                uint spawnIndex;
-                InterlockedAdd(gSpawnCounter[1], 1, spawnIndex);
-                
-                // 아직 생성해야 할 파티클이 남아있는지 확인
-                if (spawnIndex < gSpawnCounter[0])
-                {
-                    // 난수 시드 생성 (시간, 인덱스, 그룹 ID 등을 조합)
-                    uint seed = wang_hash(idx + spawnIndex + Gid.x * 1000 + GTid.x);
-                    InterlockedAdd(gRandomCounter[0], 1); // 다음 프레임을 위한 시드 증가
-                    
-                    // 파티클 초기화
-                    InitializeParticle(gParticles[idx], seed);
-                    
-                    // 할당된 파티클을 찾았으므로 루프 종료
-                    break;
-                }
-            }
-        }
+        // 비활성 인덱스에서 파티클 슬롯 가져오기
+        uint particleIndex = gInactiveParticleIndices[GTid.x];
+        
+        // 난수 시드 생성
+        uint seed = wang_hash(particleIndex + DTid.x);
+        InterlockedAdd(gRandomCounter[0], 1);
+        
+        // 새 파티클 생성
+        ParticleData particle;
+        InitializeParticle(particle, seed);
+        
+        // 파티클 저장
+        gParticles[particleIndex] = particle;
     }
 }

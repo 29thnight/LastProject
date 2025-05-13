@@ -53,6 +53,7 @@ void main(uint3 DTid : SV_DispatchThreadID)
     uint particleIndex = DTid.x;
     uint maxParticles = gMaxParticles; // 상수 버퍼에서 가져오거나 하드코딩
     
+    
     if (particleIndex < maxParticles)
     {
         ParticleData particle = gParticles[particleIndex];
