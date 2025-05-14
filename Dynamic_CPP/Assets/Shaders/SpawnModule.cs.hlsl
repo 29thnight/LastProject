@@ -77,18 +77,37 @@ float rand(inout uint state)
 }
 
 // 파티클 초기화 함수
-void InitializeParticle(inout ParticleData particle, uint seed)
+// 파티클 초기화 함수 개선
+void InitializeParticle(inout ParticleData particle, inout uint seed)
 {
-    // 기본 속성 설정
+    // 모든 필드를 먼저 0으로 초기화
+    particle.position = float3(0, 0, 0);
+    particle.pad1 = 0.0f;
+    particle.velocity = float3(0, 0, 0);
+    particle.pad2 = 0.0f;
+    particle.acceleration = float3(0, 0, 0);
+    particle.pad3 = 0.0f;
+    particle.size = float2(0, 0);
+    particle.age = 0.0f;
+    particle.lifeTime = 0.0f;
+    particle.rotation = 0.0f;
+    particle.rotatespeed = 0.0f;
+    particle.pad4 = float2(0, 0);
+    particle.color = float4(0, 0, 0, 0);
+    particle.isActive = 0;
+    particle.pad5 = float3(0, 0, 0);
+    
+    // 이제 실제 값으로 설정
+    particle.position = float3(0, 0, 0); // 기본값, 이후 이미터 타입에 따라 변경됨
+    particle.velocity = gVelocity;
+    particle.acceleration = gAcceleration;
+    particle.size = gSize;
     particle.age = 0.0f;
     particle.lifeTime = gLifeTime;
     particle.rotation = 0.0f;
     particle.rotatespeed = gRotateSpeed;
-    particle.size = gSize;
     particle.color = gColor;
-    particle.velocity = gVelocity;
-    particle.acceleration = gAcceleration;
-    particle.isActive = 1; // 활성화
+    particle.isActive = 1;
     
     // 이미터 타입에 따른 위치 설정
     switch (gEmitterType)
@@ -101,7 +120,7 @@ void InitializeParticle(inout ParticleData particle, uint seed)
         {
                 float theta = rand(seed) * 6.28318f; // 0 ~ 2π (방위각)
                 float phi = rand(seed) * 3.14159f; // 0 ~ π (고도각)
-                float radius = gEmitterRadius; // 반지름
+                float radius = gEmitterRadius * pow(rand(seed), 1 / 3.0); // 균등 분포를 위한 r 계산
             
                 particle.position = float3(
                 radius * sin(phi) * cos(theta),
@@ -138,7 +157,7 @@ void InitializeParticle(inout ParticleData particle, uint seed)
         case 4: // circle
         {
                 float theta = rand(seed) * 6.28318f;
-                float radius = (0.5f + rand(seed) * 0.5f) * gEmitterRadius;
+                float radius = sqrt(rand(seed)) * gEmitterRadius; // 균등 분포를 위한 제곱근
             
                 particle.position = float3(
                 radius * cos(theta),
@@ -160,13 +179,14 @@ void InitializeParticle(inout ParticleData particle, uint seed)
         float magnitude = rand(seed) * gHorizontalVelocityRange;
     
         randomVelocity = float3(
-        magnitude * cos(angle),
-        verticalVelocity,
-        magnitude * sin(angle)
-    );
+            magnitude * cos(angle),
+            verticalVelocity,
+            magnitude * sin(angle)
+        );
     }
     
     particle.velocity = baseVelocity + randomVelocity;
+    particle.acceleration = gAcceleration;
 }
 
 // 스레드 그룹 크기 정의
@@ -222,7 +242,8 @@ void main(uint3 DTid : SV_DispatchThreadID, uint3 GTid : SV_GroupThreadID)
         
         // 새 파티클 생성
         ParticleData particle;
-        InitializeParticle(particle, seed);
+        uint tempSeed = seed;
+        InitializeParticle(particle, tempSeed);
         
         // 파티클 저장
         gParticles[particleIndex] = particle;

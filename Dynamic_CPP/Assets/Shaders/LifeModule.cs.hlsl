@@ -44,7 +44,7 @@ void main(uint3 DTid : SV_DispatchThreadID)
     if (DTid.x == 0)
     {
         gActiveParticleCounter[0] = 0;
-        gInactiveParticleCount[0] = 0;
+        //gInactiveParticleCount[0] = 0;
     }
     
     // 모든 스레드가 초기화를 기다림

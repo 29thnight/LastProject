@@ -10,6 +10,8 @@ ParticleSystem::ParticleSystem(int maxParticles) : m_maxParticles(maxParticles),
 
 	m_instanceData.resize(maxParticles);
 	CreateParticleBuffer(maxParticles);
+	CreateSharedBuffers();
+	InitializeParticleIndices();
 }
 
 ParticleSystem::~ParticleSystem()
@@ -27,6 +29,7 @@ ParticleSystem::~ParticleSystem()
 	//m_moduleList.ClearLink();
 
 	ReleaseBuffers();
+	ReleaseSharedBuffer();
 
 	for (auto* module : m_renderModules)
 	{
@@ -63,10 +66,20 @@ void ParticleSystem::Update(float delta)
 		// 3. 현재 모듈의 입출력 버퍼 설정
 		ConfigureModuleBuffers(module, isFirstModule);
 
-		// 4. 모듈 업데이트
+		// 4. 공유 버퍼 설정 (Life 모듈과 Spawn 모듈을 위한 처리)
+		if (auto* lifeModule = dynamic_cast<LifeModuleCS*>(&module)) {
+			// Life 모듈인 경우 공유 버퍼 설정
+			lifeModule->SetSharedBuffers(m_inactiveIndicesUAV, m_inactiveCountUAV, m_activeCountUAV);
+		}
+		else if (auto* spawnModule = dynamic_cast<SpawnModuleCS*>(&module)) {
+			// Spawn 모듈인 경우 공유 버퍼 설정
+			spawnModule->SetSharedBuffers(m_inactiveIndicesUAV, m_inactiveCountUAV, m_activeCountUAV);
+		}
+
+		// 5. 모듈 업데이트
 		module.Update(delta, m_particleData);
 
-		// 5. 다음 모듈을 위해 버퍼 상태 업데이트
+		// 6. 다음 모듈을 위해 버퍼 상태 업데이트
 		if (!isFirstModule) {
 			m_usingBufferA = !m_usingBufferA; // 버퍼 A/B 교대
 		}
@@ -199,6 +212,114 @@ void ParticleSystem::CreateParticleBuffer(UINT numParticles)
 	m_usingBufferA = true;
 }
 
+void ParticleSystem::CreateSharedBuffers()
+{
+	// 비활성 파티클 인덱스 버퍼 (모든 파티클 수만큼)
+	D3D11_BUFFER_DESC inactiveIndexDesc = {};
+	inactiveIndexDesc.ByteWidth = sizeof(UINT) * m_maxParticles;
+	inactiveIndexDesc.Usage = D3D11_USAGE_DEFAULT;
+	inactiveIndexDesc.BindFlags = D3D11_BIND_UNORDERED_ACCESS;
+	inactiveIndexDesc.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
+	inactiveIndexDesc.StructureByteStride = sizeof(UINT);
+
+	// 초기에는 모든 파티클이 비활성 상태로 가정
+	std::vector<UINT> initialIndices(m_maxParticles);
+	for (UINT i = 0; i < m_maxParticles; ++i)
+		initialIndices[i] = i;
+
+	D3D11_SUBRESOURCE_DATA indexData = {};
+	indexData.pSysMem = initialIndices.data();
+
+	HRESULT hr = DeviceState::g_pDevice->CreateBuffer(&inactiveIndexDesc, &indexData, &m_inactiveIndicesBuffer);
+	if (FAILED(hr))
+		return; // 오류 처리
+
+	// 비활성 카운터 버퍼
+	D3D11_BUFFER_DESC countDesc = {};
+	countDesc.ByteWidth = sizeof(UINT);
+	countDesc.Usage = D3D11_USAGE_DEFAULT;
+	countDesc.BindFlags = D3D11_BIND_UNORDERED_ACCESS;
+	countDesc.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
+	countDesc.StructureByteStride = sizeof(UINT);
+
+	UINT initialCount = m_maxParticles;
+	D3D11_SUBRESOURCE_DATA countData = {};
+	countData.pSysMem = &initialCount;
+
+	hr = DeviceState::g_pDevice->CreateBuffer(&countDesc, &countData, &m_inactiveCountBuffer);
+	if (FAILED(hr))
+		return; // 오류 처리
+
+	// 활성 파티클 카운터 버퍼
+	hr = DeviceState::g_pDevice->CreateBuffer(&countDesc, nullptr, &m_activeCountBuffer);
+	if (FAILED(hr))
+		return; // 오류 처리
+
+	// UAV 생성
+	D3D11_UNORDERED_ACCESS_VIEW_DESC inactiveIndexUAVDesc = {};
+	inactiveIndexUAVDesc.Format = DXGI_FORMAT_UNKNOWN;
+	inactiveIndexUAVDesc.ViewDimension = D3D11_UAV_DIMENSION_BUFFER;
+	inactiveIndexUAVDesc.Buffer.FirstElement = 0;
+	inactiveIndexUAVDesc.Buffer.NumElements = m_maxParticles;
+	inactiveIndexUAVDesc.Buffer.Flags = 0;
+
+	hr = DeviceState::g_pDevice->CreateUnorderedAccessView(m_inactiveIndicesBuffer, &inactiveIndexUAVDesc, &m_inactiveIndicesUAV);
+	if (FAILED(hr))
+		return; // 오류 처리
+
+	D3D11_UNORDERED_ACCESS_VIEW_DESC countUAVDesc = {};
+	countUAVDesc.Format = DXGI_FORMAT_UNKNOWN;
+	countUAVDesc.ViewDimension = D3D11_UAV_DIMENSION_BUFFER;
+	countUAVDesc.Buffer.FirstElement = 0;
+	countUAVDesc.Buffer.NumElements = 1;
+	countUAVDesc.Buffer.Flags = 0;
+
+	hr = DeviceState::g_pDevice->CreateUnorderedAccessView(m_inactiveCountBuffer, &countUAVDesc, &m_inactiveCountUAV);
+	if (FAILED(hr))
+		return; // 오류 처리
+
+	hr = DeviceState::g_pDevice->CreateUnorderedAccessView(m_activeCountBuffer, &countUAVDesc, &m_activeCountUAV);
+	if (FAILED(hr))
+		return; // 오류 처리
+}
+
+void ParticleSystem::ReleaseSharedBuffer()
+{
+	if (m_inactiveIndicesBuffer) { m_inactiveIndicesBuffer->Release(); m_inactiveIndicesBuffer = nullptr; }
+	if (m_inactiveCountBuffer) { m_inactiveCountBuffer->Release(); m_inactiveCountBuffer = nullptr; }
+	if (m_activeCountBuffer) { m_activeCountBuffer->Release(); m_activeCountBuffer = nullptr; }
+
+	if (m_inactiveIndicesUAV) { m_inactiveIndicesUAV->Release(); m_inactiveIndicesUAV = nullptr; }
+	if (m_inactiveCountUAV) { m_inactiveCountUAV->Release(); m_inactiveCountUAV = nullptr; }
+	if (m_activeCountUAV) { m_activeCountUAV->Release(); m_activeCountUAV = nullptr; }
+}
+
+void ParticleSystem::InitializeParticleIndices()
+{
+	// 비활성 인덱스 배열 초기화
+	std::vector<UINT> indices(m_particleData.size());
+	for (size_t i = 0; i < m_particleData.size(); i++)
+	{
+		indices[i] = static_cast<UINT>(i);
+	}
+
+	// GPU 버퍼에 업로드
+	D3D11_MAPPED_SUBRESOURCE mappedResource;
+	if (SUCCEEDED(DeviceState::g_pDeviceContext->Map(m_inactiveIndicesBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource)))
+	{
+		memcpy(mappedResource.pData, indices.data(), indices.size() * sizeof(UINT));
+		DeviceState::g_pDeviceContext->Unmap(m_inactiveIndicesBuffer, 0);
+	}
+
+	// 카운터 초기화
+	UINT count = static_cast<UINT>(m_particleData.size());
+	if (SUCCEEDED(DeviceState::g_pDeviceContext->Map(m_inactiveCountBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource)))
+	{
+		memcpy(mappedResource.pData, &count, sizeof(UINT));
+		DeviceState::g_pDeviceContext->Unmap(m_inactiveCountBuffer, 0);
+	}
+}
+
 void ParticleSystem::ResizeParticleSystem(UINT newMaxParticles)
 {
 	if (newMaxParticles == m_maxParticles)
@@ -213,6 +334,7 @@ void ParticleSystem::ResizeParticleSystem(UINT newMaxParticles)
 
 	// 2. 기존 리소스 정리
 	ReleaseBuffers();
+	ReleaseSharedBuffer();
 
 	// 3. 파티클 데이터 벡터 크기 조정
 	m_maxParticles = newMaxParticles;
@@ -237,6 +359,7 @@ void ParticleSystem::ResizeParticleSystem(UINT newMaxParticles)
 
 	// 6. 새 버퍼 생성
 	CreateParticleBuffer(m_maxParticles);
+	CreateSharedBuffers();
 
 	// 7. 모듈에 새 크기 알림 (필요시)
 	for (auto it = m_moduleList.begin(); it != m_moduleList.end(); ++it) {

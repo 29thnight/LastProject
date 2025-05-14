@@ -23,22 +23,19 @@ public:
 
     bool InitializeCompute();
 
-    void SetInactiveBuffers(ID3D11UnorderedAccessView* inactiveIndicesUAV, ID3D11UnorderedAccessView* inactiveCountUAV)
+    void SetSharedBuffers(
+        ID3D11UnorderedAccessView* inactiveIndicesUAV,
+        ID3D11UnorderedAccessView* inactiveCountUAV,
+        ID3D11UnorderedAccessView* activeCountUAV)
     {
+        // 공유 버퍼 설정 - ParticleSystem에서 호출하여 공유 버퍼 전달
         m_inactiveIndicesUAV = inactiveIndicesUAV;
         m_inactiveCountUAV = inactiveCountUAV;
+        m_activeCountUAV = activeCountUAV;
     }
 
-    void SetActiveCounterBuffer(ID3D11UnorderedAccessView* activeCounterUAV)
-    {
-        m_activeCounterUAV = activeCounterUAV;
-    }
+    UINT GetActiveParticleCount();
 
-    void SetInputOutput(ID3D11ShaderResourceView* inputSRV, ID3D11UnorderedAccessView* outputUAV)
-    {
-        m_inputSRV = inputSRV;
-        m_outputUAV = outputUAV;
-    }
 
 private:
     void UpdateConstantBuffers(float delta);
@@ -58,10 +55,13 @@ private:
 
     ID3D11UnorderedAccessView* m_inactiveIndicesUAV;
     ID3D11UnorderedAccessView* m_inactiveCountUAV;
-    ID3D11UnorderedAccessView* m_activeCounterUAV;
+    ID3D11UnorderedAccessView* m_activeCountUAV;
 
     bool m_isInitialized;
     bool m_paramsDirty;
     UINT m_particlesCapacity = 0;
+
+    // 스테이징 버퍼
+    ID3D11Buffer* m_activeCountStagingBuffer = nullptr;
 };
 

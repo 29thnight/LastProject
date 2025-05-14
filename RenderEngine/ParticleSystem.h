@@ -4,6 +4,7 @@
 #include "IRenderPass.h"
 #include "SpawnModuleCS.h"
 #include "MovementModuleCS.h"
+#include "LifeModuleCS.h"
 
 // maxparticles
 class ParticleSystem
@@ -79,20 +80,21 @@ public:
 
 	void SetPosition(const Mathf::Vector3& position);
 
-	void SetMaxParticles(int max) { m_particleData.resize(max); m_instanceData.resize(max); }
-
 	void ResizeParticleSystem(UINT newMaxParticles);
 
 	void ReleaseBuffers();
 
 private:
-	void InitializeDefaultModule();
 
 	void ConfigureModuleBuffers(ParticleModule& module, bool isFirstModule);
 
 	void CreateParticleBuffer(UINT numParticles);
 
 	void CreateSharedBuffers();
+
+	void ReleaseSharedBuffer();
+
+	void InitializeParticleIndices();
 
 protected:
 	// 렌더 초기화 메소드는 rendermodule에서 정의.
@@ -119,9 +121,14 @@ protected:
 
 	bool m_usingBufferA = true; // 현재 A 버퍼를 입력으로 사용 중인지 여부
 
-	// 공유 버퍼
+	// 비활성 파티클 관리용 버퍼
+	ID3D11Buffer* m_inactiveIndicesBuffer = nullptr;
+	ID3D11Buffer* m_inactiveCountBuffer = nullptr;
+	ID3D11Buffer* m_activeCountBuffer = nullptr;
+
+	ID3D11UnorderedAccessView* m_inactiveIndicesUAV = nullptr;
 	ID3D11UnorderedAccessView* m_inactiveCountUAV = nullptr;
-	ID3D11UnorderedAccessView* m_activeCounterUAV = nullptr;
+	ID3D11UnorderedAccessView* m_activeCountUAV = nullptr;
 
 
 };

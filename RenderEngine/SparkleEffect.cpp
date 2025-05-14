@@ -100,14 +100,14 @@ SparkleEffect::SparkleEffect(const Mathf::Vector3& position, int maxParticles) :
                             module->SetEmitterShape(EmitterType::circle);
                         }
                         {
-                            auto module = GetModule<SpawnModuleCS>();
+                            auto module = GetModule<LifeModuleCS>();
                             ImGui::InputScalar("MaxParticles", ImGuiDataType_U32, &m_max);
                             if (ImGui::Button("SetMaxParticles"))
                             {
                                 ResizeParticleSystem(m_max);
                             }
 
-                            //ImGui::Text("Active Particles: %d / %d", , module->GetParticleCount());
+                            ImGui::Text("Active Particles: %d / %d", module->GetActiveParticleCount(), m_maxParticles);
                             ImGui::Text("Instance Count: %d", m_billboardModule ? m_billboardModule->m_instanceCount : 0);
                         }
                         {
@@ -180,7 +180,9 @@ void SparkleEffect::InitializeModules()
 {
     // 스폰 모듈 추가 (이펙트의 위치는 m_position)
     //AddModule<SpawnModule>(10.0f, EmitterType::box);
+    AddModule<LifeModuleCS>();
     AddModule<SpawnModuleCS>(10.0f, EmitterType::box, 1000000);
+
     // 수명 모듈 추가
     //AddModule<LifeModule>();
 

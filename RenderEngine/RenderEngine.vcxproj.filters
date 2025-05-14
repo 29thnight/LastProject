@@ -145,9 +145,6 @@
     <Filter Include="RenderPass\EffectPass\Example">
       <UniqueIdentifier>{82ba81b1-96a9-4f84-a25a-43bc76616fde}</UniqueIdentifier>
     </Filter>
-    <Filter Include="RenderPass\EffectPass\Modules\1.spawn">
-      <UniqueIdentifier>{abc9ea2b-d86f-4982-80e0-4b55f08c5d3e}</UniqueIdentifier>
-    </Filter>
     <Filter Include="RenderPass\EffectPass\Modules\0.Base">
       <UniqueIdentifier>{46ea26bc-7c25-4988-a10f-b82e11fe7b7f}</UniqueIdentifier>
     </Filter>
@@ -157,14 +154,17 @@
     <Filter Include="RenderPass\EffectPass\Modules\3.movement">
       <UniqueIdentifier>{53a97904-81ba-4fcb-a80c-09c42f3826b5}</UniqueIdentifier>
     </Filter>
-    <Filter Include="RenderPass\EffectPass\Modules\2.Life">
-      <UniqueIdentifier>{5becc588-c1a5-4b63-a177-4480f5853216}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Shaders\Effect\Modules">
       <UniqueIdentifier>{a6b36797-9dd3-4d5f-a45f-d7278d99e9df}</UniqueIdentifier>
     </Filter>
     <Filter Include="Shaders\Effect\Base">
       <UniqueIdentifier>{ec089200-0627-434c-a097-aed5da0b75ce}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="RenderPass\EffectPass\Modules\1.Life">
+      <UniqueIdentifier>{5becc588-c1a5-4b63-a177-4480f5853216}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="RenderPass\EffectPass\Modules\2.spawn">
+      <UniqueIdentifier>{abc9ea2b-d86f-4982-80e0-4b55f08c5d3e}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -301,13 +301,13 @@
       <Filter>RenderPass\EffectPass\Example</Filter>
     </ClCompile>
     <ClCompile Include="SpawnModuleCS.cpp">
-      <Filter>RenderPass\EffectPass\Modules\1.spawn</Filter>
+      <Filter>RenderPass\EffectPass\Modules\2.spawn</Filter>
     </ClCompile>
     <ClCompile Include="ParticleModule.cpp">
       <Filter>RenderPass\EffectPass\Modules\0.Base</Filter>
     </ClCompile>
     <ClCompile Include="SpawnModule.cpp">
-      <Filter>RenderPass\EffectPass\Modules\1.spawn</Filter>
+      <Filter>RenderPass\EffectPass\Modules\2.spawn</Filter>
     </ClCompile>
     <ClCompile Include="EaseInOut.cpp">
       <Filter>RenderPass\EffectPass\Modules\0.Base</Filter>
@@ -319,10 +319,10 @@
       <Filter>RenderPass\EffectPass\Modules\333. System</Filter>
     </ClCompile>
     <ClCompile Include="LifeModuleCS.cpp">
-      <Filter>RenderPass\EffectPass\Modules\2.Life</Filter>
+      <Filter>RenderPass\EffectPass\Modules\1.Life</Filter>
     </ClCompile>
     <ClCompile Include="LifeModule.cpp">
-      <Filter>RenderPass\EffectPass\Modules\2.Life</Filter>
+      <Filter>RenderPass\EffectPass\Modules\1.Life</Filter>
     </ClCompile>
     <ClCompile Include="MovementModule.cpp">
       <Filter>RenderPass\EffectPass\Modules\3.movement</Filter>
@@ -474,13 +474,13 @@
       <Filter>RenderPass\EffectPass\Example</Filter>
     </ClInclude>
     <ClInclude Include="SpawnModuleCS.h">
-      <Filter>RenderPass\EffectPass\Modules\1.spawn</Filter>
+      <Filter>RenderPass\EffectPass\Modules\2.spawn</Filter>
     </ClInclude>
     <ClInclude Include="ParticleModule.h">
       <Filter>RenderPass\EffectPass\Modules\0.Base</Filter>
     </ClInclude>
     <ClInclude Include="SpawnModule.h">
-      <Filter>RenderPass\EffectPass\Modules\1.spawn</Filter>
+      <Filter>RenderPass\EffectPass\Modules\2.spawn</Filter>
     </ClInclude>
     <ClInclude Include="BaseEffectStruct.h">
       <Filter>RenderPass\EffectPass\Modules\0.Base</Filter>
@@ -495,10 +495,10 @@
       <Filter>RenderPass\EffectPass\Modules\333. System</Filter>
     </ClInclude>
     <ClInclude Include="LifeModuleCS.h">
-      <Filter>RenderPass\EffectPass\Modules\2.Life</Filter>
+      <Filter>RenderPass\EffectPass\Modules\1.Life</Filter>
     </ClInclude>
     <ClInclude Include="LifeModule.h">
-      <Filter>RenderPass\EffectPass\Modules\2.Life</Filter>
+      <Filter>RenderPass\EffectPass\Modules\1.Life</Filter>
     </ClInclude>
     <ClInclude Include="MovementModule.h">
       <Filter>RenderPass\EffectPass\Modules\3.movement</Filter>

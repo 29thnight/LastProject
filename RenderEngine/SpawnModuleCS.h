@@ -46,6 +46,17 @@ public:
 
 	// Get method
 	UINT GetParticleCount() const { return m_particlesCapacity; }
+
+	// shared buffer method
+	void SetSharedBuffers(ID3D11UnorderedAccessView* inactiveIndicesUAV,
+		ID3D11UnorderedAccessView* inactiveCountUAV,
+		ID3D11UnorderedAccessView* activeCountUAV)
+	{
+		m_inactiveIndicesUAV = inactiveIndicesUAV;
+		m_inactiveCountUAV = inactiveCountUAV;
+		m_activeCountUAV = activeCountUAV;
+	}
+
 public:
 	ParticleData m_particleTemplate;
 private:
@@ -122,9 +133,11 @@ private:
 	bool m_templateDirty;
 	
 	// 파티클 수 추적 함수
-	ID3D11Buffer* m_activeCountBuffer;				// 활성 파티클 수를 저장할 버퍼
-	ID3D11UnorderedAccessView* m_activeCountUAV;	// 버퍼의 UAV
-	ID3D11Buffer* m_activeCountStagingBuffer;		// CPU 읽기용 스테이징 버퍼
+	ID3D11Buffer* m_activeCountBuffer;				 // 활성 파티클 수를 저장할 버퍼
+	ID3D11UnorderedAccessView* m_activeCountUAV;	 // 버퍼의 UAV
+	ID3D11UnorderedAccessView* m_inactiveIndicesUAV; // 버퍼의 UAV
+	ID3D11UnorderedAccessView* m_inactiveCountUAV;	 // 버퍼의 UAV
+	ID3D11Buffer* m_activeCountStagingBuffer;		 // CPU 읽기용 스테이징 버퍼
 	float m_correctionFactor;
 	UINT m_actualCount;
 
