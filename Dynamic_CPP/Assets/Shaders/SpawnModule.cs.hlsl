@@ -25,8 +25,8 @@ cbuffer SpawnParams : register(b0)
 {
     float gSpawnRate;
     float gDeltaTime;
-    float gAccumulatedTime;
     int gEmitterType;
+    float pad;
     float3 gEmitterSize;
     float gEmitterRadius;
     uint gMaxParticles;
@@ -57,6 +57,7 @@ RWStructuredBuffer<uint> gRandomCounter : register(u1);
 RWStructuredBuffer<float> gTimeBuffer : register(u2);
 // 새로 추가: 스폰 카운터와 필요한 파티클 수를 위한 버퍼
 RWStructuredBuffer<uint> gSpawnCounter : register(u3);
+
 RWStructuredBuffer<uint> gInactiveParticleIndices : register(u4);
 RWStructuredBuffer<uint> gInactiveParticleCount : register(u5);
 // 난수 생성 함수
@@ -93,7 +94,7 @@ void InitializeParticle(inout ParticleData particle, inout uint seed)
     particle.rotation = 0.0f;
     particle.rotatespeed = 0.0f;
     particle.pad4 = float2(0, 0);
-    particle.color = float4(0, 0, 0, 0);
+    particle.color = float4(0, 0, 0, 1);
     particle.isActive = 0;
     particle.pad5 = float3(0, 0, 0);
     
@@ -103,7 +104,7 @@ void InitializeParticle(inout ParticleData particle, inout uint seed)
     particle.acceleration = gAcceleration;
     particle.size = gSize;
     particle.age = 0.0f;
-    particle.lifeTime = gLifeTime;
+    particle.lifeTime = 15.0f;
     particle.rotation = 0.0f;
     particle.rotatespeed = gRotateSpeed;
     particle.color = gColor;
@@ -192,33 +193,32 @@ void InitializeParticle(inout ParticleData particle, inout uint seed)
 // 스레드 그룹 크기 정의
 #define THREAD_GROUP_SIZE 1024
 
-// 메인 컴퓨트 셰이더 함수
 [numthreads(THREAD_GROUP_SIZE, 1, 1)]
-void main(uint3 DTid : SV_DispatchThreadID, uint3 GTid : SV_GroupThreadID)
+void main(uint3 DTid : SV_DispatchThreadID)
 {
-    // 첫 번째 스레드만 이번 프레임에 생성할 파티클 수를 계산
+    // 첫 번째 스레드만 이번 프레임에 생성할 파티클 수 계산
     if (DTid.x == 0)
     {
-        // 누적 시간에 현재 델타 타임 추가
-        float newAccumulatedTime = gAccumulatedTime + gDeltaTime;
-    
-        // 기본 방법: 정확한 파티클 수 계산
+        // 비활성 카운터 값 확인
+        uint inactiveCount = gInactiveParticleCount[0];
+        
+        // 생성할 파티클 수 계산 
         float particlesPerSecond = gSpawnRate;
         float particlesThisFrame = particlesPerSecond * gDeltaTime;
-    
+        
         // 누적 소수점 처리
         float fractionalPart = frac(gTimeBuffer[0]);
         float totalParticles = particlesThisFrame + fractionalPart;
-    
+        
         // 생성할 파티클 수 (정수부)
-        uint particlesToSpawn = uint(totalParticles);
-    
+        uint particlesToSpawn = min(uint(totalParticles), inactiveCount);
+        
         // 남은 소수점 부분은 다음 프레임으로
         float remainingFraction = frac(totalParticles);
-    
+        
         // 생성할 파티클 수 저장
         gSpawnCounter[0] = particlesToSpawn;
-    
+        
         // 남은 소수점 저장
         gTimeBuffer[0] = remainingFraction;
     }
@@ -226,26 +226,30 @@ void main(uint3 DTid : SV_DispatchThreadID, uint3 GTid : SV_GroupThreadID)
     // 그룹 동기화
     GroupMemoryBarrierWithGroupSync();
     
-    // 병렬 파티클 생성
+    // 각 스레드는 전역 인덱스를 사용하여 파티클 처리
+    uint globalIndex = DTid.x;
     uint spawnCount = gSpawnCounter[0];
     uint inactiveCount = gInactiveParticleCount[0];
     
-    // 스레드 인덱스가 스폰 카운트보다 작고, 비활성 파티클이 충분히 있는 경우
-    if (GTid.x < spawnCount && GTid.x < inactiveCount)
+    // 생성할 파티클 수보다 작고, 비활성 파티클이 충분히 있는 경우
+    if (globalIndex < spawnCount && globalIndex < inactiveCount)
     {
         // 비활성 인덱스에서 파티클 슬롯 가져오기
-        uint particleIndex = gInactiveParticleIndices[GTid.x];
+        uint particleIndex = gInactiveParticleIndices[globalIndex];
         
-        // 난수 시드 생성
-        uint seed = wang_hash(particleIndex + DTid.x);
-        InterlockedAdd(gRandomCounter[0], 1);
-        
-        // 새 파티클 생성
-        ParticleData particle;
-        uint tempSeed = seed;
-        InitializeParticle(particle, tempSeed);
-        
-        // 파티클 저장
-        gParticles[particleIndex] = particle;
+        // 유효한 인덱스인지 확인
+        if (particleIndex < gMaxParticles)
+        {
+            // 난수 시드 생성
+            uint seed = wang_hash(particleIndex + DTid.x + gRandomCounter[0]);
+            InterlockedAdd(gRandomCounter[0], 1);
+            
+            // 파티클 초기화
+            ParticleData particle = (ParticleData) 0;
+            InitializeParticle(particle, seed);
+            
+            // 중요: 파티클 데이터를 GPU 버퍼에 저장
+            gParticles[particleIndex] = particle;
+        }
     }
 }

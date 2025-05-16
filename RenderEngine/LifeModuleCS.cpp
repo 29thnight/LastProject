@@ -56,6 +56,23 @@ void LifeModuleCS::Update(float delta, std::vector<ParticleData>& particles)
     DeviceState::g_pDeviceContext->CSSetShader(nullptr, nullptr, 0);
 
     DirectX11::EndEvent();
+
+    if (m_isInitialized && m_activeCountUAV) {
+        // 활성 파티클 수 가져오기
+        UINT activeCount = GetActiveParticleCount();
+
+        // 디버그 출력
+        std::cout << "Active particles: " << activeCount << std::endl;
+
+        // 첫 5개 파티클 상태 출력 (활성/비활성 상관없이)
+        for (int i = 0; i < std::min(5, (int)particles.size()); i++) {
+            std::cout << "Particle " << i << ": "
+                << "Active=" << particles[i].isActive
+                << ", Age=" << particles[i].age
+                << ", Lifetime=" << particles[i].lifeTime
+                << std::endl;
+        }
+    }
 }
 
 void LifeModuleCS::OnSystemResized(UINT max)

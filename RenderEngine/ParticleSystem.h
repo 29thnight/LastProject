@@ -84,6 +84,8 @@ public:
 
 	void ReleaseBuffers();
 
+	ID3D11ShaderResourceView* GetCurrentRenderingSRV() const;
+
 private:
 
 	void ConfigureModuleBuffers(ParticleModule& module, bool isFirstModule);

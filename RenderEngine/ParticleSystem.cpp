@@ -46,7 +46,7 @@ void ParticleSystem::Play()
 
 	for (auto& particle : m_particleData)
 	{
-		particle.isActive = false;
+		particle.isActive = 0;
 	}
 }
 
@@ -55,37 +55,43 @@ void ParticleSystem::Update(float delta)
 	if (!m_isRunning || m_isPaused)
 		return;
 
-	// 1. 모듈을 순회하기 전에 초기 버퍼 설정
+	// 모듈 순회
 	bool isFirstModule = true;
-
-	// 2. 각 모듈을 순회하면서 버퍼 설정 및 업데이트
-	ParticleModule* prevModule = nullptr;
 	for (auto it = m_moduleList.begin(); it != m_moduleList.end(); ++it) {
 		ParticleModule& module = *it;
 
-		// 3. 현재 모듈의 입출력 버퍼 설정
-		ConfigureModuleBuffers(module, isFirstModule);
+		// 현재 모듈의 입출력 버퍼 설정
+		if (m_usingBufferA) {
+			// A가 입력, B가 출력
+			module.SetBuffers(m_particleUAV_A, m_particleSRV_A, m_particleUAV_B, m_particleSRV_B);
+		}
+		else {
+			// B가 입력, A가 출력
+			module.SetBuffers(m_particleUAV_B, m_particleSRV_B, m_particleUAV_A, m_particleSRV_A);
+		}
 
-		// 4. 공유 버퍼 설정 (Life 모듈과 Spawn 모듈을 위한 처리)
+		// 공유 버퍼 설정
 		if (auto* lifeModule = dynamic_cast<LifeModuleCS*>(&module)) {
-			// Life 모듈인 경우 공유 버퍼 설정
 			lifeModule->SetSharedBuffers(m_inactiveIndicesUAV, m_inactiveCountUAV, m_activeCountUAV);
+			module.Update(delta, m_particleData);
+			m_activeParticleCount = lifeModule->GetActiveParticleCount();
 		}
 		else if (auto* spawnModule = dynamic_cast<SpawnModuleCS*>(&module)) {
-			// Spawn 모듈인 경우 공유 버퍼 설정
 			spawnModule->SetSharedBuffers(m_inactiveIndicesUAV, m_inactiveCountUAV, m_activeCountUAV);
+			module.Update(delta, m_particleData);
+		}
+		else {
+			module.Update(delta, m_particleData);
 		}
 
-		// 5. 모듈 업데이트
-		module.Update(delta, m_particleData);
-
-		// 6. 다음 모듈을 위해 버퍼 상태 업데이트
-		if (!isFirstModule) {
-			m_usingBufferA = !m_usingBufferA; // 버퍼 A/B 교대
-		}
-
+		// 각 모듈 처리 후 버퍼 스왑
+		m_usingBufferA = !m_usingBufferA;
 		isFirstModule = false;
-		prevModule = &module;
+	}
+
+	// 홀수 모듈 수에 대한 조정 (필요시)
+	if (m_moduleList.size() % 2 == 1) {
+		m_usingBufferA = !m_usingBufferA;
 	}
 }
 
@@ -415,42 +421,34 @@ void ParticleSystem::ReleaseBuffers()
 	}
 }
 
+ID3D11ShaderResourceView* ParticleSystem::GetCurrentRenderingSRV() const
+{
+	bool finalIsBufferA = m_usingBufferA;
+	if (m_moduleList.size() % 2 == 1) {
+		// 모듈 개수가 홀수이면 반전
+		finalIsBufferA = !finalIsBufferA;
+	}
+
+	return finalIsBufferA ? m_particleSRV_A : m_particleSRV_B;
+}
+
 void ParticleSystem::ConfigureModuleBuffers(ParticleModule& module, bool isFirstModule)
 {
-	if (isFirstModule) {
-		// 첫 번째 모듈: 이전 프레임의 결과를 입력으로 사용
-		// (현재 m_usingBufferA 상태에 따라)
-		if (m_usingBufferA) {
-			// A가 입력(읽기), B가 출력(쓰기) 버퍼
-			module.SetBuffers(
-				m_particleUAV_A, m_particleSRV_A,  // 입력
-				m_particleUAV_B, m_particleSRV_B   // 출력
-			);
-		}
-		else {
-			// B가 입력(읽기), A가 출력(쓰기) 버퍼
-			module.SetBuffers(
-				m_particleUAV_B, m_particleSRV_B,  // 입력
-				m_particleUAV_A, m_particleSRV_A   // 출력
-			);
-		}
+	// 간소화된 로직: 현재 사용 중인 버퍼가 입력, 다른 버퍼가 출력
+	if (m_usingBufferA) {
+		// A가 입력(읽기), B가 출력(쓰기) 버퍼
+		module.SetBuffers(
+			m_particleUAV_A, m_particleSRV_A,  // 입력
+			m_particleUAV_B, m_particleSRV_B   // 출력
+		);
+		//std::cout << "  Module using: Buffer A → Buffer B" << std::endl;
 	}
 	else {
-		// 두 번째 이후 모듈: 이전 모듈의 출력을 입력으로 사용
-		// (현재 m_usingBufferA 상태의 반대)
-		if (m_usingBufferA) {
-			// B가 입력(읽기), A가 출력(쓰기) 버퍼
-			module.SetBuffers(
-				m_particleUAV_B, m_particleSRV_B,  // 입력
-				m_particleUAV_A, m_particleSRV_A   // 출력
-			);
-		}
-		else {
-			// A가 입력(읽기), B가 출력(쓰기) 버퍼
-			module.SetBuffers(
-				m_particleUAV_A, m_particleSRV_A,  // 입력
-				m_particleUAV_B, m_particleSRV_B   // 출력
-			);
-		}
+		// B가 입력(읽기), A가 출력(쓰기) 버퍼
+		module.SetBuffers(
+			m_particleUAV_B, m_particleSRV_B,  // 입력
+			m_particleUAV_A, m_particleSRV_A   // 출력
+		);
+		//std::cout << "  Module using: Buffer B → Buffer A" << std::endl;
 	}
 }

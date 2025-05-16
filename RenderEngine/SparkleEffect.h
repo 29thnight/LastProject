@@ -25,6 +25,6 @@ private:
     float m_delta;
     Texture* m_sparkleTexture;
     ComPtr<ID3D11Buffer> m_constantBuffer;
-    float m_rate;
-    UINT m_max;
+    float m_rate = 0;
+    UINT m_max = 0;
 };

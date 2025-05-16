@@ -7,7 +7,7 @@ class SpawnModuleCS : public ParticleModule
 public:
 	SpawnModuleCS(float spawnRate, EmitterType emitterType, int maxParticles)
 		: m_spawnRate(spawnRate), m_emitterType(emitterType),
-		m_Time(0.0f), m_random(std::random_device{}()),
+		m_random(std::random_device{}()),
 		m_computeShader(nullptr), m_spawnParamsBuffer(nullptr),
 		m_templateBuffer(nullptr), m_randomCounterBuffer(nullptr),
 		m_randomCounterUAV(nullptr), m_isInitialized(false),
@@ -59,6 +59,7 @@ public:
 
 public:
 	ParticleData m_particleTemplate;
+	float m_spawnRate;
 private:
 
 	// compute shader method
@@ -70,8 +71,8 @@ private:
 	{
 		float spawnRate;
 		float deltaTime;
-		float accumulatedTime;
 		int emitterType;
+		float pad2;
 
 		float3 emitterSize;
 		float emitterRadius;
@@ -103,8 +104,6 @@ private:
 
 private:
 	// 기존 SpawnModule 변수
-	float m_spawnRate;
-	float m_Time;
 	EmitterType m_emitterType;
 	std::mt19937 m_random;
 	std::uniform_real_distribution<float> m_uniform;
@@ -115,6 +114,8 @@ private:
 	float m_maxVerticalVelocity;
 	float m_horizontalVelocityRange;
 	size_t m_particlesCapacity;
+	Mathf::Vector3 m_emitterSize;
+	float m_emitterRadius;
 
 	// 컴퓨트 셰이더 관련 변수
 	ID3D11Buffer* m_spawnCounterBuffer = nullptr;

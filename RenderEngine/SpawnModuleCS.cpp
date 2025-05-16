@@ -7,7 +7,7 @@ void SpawnModuleCS::Initialize()
 
     // 파티클 템플릿 한 번만 초기화
     m_particleTemplate.age = 0.0f;
-    m_particleTemplate.lifeTime = 1.0f;
+    m_particleTemplate.lifeTime = 15.0f;
     m_particleTemplate.rotation = 0.0f;
     m_particleTemplate.rotatespeed = 0.0f;
     m_particleTemplate.size = float2(0.3f, 0.3f);
@@ -19,7 +19,8 @@ void SpawnModuleCS::Initialize()
     m_minVerticalVelocity = 0.0f;
     m_maxVerticalVelocity = 0.0f;
     m_horizontalVelocityRange = 0.0f;
-
+    m_emitterSize = float3(1, 1, 1);
+    m_emitterRadius = 1.0f;
     m_templateDirty = true;
     m_paramsDirty = true;
 
@@ -42,33 +43,31 @@ void SpawnModuleCS::Update(float delta, std::vector<ParticleData>& particles)
     ID3D11Buffer* constantBuffers[] = { m_spawnParamsBuffer, m_templateBuffer };
     DeviceState::g_pDeviceContext->CSSetConstantBuffers(0, 2, constantBuffers);
 
-    // 셰이더에서 출력으로 사용할 버퍼와 기타 UAV 설정
-    // 중요: 여기서 공유 버퍼인 m_inactiveIndicesUAV, m_inactiveCountUAV, m_activeCountUAV를 사용
-    ID3D11UnorderedAccessView* uavs[] = {
-        m_outputUAV,           // 파티클 데이터 출력 버퍼
-        m_randomCounterUAV,    // 랜덤 카운터 (스폰 모듈 전용)
-        m_timeUAV,             // 시간 버퍼 (스폰 모듈 전용)
-        m_spawnCounterUAV,     // 스폰 카운터 (스폰 모듈 전용)
-        m_activeCountUAV,      // 활성 파티클 카운터 (공유 버퍼)
-        m_inactiveIndicesUAV,  // 비활성 파티클 인덱스 (공유 버퍼)
-        m_inactiveCountUAV     // 비활성 카운터 (공유 버퍼)
-    };
-
-    UINT initCounts[] = { 0, 0, 0, 0, 0, 0, 0 };
-
-    // 셰이더에서 입력으로 사용할 버퍼 설정
+    // 셰이더 입력 리소스 설정
     ID3D11ShaderResourceView* srvs[] = { m_inputSRV };
     DeviceState::g_pDeviceContext->CSSetShaderResources(0, 1, srvs);
 
-    DeviceState::g_pDeviceContext->CSSetUnorderedAccessViews(0, 7, uavs, initCounts);
+    // 셰이더 출력 리소스 설정
+    ID3D11UnorderedAccessView* uavs[] = {
+        m_outputUAV,           // 파티클 데이터 출력 (u0)
+        m_randomCounterUAV,    // 랜덤 카운터 (u1)
+        m_timeUAV,             // 시간 버퍼 (u2)
+        m_spawnCounterUAV,     // 스폰 카운터 (u3)
+        m_inactiveIndicesUAV,  // 비활성 인덱스 (u4)
+        m_inactiveCountUAV     // 비활성 카운터 (u5)
+    };
 
-    // 컴퓨트 셰이더 실행
+    // UAV 초기 카운터 값
+    UINT initCounts[] = { 0, 0, 0, 0, 0, 0 };
+    DeviceState::g_pDeviceContext->CSSetUnorderedAccessViews(0, 6, uavs, initCounts);
+
+    // 컴퓨트 셰이더 실행 (스레드 그룹 계산)
     UINT numThreadGroups = (std::max<UINT>)(1, (static_cast<UINT>(particles.size()) + THREAD_GROUP_SIZE - 1) / THREAD_GROUP_SIZE);
     DeviceState::g_pDeviceContext->Dispatch(numThreadGroups, 1, 1);
 
     // 리소스 해제
-    ID3D11UnorderedAccessView* nullUAVs[] = { nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr };
-    DeviceState::g_pDeviceContext->CSSetUnorderedAccessViews(0, 7, nullUAVs, nullptr);
+    ID3D11UnorderedAccessView* nullUAVs[] = { nullptr, nullptr, nullptr, nullptr, nullptr, nullptr };
+    DeviceState::g_pDeviceContext->CSSetUnorderedAccessViews(0, 6, nullUAVs, nullptr);
 
     ID3D11ShaderResourceView* nullSRVs[] = { nullptr };
     DeviceState::g_pDeviceContext->CSSetShaderResources(0, 1, nullSRVs);
@@ -87,9 +86,6 @@ void SpawnModuleCS::OnSystemResized(UINT max)
     {
         m_particlesCapacity = max;
         m_paramsDirty = true;  // 파라미터 업데이트가 필요하다고 표시
-
-        // 추가적으로 필요한 처리가 있다면 여기에 구현
-        // 예: 버퍼 재생성 등
     }
 }
 
@@ -154,7 +150,7 @@ bool SpawnModuleCS::InitializeCompute()
     timeDesc.StructureByteStride = sizeof(float);
 
     // 초기 값으로 현재 m_Time 설정
-    float initialTime = m_Time;
+    float initialTime = 0.0f; // 초기 값은 0으로 설정
     D3D11_SUBRESOURCE_DATA timeData = {};
     timeData.pSysMem = &initialTime;
 
@@ -174,17 +170,17 @@ bool SpawnModuleCS::InitializeCompute()
     if (FAILED(hr))
         return false;
 
-    // 스폰 카운터 버퍼 생성
+    // 스폰 카운터 버퍼 생성 - 단일 값으로 변경
     D3D11_BUFFER_DESC spawnCounterDesc = {};
-    spawnCounterDesc.ByteWidth = sizeof(UINT) * 2; // [0] = 생성할 파티클 수, [1] = 현재까지 생성된 파티클 수
+    spawnCounterDesc.ByteWidth = sizeof(UINT);  // 단일 값으로 변경
     spawnCounterDesc.Usage = D3D11_USAGE_DEFAULT;
     spawnCounterDesc.BindFlags = D3D11_BIND_UNORDERED_ACCESS;
     spawnCounterDesc.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
     spawnCounterDesc.StructureByteStride = sizeof(UINT);
 
-    UINT initialSpawnCounter[2] = { 0, 0 };
+    UINT initialSpawnCounter = 0;
     D3D11_SUBRESOURCE_DATA spawnCounterData = {};
-    spawnCounterData.pSysMem = initialSpawnCounter;
+    spawnCounterData.pSysMem = &initialSpawnCounter;
 
     hr = DeviceState::g_pDevice->CreateBuffer(&spawnCounterDesc, &spawnCounterData, &m_spawnCounterBuffer);
     if (FAILED(hr))
@@ -195,21 +191,10 @@ bool SpawnModuleCS::InitializeCompute()
     spawnCounterUAVDesc.Format = DXGI_FORMAT_UNKNOWN;
     spawnCounterUAVDesc.ViewDimension = D3D11_UAV_DIMENSION_BUFFER;
     spawnCounterUAVDesc.Buffer.FirstElement = 0;
-    spawnCounterUAVDesc.Buffer.NumElements = 2;
+    spawnCounterUAVDesc.Buffer.NumElements = 1;  // 단일 값으로 변경
     spawnCounterUAVDesc.Buffer.Flags = 0;
 
     hr = DeviceState::g_pDevice->CreateUnorderedAccessView(m_spawnCounterBuffer, &spawnCounterUAVDesc, &m_spawnCounterUAV);
-    if (FAILED(hr))
-        return false;
-
-    // CPU 읽기용 스테이징 버퍼 생성
-    D3D11_BUFFER_DESC stagingDesc = {};
-    stagingDesc.ByteWidth = sizeof(UINT);
-    stagingDesc.Usage = D3D11_USAGE_STAGING;
-    stagingDesc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
-    stagingDesc.MiscFlags = 0;
-
-    hr = DeviceState::g_pDevice->CreateBuffer(&stagingDesc, nullptr, &m_activeCountStagingBuffer);
     if (FAILED(hr))
         return false;
 
@@ -218,49 +203,11 @@ bool SpawnModuleCS::InitializeCompute()
     DeviceState::g_pDeviceContext->UpdateSubresource(m_timeBuffer, 0, nullptr, &zeroTime, 0, 0);
 
     // 스폰 카운터 초기화
-    UINT zeroCounter[2] = { 0, 0 };
-    DeviceState::g_pDeviceContext->UpdateSubresource(m_spawnCounterBuffer, 0, nullptr, zeroCounter, 0, 0);
+    UINT zeroCounter = 0;
+    DeviceState::g_pDeviceContext->UpdateSubresource(m_spawnCounterBuffer, 0, nullptr, &zeroCounter, 0, 0);
 
     m_isInitialized = true;
     return true;
-}
-
-void SpawnModuleCS::Release()
-{
-    // 스폰 모듈 전용 리소스 해제
-    if (m_computeShader) m_computeShader->Release();
-    if (m_spawnParamsBuffer) m_spawnParamsBuffer->Release();
-    if (m_templateBuffer) m_templateBuffer->Release();
-    if (m_randomCounterBuffer) m_randomCounterBuffer->Release();
-    if (m_randomCounterUAV) m_randomCounterUAV->Release();
-    if (m_timeBuffer) m_timeBuffer->Release();
-    if (m_timeUAV) m_timeUAV->Release();
-    if (m_spawnCounterBuffer) m_spawnCounterBuffer->Release();
-    if (m_spawnCounterUAV) m_spawnCounterUAV->Release();
-    if (m_activeCountStagingBuffer) m_activeCountStagingBuffer->Release();
-
-    // 모든 포인터 초기화
-    m_computeShader = nullptr;
-    m_spawnParamsBuffer = nullptr;
-    m_templateBuffer = nullptr;
-    m_randomCounterBuffer = nullptr;
-    m_randomCounterUAV = nullptr;
-    m_timeBuffer = nullptr;
-    m_timeUAV = nullptr;
-    m_spawnCounterBuffer = nullptr;
-    m_spawnCounterUAV = nullptr;
-    m_activeCountStagingBuffer = nullptr;
-
-    // 외부 버퍼 참조 초기화 (공유 버퍼는 여기서 해제하지 않음)
-    m_inputUAV = nullptr;
-    m_inputSRV = nullptr;
-    m_outputUAV = nullptr;
-    m_outputSRV = nullptr;
-    m_inactiveIndicesUAV = nullptr;
-    m_inactiveCountUAV = nullptr;
-    m_activeCountUAV = nullptr;
-
-    m_isInitialized = false;
 }
 
 void SpawnModuleCS::UpdateConstantBuffers(float delta)
@@ -276,12 +223,11 @@ void SpawnModuleCS::UpdateConstantBuffers(float delta)
             SpawnParams* params = reinterpret_cast<SpawnParams*>(mappedResource.pData);
             params->spawnRate = m_spawnRate;
             params->deltaTime = delta;
-            params->accumulatedTime = m_Time;
             params->emitterType = static_cast<int>(m_emitterType);
 
-            // 이미터 크기 파라미터 설정 (기본값)
-            params->emitterSize = float3(1.0f, 1.0f, 1.0f);
-            params->emitterRadius = 1.0f;
+            // 이미터 크기 파라미터 설정 
+            params->emitterSize = m_emitterSize; // 벡터 직접 할당 (멤버 변수로 추가 필요)
+            params->emitterRadius = m_emitterRadius; // 멤버 변수로 추가 필요
             params->maxParticles = static_cast<UINT>(m_particlesCapacity);
 
             DeviceState::g_pDeviceContext->Unmap(m_spawnParamsBuffer, 0);
@@ -318,27 +264,37 @@ void SpawnModuleCS::UpdateConstantBuffers(float delta)
     }
 }
 
-bool SpawnModuleCS::TryGetCPUCount(UINT* count)
+void SpawnModuleCS::Release()
 {
-    if (!m_activeCountUAV || !m_activeCountStagingBuffer)
-        return false;
+    // 스폰 모듈 전용 리소스 해제
+    if (m_computeShader) m_computeShader->Release();
+    if (m_spawnParamsBuffer) m_spawnParamsBuffer->Release();
+    if (m_templateBuffer) m_templateBuffer->Release();
+    if (m_randomCounterBuffer) m_randomCounterBuffer->Release();
+    if (m_randomCounterUAV) m_randomCounterUAV->Release();
+    if (m_timeBuffer) m_timeBuffer->Release();
+    if (m_timeUAV) m_timeUAV->Release();
+    if (m_spawnCounterBuffer) m_spawnCounterBuffer->Release();
+    if (m_spawnCounterUAV) m_spawnCounterUAV->Release();
+    if (m_activeCountStagingBuffer) m_activeCountStagingBuffer->Release();
 
-    // 활성 카운트 버퍼에서 스테이징 버퍼로 복사
-    // 여기서는 ParticleSystem에서 공유받은 m_activeCountBuffer를 사용해야 함
-    // 그러나 현재 코드에서는 해당 버퍼의 포인터가 없으므로 이 기능을 사용하려면 추가 수정이 필요
-    // 임시로 다음과 같이 구현
+    // 모든 포인터 초기화
+    m_computeShader = nullptr;
+    m_spawnParamsBuffer = nullptr;
+    m_templateBuffer = nullptr;
+    m_randomCounterBuffer = nullptr;
+    m_randomCounterUAV = nullptr;
+    m_timeBuffer = nullptr;
+    m_timeUAV = nullptr;
+    m_spawnCounterBuffer = nullptr;
+    m_spawnCounterUAV = nullptr;
+    m_activeCountStagingBuffer = nullptr;
 
-    // 스테이징 버퍼에서 CPU로 데이터 가져오기
-    D3D11_MAPPED_SUBRESOURCE mappedResource;
-    HRESULT hr = DeviceState::g_pDeviceContext->Map(m_activeCountStagingBuffer, 0, D3D11_MAP_READ, 0, &mappedResource);
+    // 외부 버퍼 참조 초기화 (공유 버퍼는 여기서 해제하지 않음)
+    m_inputSRV = nullptr;
+    m_outputUAV = nullptr;
+    m_inactiveIndicesUAV = nullptr;
+    m_inactiveCountUAV = nullptr;
 
-    if (SUCCEEDED(hr))
-    {
-        // 카운트 값 읽기
-        *count = *reinterpret_cast<UINT*>(mappedResource.pData);
-        DeviceState::g_pDeviceContext->Unmap(m_activeCountStagingBuffer, 0);
-        return true;
-    }
-
-    return false;
+    m_isInitialized = false;
 }

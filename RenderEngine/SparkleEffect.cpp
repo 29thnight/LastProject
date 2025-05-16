@@ -112,12 +112,13 @@ SparkleEffect::SparkleEffect(const Mathf::Vector3& position, int maxParticles) :
                         }
                         {
                             ImGui::InputFloat("Spawn Rate", &m_rate);
+                            auto module = GetModule<SpawnModuleCS>();
+                            ImGui::Text("Spawn Rate : %f", module->m_spawnRate);
                             if (ImGui::Button("SetSpawnRate"))
                             {
-                                auto module = GetModule<SpawnModuleCS>();
                                 module->SetSpawnRate(m_rate);
                             }
-                            //ImGui::Text("Spawn Rate", module)
+                           
                         }
                         ImGui::EndTabItem();
                     }
@@ -180,8 +181,9 @@ void SparkleEffect::InitializeModules()
 {
     // 스폰 모듈 추가 (이펙트의 위치는 m_position)
     //AddModule<SpawnModule>(10.0f, EmitterType::box);
-    AddModule<LifeModuleCS>();
+
     AddModule<SpawnModuleCS>(10.0f, EmitterType::box, 1000000);
+    AddModule<LifeModuleCS>();
 
     // 수명 모듈 추가
     //AddModule<LifeModule>();
@@ -249,8 +251,8 @@ void SparkleEffect::Render(RenderScene& scene, Camera& camera)
     if (!m_isRunning) // || m_activeParticleCount == 0)
         return;
 
-    m_billboardModule->m_particleSRV = GetModule<SpawnModuleCS>()->GetOutputSRV();
-    m_billboardModule->m_instanceCount = GetModule<SpawnModuleCS>()->GetParticleCount();
+    m_billboardModule->m_particleSRV = GetCurrentRenderingSRV();
+    m_billboardModule->m_instanceCount = m_activeParticleCount;
 
     auto& deviceContext = DeviceState::g_pDeviceContext;
 
@@ -347,8 +349,8 @@ void SparkleEffect::UpdateInstanceData()
 
     // 실제 활성 파티클 수와 카운트가 일치하지 않는 경우 조정
     if (instanceIndex != m_activeParticleCount) {
-        std::cout << "Adjusting m_activeParticleCount from " << m_activeParticleCount
-            << " to " << instanceIndex << std::endl;
+        //std::cout << "Adjusting m_activeParticleCount from " << m_activeParticleCount
+        //    << " to " << instanceIndex << std::endl;
         m_activeParticleCount = instanceIndex;
         m_instanceData.resize(instanceIndex);
     }
