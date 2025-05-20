@@ -92,7 +92,7 @@ private:
 
 	void CreateParticleBuffer(UINT numParticles);
 
-
+	UINT ReadActiveParticleCount();
 	
 private:
 

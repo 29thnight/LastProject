@@ -55,13 +55,18 @@ void ParticleSystem::Update(float delta)
 	if (!m_isRunning || m_isPaused)
 		return;
 
-	// 모듈 순회
-	bool isFirstModule = true;
+	// 활성 카운터 초기화
+	UINT zero = 0;
+	DeviceState::g_pDeviceContext->ClearUnorderedAccessViewUint(m_activeCountUAV, &zero);
+
+	// 모듈 순서가 중요: 1) LifeModule 2) SpawnModule
+	bool currentBuffer = m_usingBufferA;
+
 	for (auto it = m_moduleList.begin(); it != m_moduleList.end(); ++it) {
 		ParticleModule& module = *it;
 
-		// 현재 모듈의 입출력 버퍼 설정
-		if (m_usingBufferA) {
+		// 현재 버퍼 상태에 따라 입력/출력 설정
+		if (currentBuffer) {
 			// A가 입력, B가 출력
 			module.SetBuffers(m_particleUAV_A, m_particleSRV_A, m_particleUAV_B, m_particleSRV_B);
 		}
@@ -70,35 +75,31 @@ void ParticleSystem::Update(float delta)
 			module.SetBuffers(m_particleUAV_B, m_particleSRV_B, m_particleUAV_A, m_particleSRV_A);
 		}
 
-		// 공유 버퍼 설정
+		// 모듈 유형에 따라 적절한 버퍼 설정
 		if (auto* lifeModule = dynamic_cast<LifeModuleCS*>(&module)) {
-			// Life 모듈은 다음 인덱스 버퍼에 쓰기
 			lifeModule->SetSharedBuffers(m_nextIndicesUAV, m_inactiveCountUAV, m_activeCountUAV);
-			module.Update(delta, m_particleData);
-			m_activeParticleCount = lifeModule->GetActiveParticleCount();
 		}
 		else if (auto* spawnModule = dynamic_cast<SpawnModuleCS*>(&module)) {
-			// Spawn 모듈은 현재 인덱스 버퍼에서 읽기
 			spawnModule->SetSharedBuffers(m_inactiveIndicesUAV, m_inactiveCountUAV, m_activeCountUAV);
-			module.Update(delta, m_particleData);
-		}
-		else {
-			module.Update(delta, m_particleData);
 		}
 
-		// 각 모듈 처리 후 버퍼 스왑
-		m_usingBufferA = !m_usingBufferA;
-		isFirstModule = false;
+		// 모듈 업데이트 실행
+		module.Update(delta, m_particleData);
+
+		// 버퍼 상태 전환
+		currentBuffer = !currentBuffer;
 	}
 
-	// 프레임 끝에서 비활성 인덱스 버퍼 스왑
+	// 최종 버퍼 상태 저장
+	m_usingBufferA = currentBuffer;
+
+	// 인덱스 버퍼 교체
 	SwapIndexBuffer();
 
-	// 홀수 모듈 수에 대한 조정 (필요시)
-	if (m_moduleList.size() % 2 == 1) {
-		m_usingBufferA = !m_usingBufferA;
-	}
+	// 활성 파티클 수 읽기
+	m_activeParticleCount = ReadActiveParticleCount();
 }
+
 void ParticleSystem::Render(RenderScene& scene, Camera& camera)
 {
 	if (!m_isRunning) //|| m_activeParticleCount == 0)
@@ -222,6 +223,49 @@ void ParticleSystem::CreateParticleBuffer(UINT numParticles)
 	m_usingBufferA = true;
 }
 
+UINT ParticleSystem::ReadActiveParticleCount()
+{
+	// GPU 버퍼에서 활성 파티클 수 읽기
+	UINT count = 0;
+
+	// 활성 카운터 버퍼에 대한 스테이징 버퍼 생성 (CPU 읽기 가능)
+	ID3D11Buffer* stagingBuffer = nullptr;
+	D3D11_BUFFER_DESC desc = {};
+	desc.ByteWidth = sizeof(UINT);
+	desc.Usage = D3D11_USAGE_STAGING;
+	desc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
+	desc.StructureByteStride = sizeof(UINT);
+
+	HRESULT hr = DeviceState::g_pDevice->CreateBuffer(&desc, nullptr, &stagingBuffer);
+	if (FAILED(hr))
+	{
+		return 0; // 버퍼 생성 실패 시 0 반환
+	}
+
+	// GPU 버퍼에서 스테이징 버퍼로 데이터 복사
+	DeviceState::g_pDeviceContext->CopyResource(stagingBuffer, m_activeCountBuffer);
+
+	// 스테이징 버퍼 매핑하여 CPU에서 읽기
+	D3D11_MAPPED_SUBRESOURCE mappedResource;
+	hr = DeviceState::g_pDeviceContext->Map(stagingBuffer, 0, D3D11_MAP_READ, 0, &mappedResource);
+	if (SUCCEEDED(hr))
+	{
+		// 데이터 읽기
+		count = *(UINT*)mappedResource.pData;
+
+		// 버퍼 언매핑
+		DeviceState::g_pDeviceContext->Unmap(stagingBuffer, 0);
+	}
+
+	// 스테이징 버퍼 해제
+	if (stagingBuffer)
+	{
+		stagingBuffer->Release();
+	}
+
+	return count;
+}
+
 void ParticleSystem::CreateSharedBuffers()
 {
 	// 비활성 파티클 인덱스 버퍼 (모든 파티클 수만큼)
@@ -321,28 +365,41 @@ void ParticleSystem::ReleaseSharedBuffer()
 
 void ParticleSystem::InitializeParticleIndices()
 {
-	// 비활성 인덱스 배열 초기화
-	std::vector<UINT> indices(m_particleData.size());
-	for (size_t i = 0; i < m_particleData.size(); i++)
-	{
-		indices[i] = static_cast<UINT>(i);
+	// 모든 파티클 인덱스를 비활성 인덱스 버퍼에 추가
+	std::vector<UINT> indices(m_maxParticles);
+	for (UINT i = 0; i < m_maxParticles; ++i) {
+		indices[i] = i;
+
+		// CPU 측 파티클 데이터도 비활성화
+		m_particleData[i].isActive = 0;
 	}
 
-	// GPU 버퍼에 업로드
+	// 비활성 인덱스 버퍼 업데이트
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
-	if (SUCCEEDED(DeviceState::g_pDeviceContext->Map(m_inactiveIndicesBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource)))
-	{
+	if (SUCCEEDED(DeviceState::g_pDeviceContext->Map(
+		m_inactiveIndicesBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource))) {
 		memcpy(mappedResource.pData, indices.data(), indices.size() * sizeof(UINT));
 		DeviceState::g_pDeviceContext->Unmap(m_inactiveIndicesBuffer, 0);
 	}
 
-	// 카운터 초기화
-	UINT count = static_cast<UINT>(m_particleData.size());
-	if (SUCCEEDED(DeviceState::g_pDeviceContext->Map(m_inactiveCountBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource)))
-	{
-		memcpy(mappedResource.pData, &count, sizeof(UINT));
+	// 비활성 카운터 초기화 (모든 파티클이 비활성 상태)
+	UINT initialCount = m_maxParticles;
+	if (SUCCEEDED(DeviceState::g_pDeviceContext->Map(
+		m_inactiveCountBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource))) {
+		memcpy(mappedResource.pData, &initialCount, sizeof(UINT));
 		DeviceState::g_pDeviceContext->Unmap(m_inactiveCountBuffer, 0);
 	}
+
+	// 활성 카운터 초기화 (0개의 활성 파티클)
+	UINT zeroCount = 0;
+	if (SUCCEEDED(DeviceState::g_pDeviceContext->Map(
+		m_activeCountBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource))) {
+		memcpy(mappedResource.pData, &zeroCount, sizeof(UINT));
+		DeviceState::g_pDeviceContext->Unmap(m_activeCountBuffer, 0);
+	}
+
+	// CPU 측 활성 파티클 카운트도 초기화
+	m_activeParticleCount = 0;
 }
 
 void ParticleSystem::SwapIndexBuffer()

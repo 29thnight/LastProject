@@ -50,8 +50,10 @@ cbuffer ParticleTemplateParams : register(b1)
     float gPad3; // 패딩
 }
 
-// 파티클 버퍼 (register u0에 바인딩)
-RWStructuredBuffer<ParticleData> gParticles : register(u0);
+// 입력 파티클 버퍼 (읽기 전용)
+StructuredBuffer<ParticleData> ParticlesInput : register(t0);
+// 출력 파티클 버퍼 (쓰기 전용)
+RWStructuredBuffer<ParticleData> ParticlesOutput : register(u0);
 // 랜덤 카운터 버퍼 (register u1에 바인딩)
 RWStructuredBuffer<uint> gRandomCounter : register(u1);
 RWStructuredBuffer<float> gTimeBuffer : register(u2);
@@ -60,6 +62,7 @@ RWStructuredBuffer<uint> gSpawnCounter : register(u3);
 
 RWStructuredBuffer<uint> gInactiveParticleIndices : register(u4);
 RWStructuredBuffer<uint> gInactiveParticleCount : register(u5);
+
 // 난수 생성 함수
 uint wang_hash(uint seed)
 {
@@ -104,7 +107,7 @@ void InitializeParticle(inout ParticleData particle, inout uint seed)
     particle.acceleration = gAcceleration;
     particle.size = gSize;
     particle.age = 0.0f;
-    particle.lifeTime = 15.0f;
+    particle.lifeTime = gLifeTime; // 상수 버퍼의 lifetime 사용
     particle.rotation = 0.0f;
     particle.rotatespeed = gRotateSpeed;
     particle.color = gColor;
@@ -196,6 +199,14 @@ void InitializeParticle(inout ParticleData particle, inout uint seed)
 [numthreads(THREAD_GROUP_SIZE, 1, 1)]
 void main(uint3 DTid : SV_DispatchThreadID)
 {
+    uint particleIndex = DTid.x;
+    
+    // 모든 파티클에 대해 기본적으로 입력을 출력으로 복사
+    if (particleIndex < gMaxParticles)
+    {
+        ParticlesOutput[particleIndex] = ParticlesInput[particleIndex];
+    }
+    
     // 첫 번째 스레드만 이번 프레임에 생성할 파티클 수 계산
     if (DTid.x == 0)
     {
@@ -249,7 +260,7 @@ void main(uint3 DTid : SV_DispatchThreadID)
             InitializeParticle(particle, seed);
             
             // 중요: 파티클 데이터를 GPU 버퍼에 저장
-            gParticles[particleIndex] = particle;
+            ParticlesOutput[particleIndex] = particle;
         }
     }
 }
