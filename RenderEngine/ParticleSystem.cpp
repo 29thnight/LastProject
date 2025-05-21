@@ -48,6 +48,7 @@ void ParticleSystem::Play()
 	{
 		particle.isActive = 0;
 	}
+	InitializeParticleIndices();
 }
 
 void ParticleSystem::Update(float delta)
@@ -59,7 +60,7 @@ void ParticleSystem::Update(float delta)
 	UINT zero = 0;
 	DeviceState::g_pDeviceContext->ClearUnorderedAccessViewUint(m_activeCountUAV, &zero);
 
-	// 모듈 순서가 중요: 1) LifeModule 2) SpawnModule
+	// 모듈 순서: 1) SpawnModule 2) LifeModule (순서 변경됨)
 	bool currentBuffer = m_usingBufferA;
 
 	for (auto it = m_moduleList.begin(); it != m_moduleList.end(); ++it) {
@@ -75,9 +76,9 @@ void ParticleSystem::Update(float delta)
 			module.SetBuffers(m_particleUAV_B, m_particleSRV_B, m_particleUAV_A, m_particleSRV_A);
 		}
 
-		// 모듈 유형에 따라 적절한 버퍼 설정
+		// 모듈 유형에 따라 적절한 버퍼 설정 (동일한 인덱스 버퍼 사용)
 		if (auto* lifeModule = dynamic_cast<LifeModuleCS*>(&module)) {
-			lifeModule->SetSharedBuffers(m_nextIndicesUAV, m_inactiveCountUAV, m_activeCountUAV);
+			lifeModule->SetSharedBuffers(m_inactiveIndicesUAV, m_inactiveCountUAV, m_activeCountUAV);
 		}
 		else if (auto* spawnModule = dynamic_cast<SpawnModuleCS*>(&module)) {
 			spawnModule->SetSharedBuffers(m_inactiveIndicesUAV, m_inactiveCountUAV, m_activeCountUAV);
@@ -93,8 +94,8 @@ void ParticleSystem::Update(float delta)
 	// 최종 버퍼 상태 저장
 	m_usingBufferA = currentBuffer;
 
-	// 인덱스 버퍼 교체
-	SwapIndexBuffer();
+	// 인덱스 버퍼 교체 작업 제거됨 (더 이상 필요 없음)
+	// SwapIndexBuffer();
 
 	// 활성 파티클 수 읽기
 	m_activeParticleCount = ReadActiveParticleCount();
@@ -276,15 +277,8 @@ void ParticleSystem::CreateSharedBuffers()
 	inactiveIndexDesc.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
 	inactiveIndexDesc.StructureByteStride = sizeof(UINT);
 
-	// 초기에는 모든 파티클이 비활성 상태로 가정
-	std::vector<UINT> initialIndices(m_maxParticles);
-	for (UINT i = 0; i < m_maxParticles; ++i)
-		initialIndices[i] = i;
-
-	D3D11_SUBRESOURCE_DATA indexData = {};
-	indexData.pSysMem = initialIndices.data();
-
-	HRESULT hr = DeviceState::g_pDevice->CreateBuffer(&inactiveIndexDesc, &indexData, &m_inactiveIndicesBuffer);
+	// 초기 인덱스 데이터는 초기화 모듈에서 설정하므로 여기서는 생략 가능
+	HRESULT hr = DeviceState::g_pDevice->CreateBuffer(&inactiveIndexDesc, nullptr, &m_inactiveIndicesBuffer);
 	if (FAILED(hr))
 		return; // 오류 처리
 
@@ -296,11 +290,7 @@ void ParticleSystem::CreateSharedBuffers()
 	countDesc.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
 	countDesc.StructureByteStride = sizeof(UINT);
 
-	UINT initialCount = m_maxParticles;
-	D3D11_SUBRESOURCE_DATA countData = {};
-	countData.pSysMem = &initialCount;
-
-	hr = DeviceState::g_pDevice->CreateBuffer(&countDesc, &countData, &m_inactiveCountBuffer);
+	hr = DeviceState::g_pDevice->CreateBuffer(&countDesc, nullptr, &m_inactiveCountBuffer);
 	if (FAILED(hr))
 		return; // 오류 처리
 
@@ -336,20 +326,6 @@ void ParticleSystem::CreateSharedBuffers()
 	if (FAILED(hr))
 		return; // 오류 처리
 
-	// 현재 인덱스 버퍼 (처음에는 m_inactiveIndicesBuffer와 동일)
-	D3D11_BUFFER_DESC currentIndexDesc = inactiveIndexDesc;
-	DeviceState::g_pDevice->CreateBuffer(&currentIndexDesc, &indexData, &m_currentIndicesBuffer);
-
-	// 다음 인덱스 버퍼 (빈 상태로 시작)
-	D3D11_BUFFER_DESC nextIndexDesc = inactiveIndexDesc;
-	DeviceState::g_pDevice->CreateBuffer(&nextIndexDesc, nullptr, &m_nextIndicesBuffer);
-
-	// UAV 생성
-	D3D11_UNORDERED_ACCESS_VIEW_DESC indexUAVDesc = inactiveIndexUAVDesc;
-	DeviceState::g_pDevice->CreateUnorderedAccessView(m_currentIndicesBuffer, &indexUAVDesc, &m_currentIndicesUAV);
-	DeviceState::g_pDevice->CreateUnorderedAccessView(m_nextIndicesBuffer, &indexUAVDesc, &m_nextIndicesUAV);
-
-
 }
 
 void ParticleSystem::ReleaseSharedBuffer()
@@ -365,53 +341,28 @@ void ParticleSystem::ReleaseSharedBuffer()
 
 void ParticleSystem::InitializeParticleIndices()
 {
-	// 모든 파티클 인덱스를 비활성 인덱스 버퍼에 추가
-	std::vector<UINT> indices(m_maxParticles);
-	for (UINT i = 0; i < m_maxParticles; ++i) {
-		indices[i] = i;
+	// GPU에서 초기화 수행
+	// 현재 사용 중인 버퍼를 기준으로 UAV 선택
+	ID3D11UnorderedAccessView* particleUAV = m_usingBufferA ? m_particleUAV_A : m_particleUAV_B;
 
-		// CPU 측 파티클 데이터도 비활성화
-		m_particleData[i].isActive = 0;
-	}
+	// 초기화 모듈 실행
+	m_initializeModule.Initialize(
+		particleUAV,
+		m_inactiveIndicesUAV,
+		m_inactiveCountUAV,
+		m_activeCountUAV,
+		m_maxParticles
+	);
 
-	// 비활성 인덱스 버퍼 업데이트
-	D3D11_MAPPED_SUBRESOURCE mappedResource;
-	if (SUCCEEDED(DeviceState::g_pDeviceContext->Map(
-		m_inactiveIndicesBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource))) {
-		memcpy(mappedResource.pData, indices.data(), indices.size() * sizeof(UINT));
-		DeviceState::g_pDeviceContext->Unmap(m_inactiveIndicesBuffer, 0);
-	}
-
-	// 비활성 카운터 초기화 (모든 파티클이 비활성 상태)
-	UINT initialCount = m_maxParticles;
-	if (SUCCEEDED(DeviceState::g_pDeviceContext->Map(
-		m_inactiveCountBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource))) {
-		memcpy(mappedResource.pData, &initialCount, sizeof(UINT));
-		DeviceState::g_pDeviceContext->Unmap(m_inactiveCountBuffer, 0);
-	}
-
-	// 활성 카운터 초기화 (0개의 활성 파티클)
-	UINT zeroCount = 0;
-	if (SUCCEEDED(DeviceState::g_pDeviceContext->Map(
-		m_activeCountBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource))) {
-		memcpy(mappedResource.pData, &zeroCount, sizeof(UINT));
-		DeviceState::g_pDeviceContext->Unmap(m_activeCountBuffer, 0);
+	// CPU 측 파티클 데이터도 비활성화
+	for (auto& particle : m_particleData) {
+		particle.isActive = 0;
 	}
 
 	// CPU 측 활성 파티클 카운트도 초기화
 	m_activeParticleCount = 0;
 }
 
-void ParticleSystem::SwapIndexBuffer()
-{
-	// 현재와 다음 인덱스 버퍼 교체
-	std::swap(m_currentIndicesBuffer, m_nextIndicesBuffer);
-	std::swap(m_currentIndicesUAV, m_nextIndicesUAV);
-
-	// 다음 버퍼 초기화 (필요시)
-	UINT zero = 0;
-	DeviceState::g_pDeviceContext->ClearUnorderedAccessViewUint(m_nextIndicesUAV, &zero);
-}
 
 void ParticleSystem::ResizeParticleSystem(UINT newMaxParticles)
 {
@@ -454,6 +405,8 @@ void ParticleSystem::ResizeParticleSystem(UINT newMaxParticles)
 	CreateParticleBuffer(m_maxParticles);
 	CreateSharedBuffers();
 
+	InitializeParticleIndices();
+
 	// 7. 모듈에 새 크기 알림 (필요시)
 	for (auto it = m_moduleList.begin(); it != m_moduleList.end(); ++it) {
 		ParticleModule& module = *it;
@@ -478,11 +431,6 @@ void ParticleSystem::ReleaseBuffers()
 	if (m_inactiveIndicesUAV) { m_inactiveIndicesUAV->Release(); m_inactiveIndicesUAV = nullptr; }
 	if (m_inactiveCountUAV) { m_inactiveCountUAV->Release(); m_inactiveCountUAV = nullptr; }
 	if (m_activeCountUAV) { m_activeCountUAV->Release(); m_activeCountUAV = nullptr; }
-
-	if (m_currentIndicesBuffer) { m_currentIndicesBuffer->Release(); m_currentIndicesBuffer = nullptr; }
-	if (m_nextIndicesBuffer) { m_nextIndicesBuffer->Release(); m_nextIndicesBuffer = nullptr; }
-	if (m_currentIndicesUAV) { m_currentIndicesUAV->Release(); m_currentIndicesUAV = nullptr; }
-	if (m_nextIndicesUAV) { m_nextIndicesUAV->Release(); m_nextIndicesUAV = nullptr; }
 }
 
 ID3D11ShaderResourceView* ParticleSystem::GetCurrentRenderingSRV() const

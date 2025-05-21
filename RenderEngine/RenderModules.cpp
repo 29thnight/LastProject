@@ -1,5 +1,5 @@
 ﻿#include "RenderModules.h"
-#include "../ShaderSystem.h"
+#include "ShaderSystem.h"
 
 void RenderModules::CleanupRenderState()
 {

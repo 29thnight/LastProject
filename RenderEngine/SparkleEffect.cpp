@@ -1,6 +1,6 @@
 #include "SparkleEffect.h"
 #include "ImGuiRegister.h"
-#include "../Camera.h"
+#include "Camera.h"
 #include "RenderModules.h"
 #include "../DataSystem.h"
 
@@ -181,9 +181,8 @@ void SparkleEffect::InitializeModules()
 {
     // 스폰 모듈 추가 (이펙트의 위치는 m_position)
     //AddModule<SpawnModule>(10.0f, EmitterType::box);
-    AddModule<LifeModuleCS>();
     AddModule<SpawnModuleCS>(10.0f, EmitterType::box, 1000000);
-
+    AddModule<LifeModuleCS>();
 
 
 
