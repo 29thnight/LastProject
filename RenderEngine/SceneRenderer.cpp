@@ -192,8 +192,8 @@ SceneRenderer::SceneRenderer(const std::shared_ptr<DirectX11::DeviceResources>& 
 	m_renderScene = new RenderScene();
 	m_renderScene->Initialize();
 	m_renderScene->SetBuffers(m_ModelBuffer.Get());
-	//m_pEffectPass = std::make_unique<EffectManager>();
-	//m_pEffectPass->MakeEffects(Effect::Sparkle, "asd", float3(0, 0, 0));
+	m_pEffectPass = std::make_unique<EffectManager>();
+	m_pEffectPass->MakeEffects(Effect::Sparkle, "asd", float3(0, 0, 0));
 
 	m_threadPool = new ThreadPool(4);
 
@@ -342,7 +342,7 @@ void SceneRenderer::OnWillRenderObject(float deltaTime)
 	}
 
 	m_renderScene->Update(deltaTime);
-	//m_pEffectPass->Update(deltaTime);
+	m_pEffectPass->Update(deltaTime);
 	PrepareRender();
 }
 
@@ -517,11 +517,11 @@ void SceneRenderer::SceneRendering()
 		}
 
 		{
-			//DirectX11::BeginEvent(L"EffectPass");
-			//Benchmark banch;
-			//m_pEffectPass->Execute(*m_renderScene, *camera);
-			//RenderStatistics->UpdateRenderState("EffectPass", banch.GetElapsedTime());
-			//DirectX11::EndEvent();
+			DirectX11::BeginEvent(L"EffectPass");
+			Benchmark banch;
+			m_pEffectPass->Execute(*m_renderScene, *camera);
+			RenderStatistics->UpdateRenderState("EffectPass", banch.GetElapsedTime());
+			DirectX11::EndEvent();
 		}
 
 		//[7] SpritePass
