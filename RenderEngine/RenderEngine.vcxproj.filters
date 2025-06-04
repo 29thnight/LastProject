@@ -204,12 +204,6 @@
     <Filter Include="RenderPass\EffectPass\1.Base">
       <UniqueIdentifier>{7e116cb2-11bc-4746-92f0-9975cb1a4ce4}</UniqueIdentifier>
     </Filter>
-    <Filter Include="RenderPass\EffectPass\2.Spawn">
-      <UniqueIdentifier>{5a66f3af-b204-4c58-9c8e-75c9e4ce26f1}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="RenderPass\EffectPass\3.Life">
-      <UniqueIdentifier>{4bf2c439-800f-469a-8a43-da4b2745e407}</UniqueIdentifier>
-    </Filter>
     <Filter Include="RenderPass\EffectPass\4.Movement">
       <UniqueIdentifier>{4feada2b-4d1b-422e-92f1-734fddcfbaa6}</UniqueIdentifier>
     </Filter>
@@ -227,6 +221,18 @@
     </Filter>
     <Filter Include="RenderTaskScheduler">
       <UniqueIdentifier>{25e49c93-ca2b-4a5c-9820-2a206796f6cc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shaders\Effect\Useless">
+      <UniqueIdentifier>{1629f3ca-2a3d-4688-a308-ef8f6a7a73d1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="RenderPass\EffectPass\9999.Dummy">
+      <UniqueIdentifier>{4f1cd88e-752d-4068-99e7-43c724e7e2d9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="RenderPass\EffectPass\9999.Dummy\2.Spawn">
+      <UniqueIdentifier>{5a66f3af-b204-4c58-9c8e-75c9e4ce26f1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="RenderPass\EffectPass\9999.Dummy\3.Life">
+      <UniqueIdentifier>{4bf2c439-800f-469a-8a43-da4b2745e407}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -381,16 +387,16 @@
       <Filter>RenderPass\EffectPass\0.Example</Filter>
     </ClCompile>
     <ClCompile Include="SpawnModule.cpp">
-      <Filter>RenderPass\EffectPass\2.Spawn</Filter>
+      <Filter>RenderPass\EffectPass\9999.Dummy\2.Spawn</Filter>
     </ClCompile>
     <ClCompile Include="SpawnModuleCS.cpp">
-      <Filter>RenderPass\EffectPass\2.Spawn</Filter>
+      <Filter>RenderPass\EffectPass\9999.Dummy\2.Spawn</Filter>
     </ClCompile>
     <ClCompile Include="LifeModule.cpp">
-      <Filter>RenderPass\EffectPass\3.Life</Filter>
+      <Filter>RenderPass\EffectPass\9999.Dummy\3.Life</Filter>
     </ClCompile>
     <ClCompile Include="LifeModuleCS.cpp">
-      <Filter>RenderPass\EffectPass\3.Life</Filter>
+      <Filter>RenderPass\EffectPass\9999.Dummy\3.Life</Filter>
     </ClCompile>
     <ClCompile Include="MovementModule.cpp">
       <Filter>RenderPass\EffectPass\4.Movement</Filter>
@@ -599,16 +605,16 @@
       <Filter>RenderPass\EffectPass\1.Base</Filter>
     </ClInclude>
     <ClInclude Include="SpawnModule.h">
-      <Filter>RenderPass\EffectPass\2.Spawn</Filter>
+      <Filter>RenderPass\EffectPass\9999.Dummy\2.Spawn</Filter>
     </ClInclude>
     <ClInclude Include="SpawnModuleCS.h">
-      <Filter>RenderPass\EffectPass\2.Spawn</Filter>
+      <Filter>RenderPass\EffectPass\9999.Dummy\2.Spawn</Filter>
     </ClInclude>
     <ClInclude Include="LifeModule.h">
-      <Filter>RenderPass\EffectPass\3.Life</Filter>
+      <Filter>RenderPass\EffectPass\9999.Dummy\3.Life</Filter>
     </ClInclude>
     <ClInclude Include="LifeModuleCS.h">
-      <Filter>RenderPass\EffectPass\3.Life</Filter>
+      <Filter>RenderPass\EffectPass\9999.Dummy\3.Life</Filter>
     </ClInclude>
     <ClInclude Include="MovementModule.h">
       <Filter>RenderPass\EffectPass\4.Movement</Filter>
@@ -780,13 +786,7 @@
     <FxCompile Include="..\Dynamic_CPP\Assets\Shaders\Sparkle.ps.hlsl">
       <Filter>Shaders\Effect</Filter>
     </FxCompile>
-    <FxCompile Include="..\Dynamic_CPP\Assets\Shaders\SpawnModule.cs.hlsl">
-      <Filter>Shaders\Effect</Filter>
-    </FxCompile>
     <FxCompile Include="..\Dynamic_CPP\Assets\Shaders\MovementModule.cs.hlsl">
-      <Filter>Shaders\Effect</Filter>
-    </FxCompile>
-    <FxCompile Include="..\Dynamic_CPP\Assets\Shaders\LifeModule.cs.hlsl">
       <Filter>Shaders\Effect</Filter>
     </FxCompile>
     <FxCompile Include="..\x64\Assets\Shaders\Sparkle.ps.hlsl">
@@ -803,6 +803,12 @@
     </FxCompile>
     <FxCompile Include="..\Dynamic_CPP\Assets\Shaders\InitializeModule.cs.hlsl">
       <Filter>Shaders\Effect</Filter>
+    </FxCompile>
+    <FxCompile Include="..\Dynamic_CPP\Assets\Shaders\LifeModule.cs.hlsl">
+      <Filter>Shaders\Effect\Useless</Filter>
+    </FxCompile>
+    <FxCompile Include="..\Dynamic_CPP\Assets\Shaders\SpawnModule.cs.hlsl">
+      <Filter>Shaders\Effect\Useless</Filter>
     </FxCompile>
   </ItemGroup>
   <ItemGroup>

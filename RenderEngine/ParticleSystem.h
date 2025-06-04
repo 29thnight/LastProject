@@ -99,6 +99,8 @@ private:
 	
 	UINT ReadInactiveParticleCount();
 
+	void CheckActualParticleData();
+
 private:
 
 	// 공유 버퍼 스왑용 정리
