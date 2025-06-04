@@ -39,6 +39,13 @@ void main(uint3 DTid : SV_DispatchThreadID)
 {
     uint particleIndex = DTid.x;
     
+    if (DTid.x == 0)
+    {
+        gActiveParticleCounter[0] = 0;
+    }
+    
+    GroupMemoryBarrierWithGroupSync();
+    
     if (particleIndex < gMaxParticles)
     {
         ParticleData particle = ParticlesInput[particleIndex];

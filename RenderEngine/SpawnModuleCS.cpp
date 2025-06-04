@@ -54,20 +54,21 @@ void SpawnModuleCS::Update(float delta, std::vector<ParticleData>& particles)
         m_timeUAV,             // 시간 버퍼 (u2)
         m_spawnCounterUAV,     // 스폰 카운터 (u3)
         m_inactiveIndicesUAV,  // 비활성 인덱스 (u4)
-        m_inactiveCountUAV     // 비활성 카운터 (u5)
+        m_inactiveCountUAV,     // 비활성 카운터 (u5)
+        m_activeCountUAV
     };
 
     // UAV 초기 카운터 값
-    UINT initCounts[] = { 0, 0, 0, 0, 0, 0 };
-    DeviceState::g_pDeviceContext->CSSetUnorderedAccessViews(0, 6, uavs, initCounts);
+    UINT initCounts[] = { 0, 0, 0, 0, 0, 0, 0 };
+    DeviceState::g_pDeviceContext->CSSetUnorderedAccessViews(0, 7, uavs, initCounts);
 
     // 컴퓨트 셰이더 실행 (스레드 그룹 계산)
     UINT numThreadGroups = (std::max<UINT>)(1, (static_cast<UINT>(particles.size()) + THREAD_GROUP_SIZE - 1) / THREAD_GROUP_SIZE);
     DeviceState::g_pDeviceContext->Dispatch(numThreadGroups, 1, 1);
 
     // 리소스 해제
-    ID3D11UnorderedAccessView* nullUAVs[] = { nullptr, nullptr, nullptr, nullptr, nullptr, nullptr };
-    DeviceState::g_pDeviceContext->CSSetUnorderedAccessViews(0, 6, nullUAVs, nullptr);
+    ID3D11UnorderedAccessView* nullUAVs[] = { nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr };
+    DeviceState::g_pDeviceContext->CSSetUnorderedAccessViews(0, 7, nullUAVs, nullptr);
 
     ID3D11ShaderResourceView* nullSRVs[] = { nullptr };
     DeviceState::g_pDeviceContext->CSSetShaderResources(0, 1, nullSRVs);
@@ -295,6 +296,6 @@ void SpawnModuleCS::Release()
     m_outputUAV = nullptr;
     m_inactiveIndicesUAV = nullptr;
     m_inactiveCountUAV = nullptr;
-
+    m_activeCountUAV = nullptr;
     m_isInitialized = false;
 } 

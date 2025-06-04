@@ -54,6 +54,7 @@ RWStructuredBuffer<float> gTimeBuffer : register(u2);
 RWStructuredBuffer<uint> gSpawnCounter : register(u3);
 RWStructuredBuffer<uint> gInactiveParticleIndices : register(u4);
 RWStructuredBuffer<uint> gInactiveParticleCount : register(u5);
+RWStructuredBuffer<uint> gActiveParticleCounter : register(u6);
 
 uint wang_hash(uint seed)
 {
@@ -227,6 +228,8 @@ void main(uint3 DTid : SV_DispatchThreadID)
                 
                 // GPU 버퍼에 저장
                 ParticlesOutput[particleIndex] = particle;
+                
+                InterlockedAdd(gActiveParticleCounter[0], 1);
             }
         }
         else

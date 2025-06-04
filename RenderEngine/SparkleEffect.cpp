@@ -2,14 +2,14 @@
 #include "ImGuiRegister.h"
 #include "Camera.h"
 #include "RenderModules.h"
-#include "../DataSystem.h"
+#include "DataSystem.h"
 
 SparkleEffect::SparkleEffect(const Mathf::Vector3& position, int maxParticles) : ParticleSystem(maxParticles), m_delta(0.0f)
 {
     m_position = position;
 
     // 실제 텍스처 사진
-    m_sparkleTexture = DataSystems->LoadTexture("star.png");
+    m_sparkleTexture = DataSystems->LoadTexture("bianca.png");
     {
         ImGui::ContextRegister("Sparkle Effect", true, [&]()
             {
