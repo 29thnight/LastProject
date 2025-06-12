@@ -169,7 +169,10 @@
     <ClCompile Include="ParticleModule.cpp" />
     <ClCompile Include="ParticleSystem.cpp" />
     <ClCompile Include="RenderModules.cpp" />
-    <ClCompile Include="SizeModule.cpp" />
+    <ClCompile Include="SizeModule.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="SizeModuleCS.cpp" />
     <ClCompile Include="SparkleEffect.cpp" />
     <ClCompile Include="SpawnModule.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
@@ -248,7 +251,10 @@
     <ClInclude Include="ParticleModule.h" />
     <ClInclude Include="ParticleSystem.h" />
     <ClInclude Include="RenderModules.h" />
-    <ClInclude Include="SizeModule.h" />
+    <ClInclude Include="SizeModule.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="SizeModuleCS.h" />
     <ClInclude Include="SparkleEffect.h" />
     <ClInclude Include="SpawnModule.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
