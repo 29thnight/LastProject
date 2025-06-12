@@ -151,6 +151,9 @@
     <ClCompile Include="AnimationJob.cpp" />
     <ClCompile Include="AnimationLoader.cpp" />
     <ClCompile Include="ColorGradingPass.cpp" />
+    <ClCompile Include="ColorModule.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="ColorModuleCS.cpp" />
     <ClCompile Include="CullingManager.cpp" />
     <ClCompile Include="BillboardModuleGPU.cpp" />
@@ -159,13 +162,18 @@
     <ClCompile Include="EffectModules.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="MovementModule.cpp" />
+    <ClCompile Include="MovementModule.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="MovementModuleCS.cpp" />
     <ClCompile Include="ParticleModule.cpp" />
     <ClCompile Include="ParticleSystem.cpp" />
     <ClCompile Include="RenderModules.cpp" />
+    <ClCompile Include="SizeModule.cpp" />
     <ClCompile Include="SparkleEffect.cpp" />
-    <ClCompile Include="SpawnModule.cpp" />
+    <ClCompile Include="SpawnModule.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="SpawnModuleCS.cpp" />
     <ClCompile Include="ForwardPass.cpp" />
     <ClCompile Include="GizmoLinePass.cpp" />
@@ -221,6 +229,9 @@
     <ClInclude Include="AssetMetaRegistry.h" />
     <ClInclude Include="AssetMetaWather.h" />
     <ClInclude Include="ColorGradingPass.h" />
+    <ClInclude Include="ColorModule.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClInclude>
     <ClInclude Include="ColorModuleCS.h" />
     <ClInclude Include="CullingManager.h" />
     <ClInclude Include="BaseEffectStruct.h" />
@@ -230,13 +241,18 @@
     <ClInclude Include="EffectModules.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
     </ClInclude>
-    <ClInclude Include="MovementModule.h" />
+    <ClInclude Include="MovementModule.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClInclude>
     <ClInclude Include="MovementModuleCS.h" />
     <ClInclude Include="ParticleModule.h" />
     <ClInclude Include="ParticleSystem.h" />
     <ClInclude Include="RenderModules.h" />
+    <ClInclude Include="SizeModule.h" />
     <ClInclude Include="SparkleEffect.h" />
-    <ClInclude Include="SpawnModule.h" />
+    <ClInclude Include="SpawnModule.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClInclude>
     <ClInclude Include="SpawnModuleCS.h" />
     <ClInclude Include="GizmoCbuffer.h" />
     <ClInclude Include="GizmoLinePass.h" />
@@ -686,10 +702,6 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </FxCompile>
     <FxCompile Include="..\Dynamic_CPP\Assets\Shaders\WireFrame.vs.hlsl">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </FxCompile>
-    <FxCompile Include="..\x64\Assets\Shaders\Sparkle.ps.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </FxCompile>
