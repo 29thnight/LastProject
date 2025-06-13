@@ -182,9 +182,10 @@ void SparkleEffect::InitializeModules()
     AddModule<SpawnModuleCS>();
 
     // 움직임 모듈 추가 (중력 없음, 자유롭게 움직이는 반짝임)
-    auto movementModule = AddModule<MovementModuleCS>();
+    //auto movementModule = AddModule<MovementModuleCS>();
 
-    auto colorModule = AddModule<ColorModuleCS>();
+    //auto colorModule = AddModule<ColorModuleCS>();
+    auto sizeModule = AddModule<SizeModuleCS>();
     //movementModule->SetUseGravity(false);
 
     // 색상 모듈 추가 (반짝이는 효과를 위한 투명도 변화)

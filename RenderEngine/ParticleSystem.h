@@ -6,6 +6,7 @@
 #include "MovementModuleCS.h"
 //#include "LifeModuleCS.h"
 #include "ColorModuleCS.h"
+#include "SizeModuleCS.h"
 
 // maxparticles
 class ParticleSystem

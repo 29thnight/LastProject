@@ -107,17 +107,3 @@ private:
     std::vector<BillboardVertex> m_vertices;
     std::vector<uint32> m_indices;
 };
-
-class GameObject;
-class MeshModule : public RenderModules
-{
-public:
-    virtual void Initialize();
-    virtual void Render(Mathf::Matrix world, Mathf::Matrix view, Mathf::Matrix projection);
-    virtual void SetupInstancing(void* instanceData, UINT count);
-
-    void SetGameObject(GameObject* obj) { m_gameObject = obj; }
-
-private:
-    GameObject* m_gameObject;
-};

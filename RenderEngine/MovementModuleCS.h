@@ -41,9 +41,7 @@ private:
         float deltaTime;
         float gravityStrength;
         int useGravity;
-        int easingEnabled;
-        int easingType;
-        float3 pad;
+        float pad;
     };
 
 private:

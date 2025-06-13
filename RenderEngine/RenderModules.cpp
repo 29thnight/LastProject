@@ -216,17 +216,3 @@ void BillboardModule::Render(Mathf::Matrix world, Mathf::Matrix view, Mathf::Mat
 	// 정리
 	DirectX11::UnbindRenderTargets();
 }
-
-void MeshModule::Initialize()
-{
-	//m_gameObject->GetComponent<meshrenderer
-}
-
-void MeshModule::Render(Mathf::Matrix world, Mathf::Matrix view, Mathf::Matrix projection)
-{
-}
-
-void MeshModule::SetupInstancing(void* instanceData, UINT count)
-{
-}
-

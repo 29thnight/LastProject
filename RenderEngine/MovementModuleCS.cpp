@@ -92,8 +92,6 @@ void MovementModuleCS::UpdateConstantBuffers(float delta)
             params->deltaTime = delta;
             params->gravityStrength = m_gravityStrength;
             params->useGravity = m_gravity ? 1 : 0;
-            params->easingEnabled = m_easingEnabled ? 1 : 0;
-            params->easingType = m_easingType;
 
             DeviceState::g_pDeviceContext->Unmap(m_movementParamsBuffer, 0);
             m_paramsDirty = false;

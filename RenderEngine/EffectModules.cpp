@@ -2,8 +2,6 @@
 #include "../Camera.h"
 #include "../ShaderSystem.h"
 
-
-
 void CollisionModule::Update(float delta, std::vector<ParticleData>& particles)
 {
 	for (auto& particle : particles)
