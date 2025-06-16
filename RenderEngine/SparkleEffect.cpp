@@ -10,6 +10,7 @@ SparkleEffect::SparkleEffect(const Mathf::Vector3& position, int maxParticles) :
 
     // 실제 텍스처 사진
     m_sparkleTexture = DataSystems->LoadTexture("star.png");
+    /*
     {
         ImGui::ContextRegister("Sparkle Effect", true, [&]()
             {
@@ -163,7 +164,7 @@ SparkleEffect::SparkleEffect(const Mathf::Vector3& position, int maxParticles) :
 
             });
     }
-
+    */
     InitializeModules();
 
     Play();
@@ -179,13 +180,13 @@ void SparkleEffect::InitializeModules()
     // 스폰 모듈 추가 (이펙트의 위치는 m_position)
     //AddModule<SpawnModule>(10.0f, EmitterType::box);
     //AddModule<LifeModuleCS>();
-    AddModule<SpawnModuleCS>();
+    AddModule<MeshSpawnModuleCS>();
 
     // 움직임 모듈 추가 (중력 없음, 자유롭게 움직이는 반짝임)
     //auto movementModule = AddModule<MovementModuleCS>();
 
     //auto colorModule = AddModule<ColorModuleCS>();
-    auto sizeModule = AddModule<SizeModuleCS>();
+    //auto sizeModule = AddModule<SizeModuleCS>();
     //movementModule->SetUseGravity(false);
 
     // 색상 모듈 추가 (반짝이는 효과를 위한 투명도 변화)
@@ -219,10 +220,13 @@ void SparkleEffect::InitializeModules()
     //   });
 
      // 렌더 모듈 설정
-    m_billboardModule = AddRenderModule<BillboardModuleGPU>();
+    //m_billboardModule = AddRenderModule<BillboardModuleGPU>();
 
-    m_billboardModule->GetPSO()->m_pixelShader = &ShaderSystem->PixelShaders["Sparkle"];
-  
+    //m_billboardModule->GetPSO()->m_pixelShader = &ShaderSystem->PixelShaders["Sparkle"];
+
+    AddRenderModule<MeshModuleGPU>();
+    auto render = GetRenderModule<MeshModuleGPU>();
+    render->GetPSO()->m_pixelShader = &ShaderSystem->PixelShaders["MeshParticle"];
 }
 
 void SparkleEffect::Update(float delta)
@@ -236,12 +240,19 @@ void SparkleEffect::Update(float delta)
         m_delta = 0.0f;
     }
 
-    UpdateInstanceData();
+    //UpdateInstanceData();
 
-    auto module = GetModule<SpawnModuleCS>();
+    //auto module = GetModule<SpawnModuleCS>();
+    //float rate = module->GetSpawnRate();
+    //auto tem = module->GetTemplate();
+    //m_activeParticleCount = static_cast<int>(rate * tem.lifeTime);
+
+    auto module = GetModule<MeshSpawnModuleCS>();
     float rate = module->GetSpawnRate();
     auto tem = module->GetTemplate();
     m_activeParticleCount = static_cast<int>(rate * tem.lifeTime);
+
+
     if (m_activeParticleCount >= m_maxParticles)
     {
         m_activeParticleCount = m_maxParticles;
@@ -258,8 +269,10 @@ void SparkleEffect::Render(RenderScene& scene, Camera& camera)
     if (!RenderPassData::VaildCheck(&camera)) return;
     auto renderData = RenderPassData::GetData(&camera);
 
-    m_billboardModule->m_particleSRV = GetCurrentRenderingSRV();
-    m_billboardModule->m_instanceCount = m_maxParticles;
+    //m_billboardModule->m_particleSRV = GetCurrentRenderingSRV();
+    //m_billboardModule->m_instanceCount = m_maxParticles;
+
+    GetRenderModule<MeshModuleGPU>()->SetParticleData(GetCurrentRenderingSRV(), m_maxParticles);
 
     auto& deviceContext = DeviceState::g_pDeviceContext;
 

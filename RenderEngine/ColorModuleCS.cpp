@@ -60,7 +60,7 @@ void ColorModuleCS::Initialize()
     m_isInitialized = true;
 }
 
-void ColorModuleCS::Update(float deltaTime, std::vector<ParticleData>& particles)
+void ColorModuleCS::Update(float deltaTime)
 {
     if (!m_isInitialized)
         return;
@@ -73,7 +73,6 @@ void ColorModuleCS::Update(float deltaTime, std::vector<ParticleData>& particles
     }
 
     // 파티클 용량 업데이트
-    m_particleCapacity = static_cast<UINT>(particles.size());
     m_colorParams.maxParticles = m_particleCapacity;
 
     // 이징 처리
@@ -123,7 +122,7 @@ void ColorModuleCS::Update(float deltaTime, std::vector<ParticleData>& particles
     DeviceState::g_pDeviceContext->CSSetUnorderedAccessViews(0, 1, uavs, initCounts);
 
     // 디스패치 실행
-    UINT numThreadGroups = (m_particleCapacity + THREAD_GROUP_SIZE) / THREAD_GROUP_SIZE;
+    UINT numThreadGroups = (m_particleCapacity + (THREAD_GROUP_SIZE - 1)) / THREAD_GROUP_SIZE;
     DeviceState::g_pDeviceContext->Dispatch(numThreadGroups, 1, 1);
 
     // 리소스 정리

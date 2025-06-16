@@ -19,7 +19,7 @@ public:
 
     // ParticleModule methods
     void Initialize() override;
-    void Update(float delta, std::vector<ParticleData>& particles) override;
+    void Update(float delta) override;
     void OnSystemResized(UINT max) override;
 
     // Movement settings
@@ -58,5 +58,5 @@ private:
     // State tracking
     bool m_isInitialized;
     bool m_paramsDirty;
-    UINT m_particlesCapacity = 0;
+    UINT m_particleCapacity = 0;
 };

@@ -7,6 +7,7 @@
 //#include "LifeModuleCS.h"
 #include "ColorModuleCS.h"
 #include "SizeModuleCS.h"
+#include "MeshSpawnModuleCS.h"
 
 // maxparticles
 class ParticleSystem
@@ -22,6 +23,7 @@ public:
 
 		T* module = new T(std::forward<Args>(args)...);
 		module->Initialize();
+		module->OnSystemResized(m_maxParticles);
 		m_moduleList.Link(module);
 		return module;
 	}

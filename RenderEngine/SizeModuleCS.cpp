@@ -49,7 +49,7 @@ void SizeModuleCS::Initialize()
     OutputDebugStringA("SizeModuleCS initialized successfully\n");
 }
 
-void SizeModuleCS::Update(float deltaTime, std::vector<ParticleData>& particles)
+void SizeModuleCS::Update(float deltaTime)
 {
     if (!m_isInitialized)
     {
@@ -57,13 +57,9 @@ void SizeModuleCS::Update(float deltaTime, std::vector<ParticleData>& particles)
         return;
     }
 
-    if (particles.empty())
-        return;
-
     DirectX11::BeginEvent(L"SizeModuleCS Update");
 
     // 파티클 용량 업데이트
-    m_particleCapacity = static_cast<UINT>(particles.size());
     m_sizeParams.maxParticles = m_particleCapacity;
 
     // 이징 처리

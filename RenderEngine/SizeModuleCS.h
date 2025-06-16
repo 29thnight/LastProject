@@ -29,7 +29,7 @@ public:
 
     // 기본 인터페이스
     void Initialize() override;
-    void Update(float deltaTime, std::vector<ParticleData>& particles) override;
+    void Update(float deltaTime) override;
     void Release() override;
     void OnSystemResized(UINT maxParticles) override;
 

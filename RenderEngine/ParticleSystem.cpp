@@ -11,6 +11,7 @@ ParticleSystem::ParticleSystem(int maxParticles) : m_maxParticles(maxParticles),
 	m_instanceData.resize(maxParticles);
 
 	CreateParticleBuffer(maxParticles);
+	
 	InitializeParticleIndices();
 }
 
@@ -55,7 +56,7 @@ void ParticleSystem::Update(float delta)
 
 		// 버퍼 설정 및 실행
 		module.SetBuffers(inputUAV, inputSRV, outputUAV, outputSRV);
-		module.Update(delta, m_particleData);
+		module.Update(delta);
 
 		// 다음 모듈을 위해 입력↔출력 스왑
 		std::swap(inputUAV, outputUAV);

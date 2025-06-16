@@ -39,6 +39,9 @@ public:
     virtual void Render(Mathf::Matrix world, Mathf::Matrix view, Mathf::Matrix projection) {}
     void movePSO(std::unique_ptr<PipelineStateObject> pso) { m_pso.swap(pso); }
     PipelineStateObject* GetPSO() { return m_pso.get(); }
+
+
+    // 안씀 cpu로 파티클 돌릴때 썻던것
     virtual void SetupInstancing(void* instanceData, UINT count) {};
 
     void CleanupRenderState();
@@ -61,9 +64,6 @@ private:
 
 class BillboardModule : public RenderModules
 {
-public:
-
-
 public:
 
     void Initialize() override;

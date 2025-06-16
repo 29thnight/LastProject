@@ -3,6 +3,7 @@
 #include "ShaderSystem.h"
 #include "Effects.h"
 #include "BillboardModuleGPU.h"
+#include "MeshModuleGPU.h"
 
 class SparkleEffect : public ParticleSystem
 {
