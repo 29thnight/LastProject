@@ -158,6 +158,7 @@
     <ClCompile Include="CullingManager.cpp" />
     <ClCompile Include="BillboardModuleGPU.cpp" />
     <ClCompile Include="EaseInOut.cpp" />
+    <ClCompile Include="EffectComponent.cpp" />
     <ClCompile Include="EffectManager.cpp" />
     <ClCompile Include="EffectModules.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
@@ -242,6 +243,7 @@
     <ClInclude Include="BaseEffectStruct.h" />
     <ClInclude Include="BillboardModuleGPU.h" />
     <ClInclude Include="EaseInOut.h" />
+    <ClInclude Include="EffectComponent.h" />
     <ClInclude Include="EffectManager.h" />
     <ClInclude Include="EffectModules.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>

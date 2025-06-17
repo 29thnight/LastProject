@@ -39,12 +39,13 @@ cbuffer SpawnParameters : register(b0)
     float gCurrentTime; // 누적된 총 시간
     int gEmitterType; // 이미터 타입 (0:Point, 1:Sphere, 2:Box, 3:Cone, 4:Circle)
     
-    float gEmitterRadius; // 구/원/콘 이미터 반지름
     float3 gEmitterSize; // 박스/콘 이미터 크기
+    float gEmitterRadius; // 구/원/콘 이미터 반지름
+    
     uint gMaxParticles; // 최대 파티클 수
 }
 
-// 🔥 3D 메시 파티클 템플릿
+//  3D 메시 파티클 템플릿
 cbuffer MeshParticleTemplate : register(b1)
 {
     float gLifeTime; // 파티클 수명
@@ -217,7 +218,7 @@ void InitializeMeshParticle(inout MeshParticleData particle, uint seed)
     particle.isActive = 1;
 }
 
-#define THREAD_GROUP_SIZE 64
+#define THREAD_GROUP_SIZE 1024
 
 [numthreads(THREAD_GROUP_SIZE, 1, 1)]
 void main(uint3 DTid : SV_DispatchThreadID)

@@ -16,7 +16,7 @@ struct PixelOutput
     float4 color : SV_Target;
 };
 
-Texture2D gDiffuseTexture : register(t1);
+Texture2D gDiffuseTexture : register(t0);
 SamplerState gLinearSampler : register(s0);
 SamplerState gPointSampler : register(s1);
 
@@ -24,13 +24,18 @@ PixelOutput main(PixelInput input)
 {
     PixelOutput output;
     
-    if (input.alpha <= 0.01)
-        discard;
-    
     float3 normal = normalize(input.normal);
     float3 viewDir = normalize(input.viewDir);
     
     float4 diffuseColor = gDiffuseTexture.Sample(gLinearSampler, input.texCoord);
+    
+     // 텍스처의 알파값이 임계값 이하면 픽셀 버리기
+    if (diffuseColor.a < 0.1)
+        discard;
+    
+    // 파티클 알파값도 체크
+    if (input.alpha <= 0.01)
+        discard;
     
     float3 lightDir = normalize(float3(0.5, 1.0, 0.3));
     float NdotL = max(0.0, dot(normal, lightDir));

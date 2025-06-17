@@ -3,7 +3,7 @@
 void MeshModuleGPU::Initialize()
 {
     m_pso = std::make_unique<PipelineStateObject>();
-    m_meshType = MeshType::Cube;
+    m_meshType = MeshType::None;
     m_instanceCount = 0;
     m_particleSRV = nullptr;
     m_currentMesh = nullptr;

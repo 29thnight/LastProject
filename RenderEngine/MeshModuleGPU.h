@@ -8,7 +8,8 @@ enum class MeshType
 {
     Cube,
     Sphere,
-    Custom
+    Custom,
+    None,
 };
 
 struct MeshConstantBuffer

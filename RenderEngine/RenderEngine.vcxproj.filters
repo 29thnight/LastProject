@@ -243,6 +243,12 @@
     <Filter Include="RenderPass\EffectPass\5.Size">
       <UniqueIdentifier>{3c2f55c3-a6a1-407f-bd85-8f5bb03395b7}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Shaders\Effect\2D">
+      <UniqueIdentifier>{200135bb-ff63-4381-b632-29c9e2daf74a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shaders\Effect\3D">
+      <UniqueIdentifier>{381c9fb7-5dc6-48c4-9f1b-492d72306b5e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AnimationLoader.cpp">
@@ -451,6 +457,9 @@
     </ClCompile>
     <ClCompile Include="MeshSpawnModuleCS.cpp">
       <Filter>RenderPass\EffectPass\2.Spawn</Filter>
+    </ClCompile>
+    <ClCompile Include="EffectComponent.cpp">
+      <Filter>RenderPass\EffectPass\0.Example</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -697,6 +706,9 @@
     <ClInclude Include="MeshSpawnModuleCS.h">
       <Filter>RenderPass\EffectPass\2.Spawn</Filter>
     </ClInclude>
+    <ClInclude Include="EffectComponent.h">
+      <Filter>RenderPass\EffectPass\0.Example</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="..\Dynamic_CPP\Assets\Shaders\BloomComposite.ps.hlsl">
@@ -837,21 +849,6 @@
     <FxCompile Include="..\Dynamic_CPP\Assets\Shaders\VolumetricFogAccumulation.cs.hlsl">
       <Filter>Shaders\PostProcessShader</Filter>
     </FxCompile>
-    <FxCompile Include="..\Dynamic_CPP\Assets\Shaders\BillBoard.cs.hlsl">
-      <Filter>Shaders\Effect</Filter>
-    </FxCompile>
-    <FxCompile Include="..\Dynamic_CPP\Assets\Shaders\BillBoard.vs.hlsl">
-      <Filter>Shaders\Effect</Filter>
-    </FxCompile>
-    <FxCompile Include="..\Dynamic_CPP\Assets\Shaders\Sparkle.ps.hlsl">
-      <Filter>Shaders\Effect</Filter>
-    </FxCompile>
-    <FxCompile Include="..\Dynamic_CPP\Assets\Shaders\SpawnModule.cs.hlsl">
-      <Filter>Shaders\Effect</Filter>
-    </FxCompile>
-    <FxCompile Include="..\Dynamic_CPP\Assets\Shaders\MovementModule.cs.hlsl">
-      <Filter>Shaders\Effect</Filter>
-    </FxCompile>
     <FxCompile Include="..\Dynamic_CPP\Assets\Shaders\GBuffer.ps.hlsl">
       <Filter>Shaders\PipelineShader</Filter>
     </FxCompile>
@@ -864,17 +861,32 @@
     <FxCompile Include="..\Dynamic_CPP\Assets\Shaders\SSGI.cs.hlsl">
       <Filter>Shaders\PostProcessShader</Filter>
     </FxCompile>
-    <FxCompile Include="..\Dynamic_CPP\Assets\Shaders\SizeModule.cs.hlsl">
-      <Filter>Shaders\Effect</Filter>
+    <FxCompile Include="..\Dynamic_CPP\Assets\Shaders\BillBoard.vs.hlsl">
+      <Filter>Shaders\Effect\2D</Filter>
     </FxCompile>
-    <FxCompile Include="..\Dynamic_CPP\Assets\Shaders\MeshSpawnModule.cs.hlsl">
-      <Filter>Shaders\Effect</Filter>
-    </FxCompile>
-    <FxCompile Include="..\Dynamic_CPP\Assets\Shaders\MeshParticle.vs.hlsl">
-      <Filter>Shaders\Effect</Filter>
+    <FxCompile Include="..\Dynamic_CPP\Assets\Shaders\BillBoard.cs.hlsl">
+      <Filter>Shaders\Effect\2D</Filter>
     </FxCompile>
     <FxCompile Include="..\Dynamic_CPP\Assets\Shaders\MeshParticle.ps.hlsl">
-      <Filter>Shaders\Effect</Filter>
+      <Filter>Shaders\Effect\3D</Filter>
+    </FxCompile>
+    <FxCompile Include="..\Dynamic_CPP\Assets\Shaders\MeshParticle.vs.hlsl">
+      <Filter>Shaders\Effect\3D</Filter>
+    </FxCompile>
+    <FxCompile Include="..\Dynamic_CPP\Assets\Shaders\Sparkle.ps.hlsl">
+      <Filter>Shaders\Effect\2D</Filter>
+    </FxCompile>
+    <FxCompile Include="..\Dynamic_CPP\Assets\Shaders\SpawnModule.cs.hlsl">
+      <Filter>Shaders\Effect\2D</Filter>
+    </FxCompile>
+    <FxCompile Include="..\Dynamic_CPP\Assets\Shaders\MeshSpawnModule.cs.hlsl">
+      <Filter>Shaders\Effect\3D</Filter>
+    </FxCompile>
+    <FxCompile Include="..\Dynamic_CPP\Assets\Shaders\MovementModule.cs.hlsl">
+      <Filter>Shaders\Effect\2D</Filter>
+    </FxCompile>
+    <FxCompile Include="..\Dynamic_CPP\Assets\Shaders\SizeModule.cs.hlsl">
+      <Filter>Shaders\Effect\2D</Filter>
     </FxCompile>
   </ItemGroup>
   <ItemGroup>

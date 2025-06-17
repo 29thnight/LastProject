@@ -5,14 +5,16 @@
 #include "TerrainCollider.h"
 #include "CameraComponent.h"
 #include "Animation.h"
-#include "AnimationState.h"
 #include "Skeleton.h"
 #include "Camera.h"
+#include "Scene.h"
+#include "EffectComponent.h"
 #include "MaterialInfomation.h"
 #include "Component.h"
 #include "Material.h"
 #include "Mesh.h"
 #include "AnimationController.h"
+#include "AnimationState.h"
 #include "Animator.h"
 #include "AniTransition.h"
 #include "AvatarMask.h"
@@ -33,7 +35,6 @@
 #include "ModuleBehavior.h"
 #include "Object.h"
 #include "RigidBodyComponent.h"
-#include "Scene.h"
 #include "SphereColliderComponent.h"
 #include "Terrain.h"
 #include "TextComponent.h"
@@ -57,6 +58,7 @@ REFLECTION_REGISTER()
     AUTO_REGISTER_CLASS(CharacterControllerComponent);
     AUTO_REGISTER_CLASS(Component);
     AUTO_REGISTER_CLASS(ConditionParameter);
+    AUTO_REGISTER_CLASS(EffectComponent);
     AUTO_REGISTER_CLASS(GameObject);
     AUTO_REGISTER_CLASS(ImageComponent);
     AUTO_REGISTER_CLASS(LightComponent);

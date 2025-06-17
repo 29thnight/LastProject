@@ -4,7 +4,7 @@
 #include "RenderModules.h"
 #include "DataSystem.h"
 
-SparkleEffect::SparkleEffect(const Mathf::Vector3& position, int maxParticles) : ParticleSystem(maxParticles), m_delta(0.0f)
+SparkleEffect::SparkleEffect(const Mathf::Vector3& position, int maxParticles) : ParticleSystem(maxParticles, ParticleDataType::Mesh), m_delta(0.0f)
 {
     m_position = position;
 

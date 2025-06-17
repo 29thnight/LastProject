@@ -1,6 +1,5 @@
 #pragma once
 #include "Texture.h"
-#include "RenderModules.h"
 #include "IRenderPass.h"
 #include "SpawnModuleCS.h"
 #include "MovementModuleCS.h"
@@ -8,12 +7,20 @@
 #include "ColorModuleCS.h"
 #include "SizeModuleCS.h"
 #include "MeshSpawnModuleCS.h"
+#include "BillboardModuleGPU.h"
+#include "MeshModuleGPU.h"
+
+enum class ParticleDataType
+{
+	Standard,    // 기존 ParticleData (112바이트)
+	Mesh        // MeshParticleData (144바이트)
+};
 
 // maxparticles
 class ParticleSystem
 {
 public:
-	ParticleSystem(int maxParticles = 1000);
+	ParticleSystem(int maxParticles = 1000, ParticleDataType dataType = ParticleDataType::Standard);
 	~ParticleSystem();
 
 	template<typename T, typename... Args>
@@ -45,7 +52,8 @@ public:
 	}
 
 	template<typename T, typename... Args>
-	T* AddRenderModule(Args&&... args) {
+	T* AddRenderModule(Args&&... args) 
+	{
 		static_assert(std::is_base_of<RenderModules, T>::value,
 			"T must be derived from RenderModules");
 
@@ -101,6 +109,13 @@ private:
 private:
 
 	void InitializeParticleIndices();
+
+	void SetParticleDatatype(ParticleDataType type);
+
+	size_t GetParticleStructSize() const;
+
+	ParticleDataType m_particleDataType;
+	size_t m_particleStructSize;
 
 protected:
 	// 렌더 초기화 메소드는 rendermodule에서 정의.

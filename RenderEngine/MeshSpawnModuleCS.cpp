@@ -20,7 +20,7 @@ MeshSpawnModuleCS::MeshSpawnModuleCS()
     m_spawnParams.deltaTime = 0.0f;
     m_spawnParams.currentTime = 0.0f;
     m_spawnParams.emitterType = static_cast<int>(EmitterType::point);
-    m_spawnParams.emitterSize = XMFLOAT3(1.0f, 1.0f, 1.0f);
+    m_spawnParams.emitterSize = XMFLOAT3(0.5f, 0.5f, 0.5f);
     m_spawnParams.emitterRadius = 1.0f;
     m_spawnParams.maxParticles = 0;
 
