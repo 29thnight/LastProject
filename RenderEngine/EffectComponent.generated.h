@@ -1,15 +1,19 @@
 #pragma once
 
 #define ReflectEffectComponent \
-ReflectionField(EffectComponent) \
+ReflectionFieldInheritance(EffectComponent, Component) \
 { \
 	PropertyField \
 	({ \
-		meta_property(m_name) \
+		meta_property(num) \
 	}); \
 	MethodField \
 	({ \
-		meta_method(Update) \
+		meta_method(RemoveEmitter, "index") \
+		meta_method(PlayAll) \
+		meta_method(StopAll) \
+		meta_method(PlayEmitter, "index") \
+		meta_method(StopEmitter, "index") \
 	}); \
-	FieldEnd(EffectComponent, PropertyAndMethod) \
+	FieldEnd(EffectComponent, PropertyAndMethodInheritance) \
 };

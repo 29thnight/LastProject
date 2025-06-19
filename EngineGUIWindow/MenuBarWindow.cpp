@@ -323,6 +323,18 @@ void MenuBarWindow::RenderMenuBar()
                 ImGui::EndMenu();
             }
 
+            if (ImGui::BeginMenu("Effect"))
+            {
+                if (ImGui::MenuItem("Editor"))
+                {
+                    if (!ImGui::GetContext("EffectEdit").IsOpened())
+                    {
+                        ImGui::GetContext("EffectEdit").Open();
+                    }
+                }
+                ImGui::EndMenu();
+            }
+
             float availRegion = ImGui::GetContentRegionAvail().x;
 
             ImGui::SetCursorPos(ImVec2((availRegion * 0.5f) + 100.f, 1));
