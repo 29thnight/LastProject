@@ -39,7 +39,6 @@ public:
 	[[Method]]
 	void StopEmitter(int index);
 
-	void MakeEditor();
 private:
 	std::vector<std::shared_ptr<ParticleSystem>> m_emitters;
 };

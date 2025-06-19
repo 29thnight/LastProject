@@ -8,6 +8,7 @@ void EffectComponent::Awake()
 		});
 
 	ImGui::GetContext("EffectEdit").Close();
+
 }
 
 void EffectComponent::Update(float tick)
