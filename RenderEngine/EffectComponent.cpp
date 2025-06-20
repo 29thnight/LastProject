@@ -4,14 +4,10 @@ void EffectComponent::Awake()
 {
 	ImGui::ContextRegister("EffectEdit", false, [&]() {
 
-        ImGui::SetNextWindowSize(ImVec2(960, 540), ImGuiCond_FirstUseEver);
-        ImGui::SetNextWindowPos(ImVec2(480, 270), ImGuiCond_FirstUseEver);
-        if (ImGui::Begin("EffectEdit")) {
-            RenderMainEditor();
-        }
-        ImGui::End();
-         
-		});
+        RenderMainEditor();
+
+	});
+
 
 	//ImGui::GetContext("EffectEdit").Close();
 }
