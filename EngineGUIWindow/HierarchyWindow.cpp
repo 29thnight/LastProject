@@ -11,6 +11,7 @@
 #include "UIManager.h"
 #include "DataSystem.h"
 #include "PathFinder.h"
+#include "EffectComponent.h"
 
 HierarchyWindow::HierarchyWindow(SceneRenderer* ptr) :
 	m_sceneRenderer(ptr)
@@ -139,15 +140,25 @@ HierarchyWindow::HierarchyWindow(SceneRenderer* ptr) :
 				file::path filepath = PathFinder::Relative("UI\\") / filename.filename();
 				Texture* texture = DataSystems->LoadTexture(filepath.string().c_str());
 				ImageComponent* sprite = nullptr;
+				EffectComponent* effectImg = nullptr;
 				if (selectedSceneObject)
 				{
 					if (ImageComponent* hasSprite = selectedSceneObject->GetComponent<ImageComponent>())
 						sprite = hasSprite;
+					else if(EffectComponent* hasEffect = selectedSceneObject->GetComponent<EffectComponent>())
+					{
+						effectImg = hasEffect;
+					}
 					else
 						sprite = selectedSceneObject->AddComponent<ImageComponent>();
 					if (sprite)
 					{
 						sprite->Load(texture);
+					}
+
+					if (effectImg)
+					{
+						effectImg->SetTexture(texture);
 					}
 				}
 				else

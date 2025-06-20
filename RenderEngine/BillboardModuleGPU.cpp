@@ -43,6 +43,7 @@ void BillboardModuleGPU::Initialize()
 	m_pso->m_primitiveTopology = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
 
 	m_pso->m_vertexShader = &ShaderSystem->VertexShaders["BillBoard"];
+	m_pso->m_pixelShader = &ShaderSystem->PixelShaders["BillBoard"];
 
 	D3D11_INPUT_ELEMENT_DESC vertexLayoutDesc[] =
 	{

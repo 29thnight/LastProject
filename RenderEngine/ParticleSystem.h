@@ -100,6 +100,12 @@ public:
 
 	ID3D11ShaderResourceView* GetCurrentRenderingSRV() const;
 
+	LinkedList<ParticleModule>& GetModuleList() { return m_moduleList; }
+	const LinkedList<ParticleModule>& GetModuleList() const { return m_moduleList; }
+
+	std::vector<RenderModules*>& GetRenderModules() { return m_renderModules; }
+	const std::vector<RenderModules*>& GetRenderModules() const { return m_renderModules; }
+
 private:
 
 	void ConfigureModuleBuffers(ParticleModule& module, bool isFirstModule);

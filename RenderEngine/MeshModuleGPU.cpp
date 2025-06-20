@@ -45,6 +45,7 @@ void MeshModuleGPU::Initialize()
 
     // 셰이더 설정
     m_pso->m_vertexShader = &ShaderSystem->VertexShaders["MeshParticle"];
+    m_pso->m_pixelShader = &ShaderSystem->PixelShaders["MeshParticle"];
 
     // 입력 레이아웃 (기존 Vertex 구조체 사용)
     D3D11_INPUT_ELEMENT_DESC vertexLayoutDesc[] =
