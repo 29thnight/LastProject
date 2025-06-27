@@ -199,6 +199,7 @@ Scene* SceneManager::LoadScene(const std::string_view& name, bool isAsync)
 
 			DesirealizeGameObject(type, objNode);
         }
+        m_activeScene.load()->AllUpdateWorldMatrix();
 
 		m_scenes.push_back(m_activeScene);
 		m_activeSceneIndex = m_scenes.size() - 1;
@@ -252,6 +253,7 @@ void SceneManager::CreateEditorOnlyPlayScene()
 
             DesirealizeGameObject(type, objNode);
         }
+        m_activeScene.load()->AllUpdateWorldMatrix();
 
 		activeSceneChangedEvent.Broadcast();
 		sceneLoadedEvent.Broadcast();
