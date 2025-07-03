@@ -67,7 +67,6 @@ void PhysicsManager::OnLoadScene()
 	//컨테이너 제거
 	ChangeScene();
 	
-	m_colliderContainer.clear();
 
 	//todo : 현제의 게임씬을 찾아오기
 #pragma region NotUse
