@@ -57,7 +57,6 @@ void PhysicsManager::Shutdown()
 void PhysicsManager::ChangeScene()
 {
 	Physics->ChangeScene();
-	m_colliderContainer.clear();
 }
 void PhysicsManager::OnLoadScene()
 {
